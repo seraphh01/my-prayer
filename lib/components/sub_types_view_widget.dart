@@ -1,6 +1,8 @@
 import '/backend/schema/structs/index.dart';
+import '/components/empty_list_component_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/actions/index.dart' as actions;
 import 'package:flutter/material.dart';
 import 'sub_types_view_model.dart';
 export 'sub_types_view_model.dart';
@@ -8,10 +10,12 @@ export 'sub_types_view_model.dart';
 class SubTypesViewWidget extends StatefulWidget {
   const SubTypesViewWidget({
     super.key,
-    required this.prayerTypes,
+    this.prayerTypes,
+    required this.onSelectPrayer,
   });
 
   final List<PrayerTypeStruct>? prayerTypes;
+  final Future Function(String prayerId)? onSelectPrayer;
 
   @override
   State<SubTypesViewWidget> createState() => _SubTypesViewWidgetState();
@@ -45,9 +49,23 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
   Widget build(BuildContext context) {
     return Builder(
       builder: (context) {
-        final subTypes = widget.prayerTypes!
-            .sortedList(keyOf: (e) => e.sequence, desc: false)
-            .toList();
+        final subTypes = widget.prayerTypes
+                ?.sortedList(keyOf: (e) => e.sequence, desc: false)
+                .toList() ??
+            [];
+        if (subTypes.isEmpty) {
+          return const Center(
+            child: SizedBox(
+              width: double.infinity,
+              height: 30.0,
+              child: EmptyListComponentWidget(
+                title: 'Nu s-a putut încărca.',
+                subtitle:
+                    'Verifică conexiunea la internet sau mergi la rugăciunile descărcate.',
+              ),
+            ),
+          );
+        }
 
         return ListView.builder(
           padding: EdgeInsets.zero,
@@ -57,100 +75,124 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
           itemCount: subTypes.length,
           itemBuilder: (context, subTypesIndex) {
             final subTypesItem = subTypes[subTypesIndex];
-            return Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(8.0, 0.0, 0.0, 0.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  InkWell(
-                    splashColor: Colors.transparent,
-                    focusColor: Colors.transparent,
-                    hoverColor: Colors.transparent,
-                    highlightColor: Colors.transparent,
-                    onTap: () async {
-                      if (subTypesItem.prayers.length == 1) {
-                        context.pushNamed(
-                          'RosaryPage',
-                          queryParameters: {
-                            'prayerId': serializeParam(
-                              subTypesItem.prayers.first.id,
-                              ParamType.String,
-                            ),
-                          }.withoutNulls,
-                        );
-                      } else {
-                        if (_model.currentExpandedType == subTypesItem.id) {
-                          _model.currentExpandedType = null;
-                          safeSetState(() {});
-                        } else {
-                          _model.currentExpandedType = subTypesItem.id;
-                          safeSetState(() {});
-                        }
-                      }
-                    },
-                    child: Material(
-                      color: Colors.transparent,
-                      child: ListTile(
-                        title: Text(
-                          subTypesItem.type.maybeHandleOverflow(
-                            maxChars: 40,
-                          ),
-                          style:
-                              FlutterFlowTheme.of(context).labelMedium.override(
-                                    fontFamily: 'Inter',
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Padding(
+                      padding:
+                          const EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 1.0, 2.0),
+                      child: InkWell(
+                        splashColor: Colors.transparent,
+                        focusColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        onTap: () async {
+                          if (subTypesItem.prayers.length == 1) {
+                            await widget.onSelectPrayer?.call(
+                              subTypesItem.prayers.firstOrNull!.id,
+                            );
+                            if (!true) {
+                              await actions.navigateWithRelacement(
+                                context,
+                                'RosaryPage',
+                                <String, String>{
+                                  'prayerId':
+                                      subTypesItem.prayers.firstOrNull!.id,
+                                },
+                              );
+                            }
+                          } else {
+                            if (_model.currentExpandedType == subTypesItem.id) {
+                              _model.currentExpandedType = null;
+                              safeSetState(() {});
+                            } else {
+                              _model.currentExpandedType = subTypesItem.id;
+                              safeSetState(() {});
+                            }
+                          }
+                        },
+                        child: Material(
+                          color: Colors.transparent,
+                          child: ListTile(
+                            title: Text(
+                              subTypesItem.type.maybeHandleOverflow(
+                                maxChars: 40,
+                              ),
+                              style: FlutterFlowTheme.of(context)
+                                  .titleMedium
+                                  .override(
+                                    fontFamily: 'Merriweather',
                                     letterSpacing: 0.0,
                                   ),
-                        ),
-                        trailing: Icon(
-                          Icons.arrow_right,
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                          size: 16.0,
-                        ),
-                        tileColor:
-                            FlutterFlowTheme.of(context).secondaryBackground,
-                        dense: true,
-                        contentPadding: const EdgeInsetsDirectional.fromSTEB(
-                            12.0, 0.0, 12.0, 0.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            trailing: Icon(
+                              Icons.keyboard_arrow_right_rounded,
+                              color: FlutterFlowTheme.of(context).primaryText,
+                              size: 24.0,
+                            ),
+                            dense: true,
+                            contentPadding: const EdgeInsetsDirectional.fromSTEB(
+                                12.0, 0.0, 12.0, 0.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(0.0),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  if (subTypesItem.id == _model.currentExpandedType)
-                    Column(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        if (subTypesItem.prayers.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                                8.0, 0.0, 0.0, 0.0),
-                            child: Builder(
-                              builder: (context) {
-                                final prayers = subTypesItem.prayers.toList();
+                    Divider(
+                      height: 1.0,
+                      thickness: 1.0,
+                      color: FlutterFlowTheme.of(context).secondary,
+                    ),
+                  ],
+                ),
+                if (subTypesItem.id == _model.currentExpandedType)
+                  Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      if (subTypesItem.prayers.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(
+                              8.0, 0.0, 0.0, 0.0),
+                          child: Builder(
+                            builder: (context) {
+                              final prayers = subTypesItem.prayers
+                                  .sortedList(
+                                      keyOf: (e) => e.sequence, desc: false)
+                                  .toList();
 
-                                return ListView.builder(
-                                  padding: EdgeInsets.zero,
-                                  primary: false,
-                                  shrinkWrap: true,
-                                  scrollDirection: Axis.vertical,
-                                  itemCount: prayers.length,
-                                  itemBuilder: (context, prayersIndex) {
-                                    final prayersItem = prayers[prayersIndex];
-                                    return InkWell(
+                              return ListView.builder(
+                                padding: EdgeInsets.zero,
+                                primary: false,
+                                shrinkWrap: true,
+                                scrollDirection: Axis.vertical,
+                                itemCount: prayers.length,
+                                itemBuilder: (context, prayersIndex) {
+                                  final prayersItem = prayers[prayersIndex];
+                                  return Padding(
+                                    padding: const EdgeInsetsDirectional.fromSTEB(
+                                        0.0, 0.0, 1.0, 2.0),
+                                    child: InkWell(
                                       splashColor: Colors.transparent,
                                       focusColor: Colors.transparent,
                                       hoverColor: Colors.transparent,
                                       highlightColor: Colors.transparent,
                                       onTap: () async {
-                                        context.pushNamed(
-                                          'RosaryPage',
-                                          queryParameters: {
-                                            'prayerId': serializeParam(
-                                              prayersItem.id,
-                                              ParamType.String,
-                                            ),
-                                          }.withoutNulls,
+                                        if (!true) {
+                                          await actions.navigateWithRelacement(
+                                            context,
+                                            'RosaryPage',
+                                            <String, String>{
+                                              'prayerId': prayersItem.id,
+                                            },
+                                          );
+                                        }
+                                        await widget.onSelectPrayer?.call(
+                                          prayersItem.id,
                                         );
                                       },
                                       child: Material(
@@ -159,39 +201,40 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                           title: Text(
                                             prayersItem.subtitle,
                                             style: FlutterFlowTheme.of(context)
-                                                .labelMedium
+                                                .titleSmall
                                                 .override(
-                                                  fontFamily: 'Inter',
+                                                  fontFamily: 'Merriweather',
                                                   letterSpacing: 0.0,
                                                 ),
                                           ),
                                           trailing: Icon(
-                                            Icons.arrow_right,
+                                            Icons.keyboard_arrow_right_rounded,
                                             color: FlutterFlowTheme.of(context)
-                                                .secondaryText,
-                                            size: 16.0,
+                                                .primaryText,
+                                            size: 24.0,
                                           ),
-                                          tileColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .secondaryBackground,
-                                          dense: false,
+                                          dense: true,
                                           contentPadding:
                                               const EdgeInsetsDirectional.fromSTEB(
                                                   12.0, 0.0, 12.0, 0.0),
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(8.0),
+                                                BorderRadius.circular(0.0),
                                           ),
                                         ),
                                       ),
-                                    );
-                                  },
-                                );
-                              },
-                            ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
                           ),
-                        if (subTypesItem.subtypes.isNotEmpty)
-                          wrapWithModel(
+                        ),
+                      if (subTypesItem.subtypes.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(
+                              8.0, 0.0, 0.0, 0.0),
+                          child: wrapWithModel(
                             model: _model.subTypesViewModels.getModel(
                               subTypesItem.id.toString(),
                               subTypesIndex,
@@ -202,12 +245,13 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                 'Keyf0l_${subTypesItem.id.toString()}',
                               ),
                               prayerTypes: subTypesItem.subtypes,
+                              onSelectPrayer: (prayerId) async {},
                             ),
                           ),
-                      ],
-                    ),
-                ],
-              ),
+                        ),
+                    ],
+                  ),
+              ],
             );
           },
         );

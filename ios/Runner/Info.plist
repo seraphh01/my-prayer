@@ -54,7 +54,8 @@
 	<true/>
 
 
-
+	<key>PermissionGroupNotification</key>
+    <string>Acordă permisiunea pentru a putea afișa notificărea audio</string>
 
 
 	<key>UILaunchStoryboardName</key>

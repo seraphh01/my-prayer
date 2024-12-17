@@ -1,11 +1,13 @@
 // ignore_for_file: unnecessary_getters_setters
 
-import '/backend/schema/util/schema_util.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '/backend/schema/util/firestore_util.dart';
 
 import 'index.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
-class PrayerSectionStruct extends BaseStruct {
+class PrayerSectionStruct extends FFFirebaseStruct {
   PrayerSectionStruct({
     String? id,
     String? title,
@@ -14,13 +16,21 @@ class PrayerSectionStruct extends BaseStruct {
     String? subtitle,
     List<PrayerSectionStruct>? subsections,
     String? sectionId,
+    int? duration,
+    String? imageUrl,
+    List<SectionTextStruct>? texts,
+    FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _id = id,
         _title = title,
         _sequence = sequence,
         _audioUrl = audioUrl,
         _subtitle = subtitle,
         _subsections = subsections,
-        _sectionId = sectionId;
+        _sectionId = sectionId,
+        _duration = duration,
+        _imageUrl = imageUrl,
+        _texts = texts,
+        super(firestoreUtilData);
 
   // "id" field.
   String? _id;
@@ -77,6 +87,33 @@ class PrayerSectionStruct extends BaseStruct {
 
   bool hasSectionId() => _sectionId != null;
 
+  // "duration" field.
+  int? _duration;
+  int get duration => _duration ?? 0;
+  set duration(int? val) => _duration = val;
+
+  void incrementDuration(int amount) => duration = duration + amount;
+
+  bool hasDuration() => _duration != null;
+
+  // "image_url" field.
+  String? _imageUrl;
+  String get imageUrl => _imageUrl ?? '';
+  set imageUrl(String? val) => _imageUrl = val;
+
+  bool hasImageUrl() => _imageUrl != null;
+
+  // "texts" field.
+  List<SectionTextStruct>? _texts;
+  List<SectionTextStruct> get texts => _texts ?? const [];
+  set texts(List<SectionTextStruct>? val) => _texts = val;
+
+  void updateTexts(Function(List<SectionTextStruct>) updateFn) {
+    updateFn(_texts ??= []);
+  }
+
+  bool hasTexts() => _texts != null;
+
   static PrayerSectionStruct fromMap(Map<String, dynamic> data) =>
       PrayerSectionStruct(
         id: data['id'] as String?,
@@ -89,6 +126,12 @@ class PrayerSectionStruct extends BaseStruct {
           PrayerSectionStruct.fromMap,
         ),
         sectionId: data['section_id'] as String?,
+        duration: castToType<int>(data['duration']),
+        imageUrl: data['image_url'] as String?,
+        texts: getStructList(
+          data['texts'],
+          SectionTextStruct.fromMap,
+        ),
       );
 
   static PrayerSectionStruct? maybeFromMap(dynamic data) => data is Map
@@ -103,6 +146,9 @@ class PrayerSectionStruct extends BaseStruct {
         'subtitle': _subtitle,
         'subsections': _subsections?.map((e) => e.toMap()).toList(),
         'section_id': _sectionId,
+        'duration': _duration,
+        'image_url': _imageUrl,
+        'texts': _texts?.map((e) => e.toMap()).toList(),
       }.withoutNulls;
 
   @override
@@ -135,6 +181,19 @@ class PrayerSectionStruct extends BaseStruct {
         'section_id': serializeParam(
           _sectionId,
           ParamType.String,
+        ),
+        'duration': serializeParam(
+          _duration,
+          ParamType.int,
+        ),
+        'image_url': serializeParam(
+          _imageUrl,
+          ParamType.String,
+        ),
+        'texts': serializeParam(
+          _texts,
+          ParamType.DataStruct,
+          isList: true,
         ),
       }.withoutNulls;
 
@@ -176,6 +235,22 @@ class PrayerSectionStruct extends BaseStruct {
           ParamType.String,
           false,
         ),
+        duration: deserializeParam(
+          data['duration'],
+          ParamType.int,
+          false,
+        ),
+        imageUrl: deserializeParam(
+          data['image_url'],
+          ParamType.String,
+          false,
+        ),
+        texts: deserializeStructParam<SectionTextStruct>(
+          data['texts'],
+          ParamType.DataStruct,
+          true,
+          structBuilder: SectionTextStruct.fromSerializableMap,
+        ),
       );
 
   @override
@@ -191,12 +266,25 @@ class PrayerSectionStruct extends BaseStruct {
         audioUrl == other.audioUrl &&
         subtitle == other.subtitle &&
         listEquality.equals(subsections, other.subsections) &&
-        sectionId == other.sectionId;
+        sectionId == other.sectionId &&
+        duration == other.duration &&
+        imageUrl == other.imageUrl &&
+        listEquality.equals(texts, other.texts);
   }
 
   @override
-  int get hashCode => const ListEquality()
-      .hash([id, title, sequence, audioUrl, subtitle, subsections, sectionId]);
+  int get hashCode => const ListEquality().hash([
+        id,
+        title,
+        sequence,
+        audioUrl,
+        subtitle,
+        subsections,
+        sectionId,
+        duration,
+        imageUrl,
+        texts
+      ]);
 }
 
 PrayerSectionStruct createPrayerSectionStruct({
@@ -206,6 +294,12 @@ PrayerSectionStruct createPrayerSectionStruct({
   String? audioUrl,
   String? subtitle,
   String? sectionId,
+  int? duration,
+  String? imageUrl,
+  Map<String, dynamic> fieldValues = const {},
+  bool clearUnsetFields = true,
+  bool create = false,
+  bool delete = false,
 }) =>
     PrayerSectionStruct(
       id: id,
@@ -214,4 +308,76 @@ PrayerSectionStruct createPrayerSectionStruct({
       audioUrl: audioUrl,
       subtitle: subtitle,
       sectionId: sectionId,
+      duration: duration,
+      imageUrl: imageUrl,
+      firestoreUtilData: FirestoreUtilData(
+        clearUnsetFields: clearUnsetFields,
+        create: create,
+        delete: delete,
+        fieldValues: fieldValues,
+      ),
     );
+
+PrayerSectionStruct? updatePrayerSectionStruct(
+  PrayerSectionStruct? prayerSection, {
+  bool clearUnsetFields = true,
+  bool create = false,
+}) =>
+    prayerSection
+      ?..firestoreUtilData = FirestoreUtilData(
+        clearUnsetFields: clearUnsetFields,
+        create: create,
+      );
+
+void addPrayerSectionStructData(
+  Map<String, dynamic> firestoreData,
+  PrayerSectionStruct? prayerSection,
+  String fieldName, [
+  bool forFieldValue = false,
+]) {
+  firestoreData.remove(fieldName);
+  if (prayerSection == null) {
+    return;
+  }
+  if (prayerSection.firestoreUtilData.delete) {
+    firestoreData[fieldName] = FieldValue.delete();
+    return;
+  }
+  final clearFields =
+      !forFieldValue && prayerSection.firestoreUtilData.clearUnsetFields;
+  if (clearFields) {
+    firestoreData[fieldName] = <String, dynamic>{};
+  }
+  final prayerSectionData =
+      getPrayerSectionFirestoreData(prayerSection, forFieldValue);
+  final nestedData =
+      prayerSectionData.map((k, v) => MapEntry('$fieldName.$k', v));
+
+  final mergeFields = prayerSection.firestoreUtilData.create || clearFields;
+  firestoreData
+      .addAll(mergeFields ? mergeNestedFields(nestedData) : nestedData);
+}
+
+Map<String, dynamic> getPrayerSectionFirestoreData(
+  PrayerSectionStruct? prayerSection, [
+  bool forFieldValue = false,
+]) {
+  if (prayerSection == null) {
+    return {};
+  }
+  final firestoreData = mapToFirestore(prayerSection.toMap());
+
+  // Add any Firestore field values
+  prayerSection.firestoreUtilData.fieldValues
+      .forEach((k, v) => firestoreData[k] = v);
+
+  return forFieldValue ? mergeNestedFields(firestoreData) : firestoreData;
+}
+
+List<Map<String, dynamic>> getPrayerSectionListFirestoreData(
+  List<PrayerSectionStruct>? prayerSections,
+) =>
+    prayerSections
+        ?.map((e) => getPrayerSectionFirestoreData(e, true))
+        .toList() ??
+    [];

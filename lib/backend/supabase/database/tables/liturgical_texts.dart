@@ -23,4 +23,7 @@ class LiturgicalTextsRow extends SupabaseDataRow {
 
   String get title => getField<String>('title')!;
   set title(String value) => setField<String>('title', value);
+
+  int? get audioTime => getField<int>('audio_time');
+  set audioTime(int? value) => setField<int>('audio_time', value);
 }

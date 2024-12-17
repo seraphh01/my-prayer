@@ -20,40 +20,11 @@ class SuapabaseQueriesGroup {
     'Authorization':
         'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yYXBxand5cXZ3b3B3b3hldmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4MDU2MzQsImV4cCI6MjA0NjM4MTYzNH0.hq-X6YEAD7DG9WIiJhqwRb3ZtMruaEzAbr0Wm4TBoQU',
   };
-  static GetPrayerWithSectionsCall getPrayerWithSectionsCall =
-      GetPrayerWithSectionsCall();
   static GetPrayerTypesCall getPrayerTypesCall = GetPrayerTypesCall();
   static GetPrayerWithSectionsRecursiveCall getPrayerWithSectionsRecursiveCall =
       GetPrayerWithSectionsRecursiveCall();
-}
-
-class GetPrayerWithSectionsCall {
-  Future<ApiCallResponse> call({
-    String? prayerId = '',
-  }) async {
-    final baseUrl = SuapabaseQueriesGroup.getBaseUrl();
-
-    return ApiManager.instance.makeApiCall(
-      callName: 'Get prayer with sections',
-      apiUrl: '$baseUrl/get_prayer_with_sections',
-      callType: ApiCallType.GET,
-      headers: {
-        'apikey':
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yYXBxand5cXZ3b3B3b3hldmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4MDU2MzQsImV4cCI6MjA0NjM4MTYzNH0.hq-X6YEAD7DG9WIiJhqwRb3ZtMruaEzAbr0Wm4TBoQU',
-        'Authorization':
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yYXBxand5cXZ3b3B3b3hldmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4MDU2MzQsImV4cCI6MjA0NjM4MTYzNH0.hq-X6YEAD7DG9WIiJhqwRb3ZtMruaEzAbr0Wm4TBoQU',
-      },
-      params: {
-        'request_prayer_id': prayerId,
-      },
-      returnBody: true,
-      encodeBodyUtf8: false,
-      decodeUtf8: false,
-      cache: false,
-      isStreamingApi: false,
-      alwaysAllowBody: false,
-    );
-  }
+  static GetPrayersByDateGroupsCall getPrayersByDateGroupsCall =
+      GetPrayersByDateGroupsCall();
 }
 
 class GetPrayerTypesCall {
@@ -74,7 +45,7 @@ class GetPrayerTypesCall {
       returnBody: true,
       encodeBodyUtf8: false,
       decodeUtf8: false,
-      cache: false,
+      cache: true,
       isStreamingApi: false,
       alwaysAllowBody: false,
     );
@@ -104,6 +75,43 @@ class GetPrayerWithSectionsRecursiveCall {
       encodeBodyUtf8: false,
       decodeUtf8: false,
       cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+}
+
+class GetPrayersByDateGroupsCall {
+  Future<ApiCallResponse> call({
+    int? dayOfWeek = -1,
+    String? specificDate = 'null',
+    int? month = -1,
+    int? day = -1,
+    int? hour = -1,
+  }) async {
+    final baseUrl = SuapabaseQueriesGroup.getBaseUrl();
+
+    return ApiManager.instance.makeApiCall(
+      callName: 'Get Prayers By Date Groups',
+      apiUrl: '$baseUrl/get_prayers_by_date_groups',
+      callType: ApiCallType.GET,
+      headers: {
+        'apikey':
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yYXBxand5cXZ3b3B3b3hldmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4MDU2MzQsImV4cCI6MjA0NjM4MTYzNH0.hq-X6YEAD7DG9WIiJhqwRb3ZtMruaEzAbr0Wm4TBoQU',
+        'Authorization':
+            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yYXBxand5cXZ3b3B3b3hldmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4MDU2MzQsImV4cCI6MjA0NjM4MTYzNH0.hq-X6YEAD7DG9WIiJhqwRb3ZtMruaEzAbr0Wm4TBoQU',
+      },
+      params: {
+        'day_of_week_param': dayOfWeek,
+        'specific_date_param': specificDate,
+        'month_param': month,
+        'day_param': day,
+        'hour_param': hour,
+      },
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: true,
       isStreamingApi: false,
       alwaysAllowBody: false,
     );
@@ -246,6 +254,9 @@ class ApiPagingParams {
 }
 
 String _toEncodable(dynamic item) {
+  if (item is DocumentReference) {
+    return item.path;
+  }
   return item;
 }
 

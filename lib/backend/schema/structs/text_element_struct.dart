@@ -1,20 +1,23 @@
 // ignore_for_file: unnecessary_getters_setters
 
-import '/backend/schema/util/schema_util.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'index.dart';
+import '/backend/schema/util/firestore_util.dart';
+
 import '/flutter_flow/flutter_flow_util.dart';
 
-class TextElementStruct extends BaseStruct {
+class TextElementStruct extends FFFirebaseStruct {
   TextElementStruct({
     String? text,
     int? sequence,
     double? startTime,
     double? endTime,
+    FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _text = text,
         _sequence = sequence,
         _startTime = startTime,
-        _endTime = endTime;
+        _endTime = endTime,
+        super(firestoreUtilData);
 
   // "text" field.
   String? _text;
@@ -135,10 +138,82 @@ TextElementStruct createTextElementStruct({
   int? sequence,
   double? startTime,
   double? endTime,
+  Map<String, dynamic> fieldValues = const {},
+  bool clearUnsetFields = true,
+  bool create = false,
+  bool delete = false,
 }) =>
     TextElementStruct(
       text: text,
       sequence: sequence,
       startTime: startTime,
       endTime: endTime,
+      firestoreUtilData: FirestoreUtilData(
+        clearUnsetFields: clearUnsetFields,
+        create: create,
+        delete: delete,
+        fieldValues: fieldValues,
+      ),
     );
+
+TextElementStruct? updateTextElementStruct(
+  TextElementStruct? textElement, {
+  bool clearUnsetFields = true,
+  bool create = false,
+}) =>
+    textElement
+      ?..firestoreUtilData = FirestoreUtilData(
+        clearUnsetFields: clearUnsetFields,
+        create: create,
+      );
+
+void addTextElementStructData(
+  Map<String, dynamic> firestoreData,
+  TextElementStruct? textElement,
+  String fieldName, [
+  bool forFieldValue = false,
+]) {
+  firestoreData.remove(fieldName);
+  if (textElement == null) {
+    return;
+  }
+  if (textElement.firestoreUtilData.delete) {
+    firestoreData[fieldName] = FieldValue.delete();
+    return;
+  }
+  final clearFields =
+      !forFieldValue && textElement.firestoreUtilData.clearUnsetFields;
+  if (clearFields) {
+    firestoreData[fieldName] = <String, dynamic>{};
+  }
+  final textElementData =
+      getTextElementFirestoreData(textElement, forFieldValue);
+  final nestedData =
+      textElementData.map((k, v) => MapEntry('$fieldName.$k', v));
+
+  final mergeFields = textElement.firestoreUtilData.create || clearFields;
+  firestoreData
+      .addAll(mergeFields ? mergeNestedFields(nestedData) : nestedData);
+}
+
+Map<String, dynamic> getTextElementFirestoreData(
+  TextElementStruct? textElement, [
+  bool forFieldValue = false,
+]) {
+  if (textElement == null) {
+    return {};
+  }
+  final firestoreData = mapToFirestore(textElement.toMap());
+
+  // Add any Firestore field values
+  textElement.firestoreUtilData.fieldValues
+      .forEach((k, v) => firestoreData[k] = v);
+
+  return forFieldValue ? mergeNestedFields(firestoreData) : firestoreData;
+}
+
+List<Map<String, dynamic>> getTextElementListFirestoreData(
+  List<TextElementStruct>? textElements,
+) =>
+    textElements?.map((e) => getTextElementFirestoreData(e, true)).toList() ??
+    [];

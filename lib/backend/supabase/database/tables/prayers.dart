@@ -28,4 +28,7 @@ class PrayersRow extends SupabaseDataRow {
 
   String? get subtitle => getField<String>('subtitle');
   set subtitle(String? value) => setField<String>('subtitle', value);
+
+  int? get sequence => getField<int>('sequence');
+  set sequence(int? value) => setField<int>('sequence', value);
 }

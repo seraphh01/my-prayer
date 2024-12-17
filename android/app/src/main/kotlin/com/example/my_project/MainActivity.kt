@@ -1,4 +1,4 @@
-package com.seraphicapps.myprayer
+package com.sserafim.socaciu.wings
 
 import io.flutter.embedding.android.FlutterActivity
 

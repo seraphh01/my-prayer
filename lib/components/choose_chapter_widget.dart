@@ -1,3 +1,4 @@
+import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
 import '/components/chapter_options_view_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -10,9 +11,11 @@ class ChooseChapterWidget extends StatefulWidget {
   const ChooseChapterWidget({
     super.key,
     required this.chapterOptions,
-  });
+    int? currentChapterIndex,
+  }) : currentChapterIndex = currentChapterIndex ?? 0;
 
   final List<ChapterOptionStruct>? chapterOptions;
+  final int currentChapterIndex;
 
   @override
   State<ChooseChapterWidget> createState() => _ChooseChapterWidgetState();
@@ -60,7 +63,7 @@ class _ChooseChapterWidgetState extends State<ChooseChapterWidget> {
           width: double.infinity,
           height: MediaQuery.sizeOf(context).height * 0.5,
           decoration: BoxDecoration(
-            color: FlutterFlowTheme.of(context).secondaryBackground,
+            color: FlutterFlowTheme.of(context).primaryBackground,
             borderRadius: const BorderRadius.only(
               bottomLeft: Radius.circular(0.0),
               bottomRight: Radius.circular(0.0),
@@ -74,15 +77,13 @@ class _ChooseChapterWidgetState extends State<ChooseChapterWidget> {
               Container(
                 width: double.infinity,
                 height: MediaQuery.sizeOf(context).height * 0.1,
-                decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).secondaryBackground,
-                ),
+                decoration: const BoxDecoration(),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
                     'Mergi la secțiunea dorită',
                     style: FlutterFlowTheme.of(context).headlineSmall.override(
-                          fontFamily: 'Inter Tight',
+                          fontFamily: 'Merriweather',
                           letterSpacing: 0.0,
                         ),
                   ),
@@ -101,6 +102,7 @@ class _ChooseChapterWidgetState extends State<ChooseChapterWidget> {
                       updateCallback: () => safeSetState(() {}),
                       child: ChapterOptionsViewWidget(
                         chapterOptions: widget.chapterOptions!,
+                        currentChapterIndex: widget.currentChapterIndex,
                         onChooseChapter: (chosenChapter) async {
                           Navigator.pop(context, chosenChapter);
                         },

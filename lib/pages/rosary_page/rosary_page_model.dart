@@ -1,9 +1,9 @@
 import '/backend/api_requests/api_calls.dart';
-import '/components/app_drawer_widget.dart';
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
 import '/components/sections_view_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/request_manager.dart';
-
+import '/custom_code/actions/index.dart' as actions;
 import 'rosary_page_widget.dart' show RosaryPageWidget;
 import 'package:flutter/material.dart';
 
@@ -20,31 +20,31 @@ class RosaryPageModel extends FlutterFlowModel<RosaryPageWidget> {
 
   String? currentAudioUrl;
 
+  int? test = 12;
+
+  bool isDownloading = false;
+
+  double downloadProgress = 0.0;
+
+  bool isLoadingDownload = false;
+
+  int? downloadedSize = 0;
+
+  int? totalSize = 0;
+
+  PrayerStruct? currentPrayer;
+  void updateCurrentPrayerStruct(Function(PrayerStruct) updateFn) {
+    updateFn(currentPrayer ??= PrayerStruct());
+  }
+
   ///  State fields for stateful widgets in this page.
 
-  // Model for AppDrawer component.
-  AppDrawerModel? _appDrawerModel;
-  AppDrawerModel get appDrawerModel => _appDrawerModel ??= AppDrawerModel();
-
+  // Stores action output result for [Backend Call - API (Get prayer with sections recursive)] action in RosaryPage widget.
+  ApiCallResponse? prayerResponse;
+  // Stores action output result for [Bottom Sheet - PrayerOptions] action in IconButton widget.
+  String? pressedButton;
   // Model for SectionsView component.
   late SectionsViewModel sectionsViewModel;
-
-  /// Query cache managers for this widget.
-
-  final _prayerSectionsQueryManager = FutureRequestManager<ApiCallResponse>();
-  Future<ApiCallResponse> prayerSectionsQuery({
-    String? uniqueQueryKey,
-    bool? overrideCache,
-    required Future<ApiCallResponse> Function() requestFn,
-  }) =>
-      _prayerSectionsQueryManager.performRequest(
-        uniqueQueryKey: uniqueQueryKey,
-        overrideCache: overrideCache,
-        requestFn: requestFn,
-      );
-  void clearPrayerSectionsQueryCache() => _prayerSectionsQueryManager.clear();
-  void clearPrayerSectionsQueryCacheKey(String? uniqueKey) =>
-      _prayerSectionsQueryManager.clearRequest(uniqueKey);
 
   @override
   void initState(BuildContext context) {
@@ -53,11 +53,75 @@ class RosaryPageModel extends FlutterFlowModel<RosaryPageWidget> {
 
   @override
   void dispose() {
-    appDrawerModel.dispose();
     sectionsViewModel.dispose();
+  }
 
-    /// Dispose query cache managers for this widget.
+  /// Action blocks.
+  Future downloadPrayer(
+    BuildContext context, {
+    required String? prayerId,
+  }) async {
+    ApiCallResponse? prayerResponse;
+    bool? success;
 
-    clearPrayerSectionsQueryCache();
+    prayerResponse =
+        await SuapabaseQueriesGroup.getPrayerWithSectionsRecursiveCall.call(
+      requestPrayerId: widget!.prayerId,
+    );
+
+    if ((prayerResponse.succeeded ?? true)) {
+      success = await actions.savePrayerData(
+        PrayerStruct.maybeFromMap((prayerResponse.jsonBody ?? ''))!,
+      );
+      if (success) {
+        await showDialog(
+          context: context,
+          builder: (alertDialogContext) {
+            return AlertDialog(
+              title: const Text('Descarcarea rugaciunii'),
+              content: const Text('S-a finalizat cu succes!'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(alertDialogContext),
+                  child: const Text('Ok'),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        await showDialog(
+          context: context,
+          builder: (alertDialogContext) {
+            return AlertDialog(
+              title: const Text('Descarcarea rugaciunii'),
+              content: const Text('S-a finalizat cu eroare!'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(alertDialogContext),
+                  child: const Text('Ok'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } else {
+      await showDialog(
+        context: context,
+        builder: (alertDialogContext) {
+          return AlertDialog(
+            title: const Text('A apa[rut o eroare'),
+            content: const Text('Vă rugăm încercați mai târziu!'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(alertDialogContext),
+                child: const Text('Ok'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 }

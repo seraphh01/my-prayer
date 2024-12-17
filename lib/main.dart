@@ -1,3 +1,4 @@
+import '/custom_code/actions/index.dart' as actions;
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
@@ -22,6 +23,11 @@ void main() async {
 
   final appState = FFAppState(); // Initialize FFAppState
   await appState.initializePersistedState();
+
+  // Start final custom actions code
+  await actions.checkInternetConnection();
+  await actions.initializeAudioHandler();
+  // End final custom actions code
 
   runApp(ChangeNotifierProvider(
     create: (context) => appState,
@@ -57,7 +63,7 @@ class _MyAppState extends State<MyApp> {
     _appStateNotifier = AppStateNotifier.instance;
     _router = createRouter(_appStateNotifier);
 
-    Future.delayed(const Duration(milliseconds: 1000),
+    Future.delayed(const Duration(milliseconds: 500),
         () => safeSetState(() => _appStateNotifier.stopShowingSplashImage()));
   }
 
@@ -73,7 +79,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Surorile CMD',
+      title: 'Congregația Surorilor Maicii Domnului',
       localizationsDelegates: const [
         FFLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,
@@ -88,11 +94,31 @@ class _MyAppState extends State<MyApp> {
       ],
       theme: ThemeData(
         brightness: Brightness.light,
-        useMaterial3: false,
+        scrollbarTheme: ScrollbarThemeData(
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.dragged)) {
+              return const Color(0xff790822);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return const Color(0xff790822);
+            }
+            return const Color(0xff790822);
+          }),
+        ),
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        useMaterial3: false,
+        scrollbarTheme: ScrollbarThemeData(
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.dragged)) {
+              return const Color(0xff790822);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return const Color(0xff790822);
+            }
+            return const Color(0xff790822);
+          }),
+        ),
       ),
       themeMode: _themeMode,
       routerConfig: _router,

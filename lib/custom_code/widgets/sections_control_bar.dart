@@ -1,4 +1,5 @@
 // Automatic FlutterFlow imports
+import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
 import '/backend/schema/enums/enums.dart';
 import '/backend/supabase/supabase.dart';
@@ -11,31 +12,55 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
-import 'dart:convert';
+import 'index.dart'; // Imports other custom widgets
+
+import 'dart:async';
+
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
+import 'dart:isolate';
+
+import 'index.dart'; // Imports other custom widgets
+
+import '/components/choose_chapter_widget.dart';
+import '/flutter_flow/flutter_flow_icon_button.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class SectionsControlBar extends StatefulWidget {
   final int? initialAudioTime;
+  final double? playbackRate;
+  final int? initialTrackIndex;
+  final List<PrayerSectionStruct> sections;
   final List<String> playlist;
   final double? width;
   final double? height;
   final Future Function(int currentAudioTime)? onAudioPositionChanged;
+  final Future Function(int currentAudioDuration)? onAudioDurationChanged;
   final Future Function()? onAudioFinished;
-  final Future Function()? nextText;
-  final Future Function()? previousText;
+  final Future Function()? nextPage;
   final Future Function(int pageIndex)? goToPage;
+  final Future Function()? switchContent;
+  final bool? showingTextContent;
 
   const SectionsControlBar(
       {super.key,
       this.width,
       this.height,
+      this.playbackRate,
       this.initialAudioTime,
+      this.initialTrackIndex,
       required this.playlist,
+      this.showingTextContent,
       this.onAudioPositionChanged,
       this.onAudioFinished,
-      this.nextText,
+      this.nextPage,
       this.goToPage,
-      this.previousText});
+      this.switchContent,
+      this.onAudioDurationChanged,
+      required this.sections});
 
   @override
   State<SectionsControlBar> createState() => _SectionsControlBarState();
@@ -43,70 +68,208 @@ class SectionsControlBar extends StatefulWidget {
 
 class _SectionsControlBarState extends State<SectionsControlBar> {
   late AudioPlayer _audioPlayer;
+  late FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
+  late StreamSubscription<PlayerState> _playerStateSubscription;
   bool _isPlaying = false;
+  bool _isLoading = false;
   int _lastAudioTime = 0;
   int _currentTrackIndex = 0;
+
+  Future<void> setAudioPlayerUrl(String url) async {
+    var existingFilePath = await retrieveAudioFile(url);
+
+    if (existingFilePath != null) {
+      await _audioPlayer.setSourceDeviceFile(existingFilePath);
+    } else {
+      await _audioPlayer.setSourceUrl(url);
+    }
+    var duration = (await _audioPlayer.getDuration())!.inSeconds;
+    widget.onAudioDurationChanged?.call(duration >= 0 ? duration : 0);
+  }
 
   @override
   void initState() {
     super.initState();
+    _currentTrackIndex = widget.initialTrackIndex ?? 0;
     _audioPlayer = AudioPlayer();
-
-    // Load the audio from the network
-    _audioPlayer
-        .setSourceUrl(widget.playlist.isNotEmpty
-            ? widget.playlist[_currentTrackIndex]
-            : '')
-        .catchError((error) {
-      print("Error loading audio: $error");
-    });
+    _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
     _audioPlayer.onPositionChanged.listen((position) {
-      widget.onAudioPositionChanged?.call(position.inSeconds);
+      widget.onAudioPositionChanged
+          ?.call(position.inSeconds >= 0 ? position.inSeconds : 0);
       _lastAudioTime = position.inSeconds;
     });
 
-    _audioPlayer.onPlayerComplete.listen((event) {
-      // reset variables - go to next track if autoplay is on
+    _audioPlayer.onPlayerComplete.listen((event) async {
       widget.onAudioFinished?.call();
+
+      if (_currentTrackIndex < widget.playlist.length - 1) {
+        if (FFAppState().autoPlayNext) {
+          _currentTrackIndex += 1;
+          setState(() {
+            _isLoading = true;
+          });
+          await setAudioPlayerUrl(widget.playlist[_currentTrackIndex]);
+          setState(() {
+            _isLoading = false;
+          });
+          await _audioPlayer.resume();
+        }
+      } else {
+        await _stopAudio();
+      }
     });
+
+    _playerStateSubscription =
+        _audioPlayer.onPlayerStateChanged.listen((newState) async {
+      setState(() {
+        _isPlaying = newState == PlayerState.playing;
+      });
+      if (_isPlaying) {
+        _showNotification("Se redă audio");
+      } else {
+        _showNotification("Audio este pe pauză");
+      }
+    });
+
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    const android = AndroidInitializationSettings('@mipmap-hdpi/ic_launcher');
+    const initializationSettings = InitializationSettings(android: android);
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse: (details) {
+      print(details.payload);
+      if (details.payload == 'audio_play') {
+        if (context.mounted) {
+          _togglePlayPause();
+        }
+      }
+    });
+  }
+
+  Future<void> _showNotification(String title) async {
+    const androidDetails = AndroidNotificationDetails(
+        'audio_channel', 'Audio Notifications',
+        channelDescription: 'This is the channel for audio notifications.',
+        importance: Importance.high,
+        priority: Priority.high,
+        ongoing: true, // Keeps the notification alive
+        playSound: false,
+        autoCancel: false,
+        actions: [
+          AndroidNotificationAction("1", "Play", showsUserInterface: true)
+        ]);
+
+    const platformDetails = NotificationDetails(android: androidDetails);
+
+    // Display the notification with play/pause actions
+    await _flutterLocalNotificationsPlugin.show(
+      0,
+      title,
+      'Apasă pentru a opri/relua redarea.',
+      platformDetails,
+      payload: 'audio_play', // or 'audio_pause'
+    );
   }
 
   @override
   void dispose() {
+    _playerStateSubscription.cancel();
     _audioPlayer.dispose();
+    _flutterLocalNotificationsPlugin.cancel(0);
+    print('dispose');
     super.dispose();
   }
 
-  void _togglePlayPause() async {
-    if (_isPlaying) {
+  Future<void> _togglePlayPause() async {
+    if (_audioPlayer.state == PlayerState.playing) {
       await _audioPlayer.pause();
+      print('pause');
     } else {
+      if (_audioPlayer.state == PlayerState.stopped &&
+          widget.playlist.isNotEmpty) {
+        print("is  loading true");
+        setState(() {
+          _isLoading = true;
+        });
+        await setAudioPlayerUrl(widget.playlist[
+                _currentTrackIndex > widget.playlist.length
+                    ? widget.playlist.length - 1
+                    : _currentTrackIndex])
+            .catchError((error) {
+          print("Error loading audio: $error");
+        });
+        print("is  loading false");
+        setState(() {
+          _isLoading = false;
+        });
+        await _audioPlayer
+            .seek(Duration(seconds: widget.initialAudioTime ?? 0));
+
+        print('reset audio');
+      }
+
+      print('resume');
+
       await _audioPlayer.resume();
+      await _audioPlayer.setPlaybackRate(widget.playbackRate ?? 1);
     }
-    setState(() {
-      _isPlaying = !_isPlaying;
-    });
   }
 
-  void _stopAudio() async {
+  Future<void> _stopAudio() async {
     await _audioPlayer.stop();
-    setState(() {
-      _isPlaying = false;
-    });
+    await _flutterLocalNotificationsPlugin.cancel(0);
+    print('stop');
   }
 
-  void _chooseChapter() {
-    // open bottom sheet
-    print("Choose chapter clicked");
+  Future<void> _chooseChapter(BuildContext content) async {
+    final index = await showModalBottomSheet<int>(
+        isDismissible: true,
+        useSafeArea: true,
+        context: context,
+        builder: (context) {
+          return ChooseChapterWidget(
+              currentChapterIndex: _currentTrackIndex,
+              chapterOptions:
+                  convertPrayerSectionToChapterOption(widget.sections));
+        });
+    if (index == null) {
+      return;
+    }
+
+    widget.goToPage!.call(index);
+    _currentTrackIndex = index;
+    var wasPlaying = _isPlaying;
+    await _audioPlayer.stop();
+
+    if (wasPlaying && FFAppState().autoPlayNext) {
+      await _togglePlayPause();
+
+      return;
+    }
   }
 
-  void _nextPage() {
-    widget.nextText!();
+  void _switchContent() {
+    widget.switchContent!();
   }
 
-  void _previousPage() {
-    widget.previousText!();
+  Future<void> _nextPage() async {
+    if (_currentTrackIndex + 1 >= widget.playlist.length) {
+      return;
+    }
+
+    widget.nextPage!();
+    _currentTrackIndex += 1;
+    var wasPlaying = _isPlaying;
+    await _audioPlayer.stop();
+
+    if (wasPlaying && FFAppState().autoPlayNext) {
+      await _togglePlayPause();
+
+      return;
+    }
   }
 
   @override
@@ -115,68 +278,67 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
       _audioPlayer.seek(Duration(seconds: widget.initialAudioTime ?? 0));
       _lastAudioTime = widget.initialAudioTime ?? 0;
     }
+    if (widget.playbackRate != null &&
+        _audioPlayer.playbackRate != widget.playbackRate) {
+      _audioPlayer.setPlaybackRate(widget.playbackRate ?? 1.0);
+    }
     return Container(
       width: widget.width,
       height: widget.height,
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          IconButton(
-            style: IconButton.styleFrom(
-                backgroundColor: FlutterFlowTheme.of(context).primary),
-            color: FlutterFlowTheme.of(context).primary,
-            icon: Icon(
-              _isPlaying ? Icons.pause : Icons.play_arrow,
-              color: FlutterFlowTheme.of(context).primaryBackground,
-              size: 24,
-            ),
-            onPressed: _togglePlayPause,
-          ),
-          IconButton(
-            style: IconButton.styleFrom(
-                backgroundColor: FlutterFlowTheme.of(context).primary),
-            color: FlutterFlowTheme.of(context).primary,
-            icon: Icon(
-              Icons.stop,
-              color: FlutterFlowTheme.of(context).primaryBackground,
-              size: 24,
-            ),
-            onPressed: _stopAudio,
-          ),
-          IconButton(
-            style: IconButton.styleFrom(
-                backgroundColor: FlutterFlowTheme.of(context).primary),
-            color: FlutterFlowTheme.of(context).primary,
+          FlutterFlowIconButton(
+            borderRadius: 20,
+            buttonSize: 40,
+            fillColor: FlutterFlowTheme.of(context).primaryBackground,
             icon: Icon(
               Icons.menu_book,
-              color: FlutterFlowTheme.of(context).primaryBackground,
+              color: FlutterFlowTheme.of(context).primary,
               size: 24,
             ),
-            onPressed: _chooseChapter,
+            onPressed: () => _chooseChapter(context),
           ),
-          IconButton(
-            style: IconButton.styleFrom(
-                backgroundColor: FlutterFlowTheme.of(context).primary),
-            color: FlutterFlowTheme.of(context).primary,
+          _isLoading
+              ? Container(
+                  width: 60,
+                  height: 60,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).primary,
+                      borderRadius: BorderRadius.all(Radius.circular(30))),
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      FlutterFlowTheme.of(context).primaryBackground,
+                    ),
+                  ),
+                )
+              : FlutterFlowIconButton(
+                  borderRadius: 30,
+                  buttonSize: 60,
+                  fillColor: FlutterFlowTheme.of(context).primary,
+                  icon: Icon(
+                    _isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: FlutterFlowTheme.of(context).primaryBackground,
+                    size: 32,
+                  ),
+                  onPressed: _togglePlayPause,
+                ),
+          FlutterFlowIconButton(
+            borderRadius: 20,
+            buttonSize: 40,
+            fillColor: FlutterFlowTheme.of(context).primaryBackground,
             icon: Icon(
-              Icons.arrow_up,
-              color: FlutterFlowTheme.of(context).primaryBackground,
+              widget.showingTextContent!
+                  ? Icons.audiotrack_rounded
+                  : Icons.text_fields_rounded,
+              color: FlutterFlowTheme.of(context).primary,
               size: 24,
             ),
-            onPressed: _previousPage,
-          ),
-          IconButton(
-            style: IconButton.styleFrom(
-                backgroundColor: FlutterFlowTheme.of(context).primary),
-            color: FlutterFlowTheme.of(context).primary,
-            icon: Icon(
-              Icons.arrow_down,
-              color: FlutterFlowTheme.of(context).primaryBackground,
-              size: 24,
-            ),
-            onPressed: _nextPage,
-          ),
+            onPressed: _switchContent,
+          )
         ],
       ),
     );

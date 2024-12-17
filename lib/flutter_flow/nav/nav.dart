@@ -2,16 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
 
 import '/index.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
 
 const kTransitionInfoKey = '__transition_info__';
+
+GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 class AppStateNotifier extends ChangeNotifier {
   AppStateNotifier._();
@@ -31,17 +34,18 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
       initialLocation: '/',
       debugLogDiagnostics: true,
       refreshListenable: appStateNotifier,
+      navigatorKey: appNavigatorKey,
       errorBuilder: (context, state) => appStateNotifier.showSplashImage
           ? Builder(
               builder: (context) => Container(
-                color: Colors.white,
+                color: FlutterFlowTheme.of(context).primary,
                 child: Image.asset(
-                  'assets/images/logo_cmd.png',
-                  fit: BoxFit.contain,
+                  'assets/images/logo.jpg',
+                  fit: BoxFit.cover,
                 ),
               ),
             )
-          : const CanonicPrayersPageWidget(),
+          : const HomePageWidget(),
       routes: [
         FFRoute(
           name: '_initialize',
@@ -49,31 +53,29 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, _) => appStateNotifier.showSplashImage
               ? Builder(
                   builder: (context) => Container(
-                    color: Colors.white,
+                    color: FlutterFlowTheme.of(context).primary,
                     child: Image.asset(
-                      'assets/images/logo_cmd.png',
-                      fit: BoxFit.contain,
+                      'assets/images/logo.jpg',
+                      fit: BoxFit.cover,
                     ),
                   ),
                 )
-              : const CanonicPrayersPageWidget(),
+              : const HomePageWidget(),
         ),
         FFRoute(
-          name: 'CanonicPrayersPage',
-          path: '/canonicPrayersPage',
-          builder: (context, params) => const CanonicPrayersPageWidget(),
-        ),
-        FFRoute(
-          name: 'PrayerOptionsPage',
-          path: '/prayerOptionsPage',
-          builder: (context, params) => PrayerOptionsPageWidget(
-            prayerDetails: params.getParam(
-              'prayerDetails',
-              ParamType.DataStruct,
-              isList: false,
-              structBuilder: PrayerStruct.fromSerializableMap,
+          name: 'HomePage',
+          path: '/homePage',
+          builder: (context, params) => HomePageWidget(
+            hasNavigatedHere: params.getParam(
+              'hasNavigatedHere',
+              ParamType.bool,
             ),
           ),
+        ),
+        FFRoute(
+          name: 'SettingsPage',
+          path: '/settingsPage',
+          builder: (context, params) => const SettingsPageWidget(),
         ),
         FFRoute(
           name: 'RosaryPage',
@@ -83,7 +85,45 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               'prayerId',
               ParamType.String,
             ),
+            page: params.getParam(
+              'page',
+              ParamType.int,
+            ),
+            downloadedPrayer: params.getParam(
+              'downloadedPrayer',
+              ParamType.DataStruct,
+              isList: false,
+              structBuilder: PrayerStruct.fromSerializableMap,
+            ),
+            clearSavedPrayer: params.getParam(
+              'clearSavedPrayer',
+              ParamType.bool,
+            ),
+            initialAudioTime: params.getParam(
+              'initialAudioTime',
+              ParamType.double,
+            ),
           ),
+        ),
+        FFRoute(
+          name: 'FavoritePrayersPage',
+          path: '/favoritePrayersPage',
+          builder: (context, params) => const FavoritePrayersPageWidget(),
+        ),
+        FFRoute(
+          name: 'DownloadedPrayersPage',
+          path: '/downloadedPrayersPage',
+          builder: (context, params) => const DownloadedPrayersPageWidget(),
+        ),
+        FFRoute(
+          name: 'AllPrayersPage',
+          path: '/allPrayersPage',
+          builder: (context, params) => const AllPrayersPageWidget(),
+        ),
+        FFRoute(
+          name: 'CalendarPage',
+          path: '/calendarPage',
+          builder: (context, params) => const CalendarPageWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
@@ -155,6 +195,7 @@ class FFParameters {
     String paramName,
     ParamType type, {
     bool isList = false,
+    List<String>? collectionNamePath,
     StructBuilder<T>? structBuilder,
   }) {
     if (futureParamValues.containsKey(paramName)) {
@@ -173,6 +214,7 @@ class FFParameters {
       param,
       type,
       isList,
+      collectionNamePath: collectionNamePath,
       structBuilder: structBuilder,
     );
   }
@@ -249,7 +291,11 @@ class TransitionInfo {
   final Duration duration;
   final Alignment? alignment;
 
-  static TransitionInfo appDefault() => const TransitionInfo(hasTransition: false);
+  static TransitionInfo appDefault() => const TransitionInfo(
+        hasTransition: true,
+        transitionType: PageTransitionType.fade,
+        duration: Duration(milliseconds: 250),
+      );
 }
 
 class RootPageContext {

@@ -1,18 +1,23 @@
 // ignore_for_file: unnecessary_getters_setters
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '/backend/schema/util/firestore_util.dart';
 import '/backend/schema/util/schema_util.dart';
 
 import 'index.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
-class ChapterOptionStruct extends BaseStruct {
+class ChapterOptionStruct extends FFFirebaseStruct {
   ChapterOptionStruct({
     String? title,
     List<ChapterOptionStruct>? childOptions,
     int? index,
+    FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _title = title,
         _childOptions = childOptions,
-        _index = index;
+        _index = index,
+        super(firestoreUtilData);
 
   // "title" field.
   String? _title;
@@ -117,8 +122,82 @@ class ChapterOptionStruct extends BaseStruct {
 ChapterOptionStruct createChapterOptionStruct({
   String? title,
   int? index,
+  Map<String, dynamic> fieldValues = const {},
+  bool clearUnsetFields = true,
+  bool create = false,
+  bool delete = false,
 }) =>
     ChapterOptionStruct(
       title: title,
       index: index,
+      firestoreUtilData: FirestoreUtilData(
+        clearUnsetFields: clearUnsetFields,
+        create: create,
+        delete: delete,
+        fieldValues: fieldValues,
+      ),
     );
+
+ChapterOptionStruct? updateChapterOptionStruct(
+  ChapterOptionStruct? chapterOption, {
+  bool clearUnsetFields = true,
+  bool create = false,
+}) =>
+    chapterOption
+      ?..firestoreUtilData = FirestoreUtilData(
+        clearUnsetFields: clearUnsetFields,
+        create: create,
+      );
+
+void addChapterOptionStructData(
+  Map<String, dynamic> firestoreData,
+  ChapterOptionStruct? chapterOption,
+  String fieldName, [
+  bool forFieldValue = false,
+]) {
+  firestoreData.remove(fieldName);
+  if (chapterOption == null) {
+    return;
+  }
+  if (chapterOption.firestoreUtilData.delete) {
+    firestoreData[fieldName] = FieldValue.delete();
+    return;
+  }
+  final clearFields =
+      !forFieldValue && chapterOption.firestoreUtilData.clearUnsetFields;
+  if (clearFields) {
+    firestoreData[fieldName] = <String, dynamic>{};
+  }
+  final chapterOptionData =
+      getChapterOptionFirestoreData(chapterOption, forFieldValue);
+  final nestedData =
+      chapterOptionData.map((k, v) => MapEntry('$fieldName.$k', v));
+
+  final mergeFields = chapterOption.firestoreUtilData.create || clearFields;
+  firestoreData
+      .addAll(mergeFields ? mergeNestedFields(nestedData) : nestedData);
+}
+
+Map<String, dynamic> getChapterOptionFirestoreData(
+  ChapterOptionStruct? chapterOption, [
+  bool forFieldValue = false,
+]) {
+  if (chapterOption == null) {
+    return {};
+  }
+  final firestoreData = mapToFirestore(chapterOption.toMap());
+
+  // Add any Firestore field values
+  chapterOption.firestoreUtilData.fieldValues
+      .forEach((k, v) => firestoreData[k] = v);
+
+  return forFieldValue ? mergeNestedFields(firestoreData) : firestoreData;
+}
+
+List<Map<String, dynamic>> getChapterOptionListFirestoreData(
+  List<ChapterOptionStruct>? chapterOptions,
+) =>
+    chapterOptions
+        ?.map((e) => getChapterOptionFirestoreData(e, true))
+        .toList() ??
+    [];

@@ -1,40 +1,21 @@
 {
   "project_info": {
-    "project_number": "854966146196",
-    "project_id": "myprayer-c0e8f",
-    "storage_bucket": "myprayer-c0e8f.firebasestorage.app"
+    "project_number": "69400948962",
+    "project_id": "myprayers-d4683",
+    "storage_bucket": "myprayers-d4683.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:854966146196:android:0d8c90a418027bc77e1081",
+        "mobilesdk_app_id": "1:69400948962:android:cdc1d3c9eec8e0abb4aebb",
         "android_client_info": {
-          "package_name": "com.flutterflow.myprayer"
+          "package_name": "com.sserafim.socaciu.wings"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBfw_7HJXnQaataGEanRElTMTK1-q2Ur64"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:854966146196:android:c0cb82b28e140e687e1081",
-        "android_client_info": {
-          "package_name": "com.seraphicapps.myprayer"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBfw_7HJXnQaataGEanRElTMTK1-q2Ur64"
+          "current_key": "AIzaSyB_hdYJ7WhxCfWebu7-tWuv_Ly79KH42Vw"
         }
       ],
       "services": {

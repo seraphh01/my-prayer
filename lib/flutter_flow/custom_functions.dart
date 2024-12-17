@@ -8,6 +8,8 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'lat_lng.dart';
 import 'place.dart';
 import 'uploaded_file.dart';
+import '/backend/backend.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '/backend/schema/structs/index.dart';
 import '/backend/schema/enums/enums.dart';
 import '/backend/supabase/supabase.dart';
@@ -39,6 +41,15 @@ List<PrayerSectionStruct>? flattenSectionsList(
       if (section.subsections.isEmpty) {
         flattenedList.add(section); // Add leaf node
       } else {
+        if (section.sectionId.isNotEmpty) {
+          flattenedList.add(PrayerSectionStruct(
+              sectionId: section.sectionId,
+              audioUrl: section.audioUrl,
+              title: section.title,
+              subtitle: section.subtitle,
+              id: section.id));
+        }
+
         collectLeaves(section.subsections); // Recurse into subsections
       }
     }
@@ -55,12 +66,22 @@ List<ChapterOptionStruct> convertPrayerSectionToChapterOption(
   List<ChapterOptionStruct> mapSectionToChapter(
       List<PrayerSectionStruct> sections) {
     return sections.map((section) {
+      var index = currentIndex++;
       return ChapterOptionStruct(
           title: section.title,
           childOptions: mapSectionToChapter(section.subsections),
-          index: currentIndex++);
+          index: index);
     }).toList();
   }
 
   return mapSectionToChapter(sections);
+}
+
+String? extractFileName(String? url) {
+  if (url!.isEmpty) {
+    return '';
+  }
+
+  final uri = Uri.parse(url!);
+  return uri.pathSegments.last;
 }

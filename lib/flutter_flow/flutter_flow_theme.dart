@@ -125,22 +125,22 @@ class LightModeTheme extends FlutterFlowTheme {
   @Deprecated('Use tertiary instead')
   Color get tertiaryColor => tertiary;
 
-  late Color primary = const Color(0xFF760000);
-  late Color secondary = const Color(0xFFE6A7A7);
-  late Color tertiary = const Color(0xFFFFD3D3);
-  late Color alternate = const Color(0xFFFFBABA);
-  late Color primaryText = const Color(0xFF333333);
-  late Color secondaryText = const Color(0xFF666666);
-  late Color primaryBackground = const Color(0xFFFFFFFF);
-  late Color secondaryBackground = const Color(0xFFF2F2F2);
-  late Color accent1 = const Color(0xFFFFD700);
-  late Color accent2 = const Color(0xFFFF6600);
-  late Color accent3 = const Color(0xFF33CC33);
-  late Color accent4 = const Color(0xFF3399FF);
-  late Color success = const Color(0xFF00CC66);
-  late Color warning = const Color(0xFFFF9933);
-  late Color error = const Color(0xFFFF3333);
-  late Color info = const Color(0xFF0099FF);
+  late Color primary = const Color(0xFF790822);
+  late Color secondary = const Color(0xFFE45D55);
+  late Color tertiary = const Color(0xFFE88C77);
+  late Color alternate = const Color(0xFFFFE5AD);
+  late Color primaryText = const Color(0xFF1D1D1D);
+  late Color secondaryText = const Color(0xFF373737);
+  late Color primaryBackground = const Color(0xFFFFE5AD);
+  late Color secondaryBackground = const Color(0xFFC6AA84);
+  late Color accent1 = const Color(0xFFFF8A80);
+  late Color accent2 = const Color(0xFFD9B295);
+  late Color accent3 = const Color(0xFFFF4500);
+  late Color accent4 = const Color(0xFFFFD700);
+  late Color success = const Color(0xFF4CAF50);
+  late Color warning = const Color(0xFFFF9800);
+  late Color error = const Color(0xFFFF0000);
+  late Color info = const Color(0xFF2196F3);
 }
 
 abstract class Typography {
@@ -181,65 +181,65 @@ class ThemeTypography extends Typography {
 
   final FlutterFlowTheme theme;
 
-  String get displayLargeFamily => 'Inter Tight';
+  String get displayLargeFamily => 'Merriweather';
   TextStyle get displayLarge => GoogleFonts.getFont(
-        'Inter Tight',
+        'Merriweather',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 64.0,
       );
-  String get displayMediumFamily => 'Inter Tight';
+  String get displayMediumFamily => 'Merriweather';
   TextStyle get displayMedium => GoogleFonts.getFont(
-        'Inter Tight',
+        'Merriweather',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 44.0,
       );
-  String get displaySmallFamily => 'Inter Tight';
+  String get displaySmallFamily => 'Merriweather';
   TextStyle get displaySmall => GoogleFonts.getFont(
-        'Inter Tight',
+        'Merriweather',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 36.0,
       );
-  String get headlineLargeFamily => 'Inter Tight';
+  String get headlineLargeFamily => 'Merriweather';
   TextStyle get headlineLarge => GoogleFonts.getFont(
-        'Inter Tight',
+        'Merriweather',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 32.0,
       );
-  String get headlineMediumFamily => 'Inter Tight';
+  String get headlineMediumFamily => 'Merriweather';
   TextStyle get headlineMedium => GoogleFonts.getFont(
-        'Inter Tight',
+        'Merriweather',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 28.0,
       );
-  String get headlineSmallFamily => 'Inter Tight';
+  String get headlineSmallFamily => 'Merriweather';
   TextStyle get headlineSmall => GoogleFonts.getFont(
-        'Inter Tight',
+        'Merriweather',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 24.0,
       );
-  String get titleLargeFamily => 'Inter Tight';
+  String get titleLargeFamily => 'Merriweather';
   TextStyle get titleLarge => GoogleFonts.getFont(
-        'Inter Tight',
+        'Merriweather',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 20.0,
       );
-  String get titleMediumFamily => 'Inter Tight';
+  String get titleMediumFamily => 'Merriweather';
   TextStyle get titleMedium => GoogleFonts.getFont(
-        'Inter Tight',
+        'Merriweather',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 18.0,
       );
-  String get titleSmallFamily => 'Inter Tight';
+  String get titleSmallFamily => 'Merriweather';
   TextStyle get titleSmall => GoogleFonts.getFont(
-        'Inter Tight',
+        'Merriweather',
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 16.0,
@@ -296,22 +296,22 @@ class DarkModeTheme extends FlutterFlowTheme {
   @Deprecated('Use tertiary instead')
   Color get tertiaryColor => tertiary;
 
-  late Color primary = const Color(0xFF760000);
-  late Color secondary = const Color(0xFFCF7B7B);
-  late Color tertiary = const Color(0xFFFFB9B9);
-  late Color alternate = const Color(0xFFFF9D9D);
-  late Color primaryText = const Color(0xFFE6E6E6);
-  late Color secondaryText = const Color(0xFFCCCCCC);
-  late Color primaryBackground = const Color(0xFF1A1A1A);
-  late Color secondaryBackground = const Color(0xFF2E2E2E);
-  late Color accent1 = const Color(0xFFDBB700);
-  late Color accent2 = const Color(0xFFCC5200);
-  late Color accent3 = const Color(0xFF2EB82E);
-  late Color accent4 = const Color(0xFF2E85CC);
-  late Color success = const Color(0xFF00B359);
-  late Color warning = const Color(0xFFE68A2E);
-  late Color error = const Color(0xFFCC2E2E);
-  late Color info = const Color(0xFF0077CC);
+  late Color primary = const Color(0xFF790822);
+  late Color secondary = const Color(0xFFE45D55);
+  late Color tertiary = const Color(0xFFE88C77);
+  late Color alternate = const Color(0xFFFFE5AD);
+  late Color primaryText = const Color(0xFFFFE5AD);
+  late Color secondaryText = const Color(0xFFC6AA84);
+  late Color primaryBackground = const Color(0xFF121212);
+  late Color secondaryBackground = const Color(0xFF1D1D1D);
+  late Color accent1 = const Color(0xFFFF8A80);
+  late Color accent2 = const Color(0xFFFFA726);
+  late Color accent3 = const Color(0xFFFFC107);
+  late Color accent4 = const Color(0xFFFF5722);
+  late Color success = const Color(0xFF81C784);
+  late Color warning = const Color(0xFFFFB74D);
+  late Color error = const Color(0xFFE57373);
+  late Color info = const Color(0xFF64B5F6);
 }
 
 extension TextStyleHelper on TextStyle {

@@ -10,10 +10,12 @@ class ChapterOptionsViewWidget extends StatefulWidget {
     super.key,
     required this.chapterOptions,
     required this.onChooseChapter,
-  });
+    int? currentChapterIndex,
+  }) : currentChapterIndex = currentChapterIndex ?? 0;
 
   final List<ChapterOptionStruct>? chapterOptions;
   final Future Function(int chosenChapter)? onChooseChapter;
+  final int currentChapterIndex;
 
   @override
   State<ChapterOptionsViewWidget> createState() =>
@@ -46,21 +48,21 @@ class _ChapterOptionsViewWidgetState extends State<ChapterOptionsViewWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Builder(
-      builder: (context) {
-        final childOption = widget.chapterOptions!.toList();
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(8.0, 0.0, 8.0, 0.0),
+      child: Builder(
+        builder: (context) {
+          final childOption = widget.chapterOptions!.toList();
 
-        return ListView.builder(
-          padding: EdgeInsets.zero,
-          primary: false,
-          shrinkWrap: true,
-          scrollDirection: Axis.vertical,
-          itemCount: childOption.length,
-          itemBuilder: (context, childOptionIndex) {
-            final childOptionItem = childOption[childOptionIndex];
-            return Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(8.0, 0.0, 0.0, 0.0),
-              child: Column(
+          return ListView.builder(
+            padding: EdgeInsets.zero,
+            primary: false,
+            shrinkWrap: true,
+            scrollDirection: Axis.vertical,
+            itemCount: childOption.length,
+            itemBuilder: (context, childOptionIndex) {
+              final childOptionItem = childOption[childOptionIndex];
+              return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   InkWell(
@@ -79,10 +81,18 @@ class _ChapterOptionsViewWidgetState extends State<ChapterOptionsViewWidget> {
                           safeSetState(() {});
                         }
                       } else {
-                        await widget.onChooseChapter?.call(
-                          childOptionItem.index,
-                        );
+                        if (childOptionItem.index !=
+                            widget.currentChapterIndex) {
+                          await widget.onChooseChapter?.call(
+                            childOptionItem.index,
+                          );
+                        }
                       }
+                    },
+                    onLongPress: () async {
+                      await widget.onChooseChapter?.call(
+                        childOptionItem.index,
+                      );
                     },
                     child: Material(
                       color: Colors.transparent,
@@ -91,19 +101,34 @@ class _ChapterOptionsViewWidgetState extends State<ChapterOptionsViewWidget> {
                           childOptionItem.title.maybeHandleOverflow(
                             maxChars: 40,
                           ),
-                          style:
-                              FlutterFlowTheme.of(context).labelMedium.override(
-                                    fontFamily: 'Inter',
-                                    letterSpacing: 0.0,
-                                  ),
+                          style: FlutterFlowTheme.of(context)
+                              .labelMedium
+                              .override(
+                                fontFamily: 'Inter',
+                                color: FlutterFlowTheme.of(context).primaryText,
+                                letterSpacing: 0.0,
+                              ),
                         ),
                         trailing: Icon(
                           Icons.arrow_right,
-                          color: FlutterFlowTheme.of(context).secondaryText,
+                          color: valueOrDefault<Color>(
+                            (childOptionItem.index != null) &&
+                                    (widget.currentChapterIndex ==
+                                        childOptionItem.index)
+                                ? FlutterFlowTheme.of(context).primary
+                                : FlutterFlowTheme.of(context).primaryText,
+                            FlutterFlowTheme.of(context).secondaryText,
+                          ),
                           size: 16.0,
                         ),
-                        tileColor:
-                            FlutterFlowTheme.of(context).secondaryBackground,
+                        tileColor: valueOrDefault<Color>(
+                          (childOptionItem.index != null) &&
+                                  (widget.currentChapterIndex ==
+                                      childOptionItem.index)
+                              ? FlutterFlowTheme.of(context).primary
+                              : const Color(0x00FFFFFF),
+                          FlutterFlowTheme.of(context).secondaryText,
+                        ),
                         dense: true,
                         contentPadding: const EdgeInsetsDirectional.fromSTEB(
                             12.0, 0.0, 12.0, 0.0),
@@ -160,18 +185,36 @@ class _ChapterOptionsViewWidgetState extends State<ChapterOptionsViewWidget> {
                                                 .labelMedium
                                                 .override(
                                                   fontFamily: 'Inter',
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .primaryText,
                                                   letterSpacing: 0.0,
                                                 ),
                                           ),
                                           trailing: Icon(
                                             Icons.arrow_right,
-                                            color: FlutterFlowTheme.of(context)
-                                                .secondaryText,
+                                            color: (fianlOptionsItem.index !=
+                                                        null) &&
+                                                    (widget
+                                                            .currentChapterIndex ==
+                                                        valueOrDefault<int>(
+                                                          fianlOptionsItem
+                                                              .index,
+                                                          0,
+                                                        ))
+                                                ? FlutterFlowTheme.of(context)
+                                                    .primary
+                                                : FlutterFlowTheme.of(context)
+                                                    .primaryText,
                                             size: 16.0,
                                           ),
-                                          tileColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .secondaryBackground,
+                                          tileColor: (fianlOptionsItem.index !=
+                                                      null) &&
+                                                  (widget.currentChapterIndex ==
+                                                      fianlOptionsItem.index)
+                                              ? FlutterFlowTheme.of(context)
+                                                  .primary
+                                              : const Color(0x00FFFFFF),
                                           dense: true,
                                           contentPadding:
                                               const EdgeInsetsDirectional.fromSTEB(
@@ -203,6 +246,7 @@ class _ChapterOptionsViewWidgetState extends State<ChapterOptionsViewWidget> {
                                 'Key3ij_${childOptionItem.title}',
                               ),
                               chapterOptions: childOptionItem.childOptions,
+                              currentChapterIndex: widget.currentChapterIndex,
                               onChooseChapter: (chosenChapter) async {
                                 await widget.onChooseChapter?.call(
                                   chosenChapter,
@@ -213,11 +257,11 @@ class _ChapterOptionsViewWidgetState extends State<ChapterOptionsViewWidget> {
                       ],
                     ),
                 ],
-              ),
-            );
-          },
-        );
-      },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

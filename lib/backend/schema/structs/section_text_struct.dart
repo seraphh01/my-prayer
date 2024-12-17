@@ -1,10 +1,13 @@
 // ignore_for_file: unnecessary_getters_setters
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '/backend/schema/util/firestore_util.dart';
 
 import 'index.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
-class SectionTextStruct extends BaseStruct {
+class SectionTextStruct extends FFFirebaseStruct {
   SectionTextStruct({
     String? title,
     int? sequence,
@@ -14,6 +17,7 @@ class SectionTextStruct extends BaseStruct {
     double? endTime,
     double? intervalFactor,
     double? audioTime,
+    FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _title = title,
         _sequence = sequence,
         _repetition = repetition,
@@ -21,7 +25,8 @@ class SectionTextStruct extends BaseStruct {
         _startTime = startTime,
         _endTime = endTime,
         _intervalFactor = intervalFactor,
-        _audioTime = audioTime;
+        _audioTime = audioTime,
+        super(firestoreUtilData);
 
   // "title" field.
   String? _title;
@@ -246,6 +251,10 @@ SectionTextStruct createSectionTextStruct({
   double? endTime,
   double? intervalFactor,
   double? audioTime,
+  Map<String, dynamic> fieldValues = const {},
+  bool clearUnsetFields = true,
+  bool create = false,
+  bool delete = false,
 }) =>
     SectionTextStruct(
       title: title,
@@ -255,4 +264,72 @@ SectionTextStruct createSectionTextStruct({
       endTime: endTime,
       intervalFactor: intervalFactor,
       audioTime: audioTime,
+      firestoreUtilData: FirestoreUtilData(
+        clearUnsetFields: clearUnsetFields,
+        create: create,
+        delete: delete,
+        fieldValues: fieldValues,
+      ),
     );
+
+SectionTextStruct? updateSectionTextStruct(
+  SectionTextStruct? sectionText, {
+  bool clearUnsetFields = true,
+  bool create = false,
+}) =>
+    sectionText
+      ?..firestoreUtilData = FirestoreUtilData(
+        clearUnsetFields: clearUnsetFields,
+        create: create,
+      );
+
+void addSectionTextStructData(
+  Map<String, dynamic> firestoreData,
+  SectionTextStruct? sectionText,
+  String fieldName, [
+  bool forFieldValue = false,
+]) {
+  firestoreData.remove(fieldName);
+  if (sectionText == null) {
+    return;
+  }
+  if (sectionText.firestoreUtilData.delete) {
+    firestoreData[fieldName] = FieldValue.delete();
+    return;
+  }
+  final clearFields =
+      !forFieldValue && sectionText.firestoreUtilData.clearUnsetFields;
+  if (clearFields) {
+    firestoreData[fieldName] = <String, dynamic>{};
+  }
+  final sectionTextData =
+      getSectionTextFirestoreData(sectionText, forFieldValue);
+  final nestedData =
+      sectionTextData.map((k, v) => MapEntry('$fieldName.$k', v));
+
+  final mergeFields = sectionText.firestoreUtilData.create || clearFields;
+  firestoreData
+      .addAll(mergeFields ? mergeNestedFields(nestedData) : nestedData);
+}
+
+Map<String, dynamic> getSectionTextFirestoreData(
+  SectionTextStruct? sectionText, [
+  bool forFieldValue = false,
+]) {
+  if (sectionText == null) {
+    return {};
+  }
+  final firestoreData = mapToFirestore(sectionText.toMap());
+
+  // Add any Firestore field values
+  sectionText.firestoreUtilData.fieldValues
+      .forEach((k, v) => firestoreData[k] = v);
+
+  return forFieldValue ? mergeNestedFields(firestoreData) : firestoreData;
+}
+
+List<Map<String, dynamic>> getSectionTextListFirestoreData(
+  List<SectionTextStruct>? sectionTexts,
+) =>
+    sectionTexts?.map((e) => getSectionTextFirestoreData(e, true)).toList() ??
+    [];

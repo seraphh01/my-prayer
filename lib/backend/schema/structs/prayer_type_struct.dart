@@ -1,21 +1,26 @@
 // ignore_for_file: unnecessary_getters_setters
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '/backend/schema/util/firestore_util.dart';
 
 import 'index.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
-class PrayerTypeStruct extends BaseStruct {
+class PrayerTypeStruct extends FFFirebaseStruct {
   PrayerTypeStruct({
     int? id,
     String? type,
     int? sequence,
     List<PrayerTypeStruct>? subtypes,
     List<PrayerStruct>? prayers,
+    FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _id = id,
         _type = type,
         _sequence = sequence,
         _subtypes = subtypes,
-        _prayers = prayers;
+        _prayers = prayers,
+        super(firestoreUtilData);
 
   // "id" field.
   int? _id;
@@ -171,9 +176,78 @@ PrayerTypeStruct createPrayerTypeStruct({
   int? id,
   String? type,
   int? sequence,
+  Map<String, dynamic> fieldValues = const {},
+  bool clearUnsetFields = true,
+  bool create = false,
+  bool delete = false,
 }) =>
     PrayerTypeStruct(
       id: id,
       type: type,
       sequence: sequence,
+      firestoreUtilData: FirestoreUtilData(
+        clearUnsetFields: clearUnsetFields,
+        create: create,
+        delete: delete,
+        fieldValues: fieldValues,
+      ),
     );
+
+PrayerTypeStruct? updatePrayerTypeStruct(
+  PrayerTypeStruct? prayerType, {
+  bool clearUnsetFields = true,
+  bool create = false,
+}) =>
+    prayerType
+      ?..firestoreUtilData = FirestoreUtilData(
+        clearUnsetFields: clearUnsetFields,
+        create: create,
+      );
+
+void addPrayerTypeStructData(
+  Map<String, dynamic> firestoreData,
+  PrayerTypeStruct? prayerType,
+  String fieldName, [
+  bool forFieldValue = false,
+]) {
+  firestoreData.remove(fieldName);
+  if (prayerType == null) {
+    return;
+  }
+  if (prayerType.firestoreUtilData.delete) {
+    firestoreData[fieldName] = FieldValue.delete();
+    return;
+  }
+  final clearFields =
+      !forFieldValue && prayerType.firestoreUtilData.clearUnsetFields;
+  if (clearFields) {
+    firestoreData[fieldName] = <String, dynamic>{};
+  }
+  final prayerTypeData = getPrayerTypeFirestoreData(prayerType, forFieldValue);
+  final nestedData = prayerTypeData.map((k, v) => MapEntry('$fieldName.$k', v));
+
+  final mergeFields = prayerType.firestoreUtilData.create || clearFields;
+  firestoreData
+      .addAll(mergeFields ? mergeNestedFields(nestedData) : nestedData);
+}
+
+Map<String, dynamic> getPrayerTypeFirestoreData(
+  PrayerTypeStruct? prayerType, [
+  bool forFieldValue = false,
+]) {
+  if (prayerType == null) {
+    return {};
+  }
+  final firestoreData = mapToFirestore(prayerType.toMap());
+
+  // Add any Firestore field values
+  prayerType.firestoreUtilData.fieldValues
+      .forEach((k, v) => firestoreData[k] = v);
+
+  return forFieldValue ? mergeNestedFields(firestoreData) : firestoreData;
+}
+
+List<Map<String, dynamic>> getPrayerTypeListFirestoreData(
+  List<PrayerTypeStruct>? prayerTypes,
+) =>
+    prayerTypes?.map((e) => getPrayerTypeFirestoreData(e, true)).toList() ?? [];

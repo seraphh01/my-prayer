@@ -18,10 +18,10 @@
   },
   "scripts": {
     "lint": "./node_modules/.bin/eslint --max-warnings=0 .",
-    "serve": "firebase -P myprayer-c0e8f emulators:start --only functions",
-    "shell": "firebase -P myprayer-c0e8f functions:shell",
+    "serve": "firebase -P myprayers-d4683 emulators:start --only functions",
+    "shell": "firebase -P myprayers-d4683 functions:shell",
     "start": "npm run shell",
-    "logs": "firebase -P myprayer-c0e8f functions:log",
+    "logs": "firebase -P myprayers-d4683 functions:log",
     "compile": "cp ../../tsconfig.template.json ./tsconfig-compile.json && tsc --project tsconfig-compile.json"
   },
   "engines": {

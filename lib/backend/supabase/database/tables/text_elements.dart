@@ -28,4 +28,10 @@ class TextElementsRow extends SupabaseDataRow {
 
   String get id => getField<String>('id')!;
   set id(String value) => setField<String>('id', value);
+
+  int? get startTime => getField<int>('start_time');
+  set startTime(int? value) => setField<int>('start_time', value);
+
+  int? get endTime => getField<int>('end_time');
+  set endTime(int? value) => setField<int>('end_time', value);
 }
