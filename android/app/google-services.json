@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "69400948962",
+    "project_id": "myprayers-d4683",
+    "storage_bucket": "myprayers-d4683.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:69400948962:android:cdc1d3c9eec8e0abb4aebb",
+        "android_client_info": {
+          "package_name": "com.sserafim.socaciu.wings"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_hdYJ7WhxCfWebu7-tWuv_Ly79KH42Vw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
