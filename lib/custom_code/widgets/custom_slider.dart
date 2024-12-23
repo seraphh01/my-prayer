@@ -20,7 +20,6 @@ class CustomSlider extends StatefulWidget {
       this.minValue,
       this.maxValue,
       this.sliderValue,
-      this.bufferValue,
       this.onValueChange,
       this.onValueChangeEnd});
 
@@ -29,7 +28,6 @@ class CustomSlider extends StatefulWidget {
   final double? sliderValue;
   final int? minValue;
   final int? maxValue;
-  final double? bufferValue;
   final Future Function(double newValue)? onValueChange;
   final Future Function(double newValue)? onValueChangeEnd;
 
@@ -57,8 +55,6 @@ class _CustomSliderState extends State<CustomSlider> {
             widget.maxValue?.toDouble(),
             300.0,
           ),
-          secondaryTrackValue: widget.bufferValue ?? 0,
-          secondaryActiveColor: FlutterFlowTheme.of(context).secondary,
           value: _sliding ? _sliderValue : widget.sliderValue ?? 0,
           divisions: 100,
           onChangeStart: (newValue) async {

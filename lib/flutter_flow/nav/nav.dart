@@ -124,6 +124,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: 'CalendarPage',
           path: '/calendarPage',
           builder: (context, params) => const CalendarPageWidget(),
+        ),
+        FFRoute(
+          name: 'PrivacyPolicyPage',
+          path: '/privacyPolicyPage',
+          builder: (context, params) => const PrivacyPolicyPageWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
