@@ -95,7 +95,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                         TextSpan(
                           text: valueOrDefault<String>(
                             (widget.textInput!).substring(1),
-                            'A',
+                            'a',
                           ),
                           style:
                               FlutterFlowTheme.of(context).bodyMedium.override(

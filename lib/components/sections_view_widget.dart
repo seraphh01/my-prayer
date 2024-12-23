@@ -339,9 +339,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                           child:
                                                               EmptyListComponentWidget(
                                                             title:
-                                                                'Textul va apărea curând',
+                                                                'Textul nu a putut fi încărcat!',
                                                             subtitle:
-                                                                'Vă mulțumim pentru răbdare!',
+                                                                'Vă rugăm încercați mai târziu.',
                                                           ),
                                                         ),
                                                       );

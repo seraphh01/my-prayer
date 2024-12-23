@@ -125,12 +125,14 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                   .titleMedium
                                   .override(
                                     fontFamily: 'Merriweather',
+                                    color:
+                                        FlutterFlowTheme.of(context).alternate,
                                     letterSpacing: 0.0,
                                   ),
                             ),
                             trailing: Icon(
                               Icons.keyboard_arrow_right_rounded,
-                              color: FlutterFlowTheme.of(context).primaryText,
+                              color: FlutterFlowTheme.of(context).alternate,
                               size: 24.0,
                             ),
                             dense: true,
@@ -204,13 +206,16 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                                 .titleSmall
                                                 .override(
                                                   fontFamily: 'Merriweather',
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .alternate,
                                                   letterSpacing: 0.0,
                                                 ),
                                           ),
                                           trailing: Icon(
                                             Icons.keyboard_arrow_right_rounded,
                                             color: FlutterFlowTheme.of(context)
-                                                .primaryText,
+                                                .alternate,
                                             size: 24.0,
                                           ),
                                           dense: true,

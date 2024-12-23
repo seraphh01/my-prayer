@@ -66,7 +66,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: FlutterFlowTheme.of(context).alternate,
+          color: FlutterFlowTheme.of(context).primaryBackground,
           borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(0.0),
             bottomRight: Radius.circular(0.0),
@@ -87,10 +87,9 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: FlutterFlowTheme.of(context).primaryBackground,
                       border: Border.all(
-                        color: FlutterFlowTheme.of(context).alternate,
-                        width: 1.0,
+                        color: Colors.transparent,
+                        width: 0.0,
                       ),
                     ),
                     child: Column(
@@ -164,12 +163,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                   padding: const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
                   child: Container(
                     width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: FlutterFlowTheme.of(context).primaryBackground,
-                      border: Border.all(
-                        color: FlutterFlowTheme.of(context).alternate,
-                      ),
-                    ),
+                    decoration: const BoxDecoration(),
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,9 +236,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
             Align(
               alignment: const AlignmentDirectional(0.0, 0.0),
               child: Container(
-                decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).alternate,
-                ),
+                decoration: const BoxDecoration(),
                 child: Padding(
                   padding: const EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 16.0),
                   child: Row(

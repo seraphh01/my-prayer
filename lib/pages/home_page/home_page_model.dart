@@ -1,32 +1,40 @@
 import '/backend/api_requests/api_calls.dart';
-import '/backend/backend.dart';
-import '/backend/schema/structs/index.dart';
+import '/components/sub_types_view_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import 'dart:async';
 import 'home_page_widget.dart' show HomePageWidget;
 import 'package:flutter/material.dart';
 
 class HomePageModel extends FlutterFlowModel<HomePageWidget> {
-  ///  Local state fields for this page.
-
-  int dayOfWeek = 0;
-
-  List<DateGroupStruct> dateGroups = [];
-  void addToDateGroups(DateGroupStruct item) => dateGroups.add(item);
-  void removeFromDateGroups(DateGroupStruct item) => dateGroups.remove(item);
-  void removeAtIndexFromDateGroups(int index) => dateGroups.removeAt(index);
-  void insertAtIndexInDateGroups(int index, DateGroupStruct item) =>
-      dateGroups.insert(index, item);
-  void updateDateGroupsAtIndex(int index, Function(DateGroupStruct) updateFn) =>
-      dateGroups[index] = updateFn(dateGroups[index]);
-
   ///  State fields for stateful widgets in this page.
 
-  // Stores action output result for [Backend Call - API (Get Prayers By Date Groups)] action in HomePage widget.
-  ApiCallResponse? dateGroupsResponse;
+  Completer<ApiCallResponse>? apiRequestCompleter;
+  // Model for SubTypesView component.
+  SubTypesViewModel? _subTypesViewModel;
+  SubTypesViewModel get subTypesViewModel =>
+      _subTypesViewModel ??= SubTypesViewModel();
 
   @override
   void initState(BuildContext context) {}
 
   @override
-  void dispose() {}
+  void dispose() {
+    subTypesViewModel.dispose();
+  }
+
+  /// Additional helper methods.
+  Future waitForApiRequestCompleted({
+    double minWait = 0,
+    double maxWait = double.infinity,
+  }) async {
+    final stopwatch = Stopwatch()..start();
+    while (true) {
+      await Future.delayed(const Duration(milliseconds: 50));
+      final timeElapsed = stopwatch.elapsedMilliseconds;
+      final requestComplete = apiRequestCompleter?.isCompleted ?? false;
+      if (timeElapsed > maxWait || (requestComplete && timeElapsed > minWait)) {
+        break;
+      }
+    }
+  }
 }

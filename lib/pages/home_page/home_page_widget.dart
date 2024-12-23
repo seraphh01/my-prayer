@@ -1,13 +1,13 @@
 import '/backend/api_requests/api_calls.dart';
-import '/backend/backend.dart';
-import '/backend/schema/structs/index.dart';
+import '/components/sub_types_view_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/backend/schema/structs/index.dart';
 import '/custom_code/actions/index.dart' as actions;
+import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'home_page_model.dart';
 export 'home_page_model.dart';
@@ -33,31 +33,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => HomePageModel());
-
-    // On page load action.
-    SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _model.dayOfWeek = valueOrDefault<int>(
-        DateTime.fromMillisecondsSinceEpoch(
-                getCurrentTimestamp.millisecondsSinceEpoch)
-            .weekday,
-        0,
-      );
-      _model.dateGroupsResponse =
-          await SuapabaseQueriesGroup.getPrayersByDateGroupsCall.call(
-        dayOfWeek: _model.dayOfWeek,
-      );
-
-      if ((_model.dateGroupsResponse?.succeeded ?? true)) {
-        _model.dateGroups = ((_model.dateGroupsResponse?.jsonBody ?? '')
-                .toList()
-                .map<DateGroupStruct?>(DateGroupStruct.maybeFromMap)
-                .toList() as Iterable<DateGroupStruct?>)
-            .withoutNulls
-            .toList()
-            .cast<DateGroupStruct>();
-        safeSetState(() {});
-      }
-    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
@@ -350,296 +325,77 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     ),
                   ),
                 Expanded(
-                  child: Container(
-                    decoration: const BoxDecoration(),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (_model.dateGroups.isNotEmpty)
-                                Builder(
-                                  builder: (context) {
-                                    final dateGroup =
-                                        _model.dateGroups.toList();
+                  child: Padding(
+                    padding:
+                        const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                    child: Container(
+                      decoration: const BoxDecoration(),
+                      child: FutureBuilder<ApiCallResponse>(
+                        future: (_model.apiRequestCompleter ??=
+                                Completer<ApiCallResponse>()
+                                  ..complete(SuapabaseQueriesGroup
+                                      .getPrayerTypesCall
+                                      .call()))
+                            .future,
+                        builder: (context, snapshot) {
+                          // Customize what your widget looks like when it's loading.
+                          if (!snapshot.hasData) {
+                            return Center(
+                              child: SizedBox(
+                                width: 24.0,
+                                height: 24.0,
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    FlutterFlowTheme.of(context).primary,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          final listViewGetPrayerTypesResponse = snapshot.data!;
 
-                                    return ListView.separated(
-                                      padding: EdgeInsets.zero,
-                                      primary: false,
-                                      shrinkWrap: true,
-                                      scrollDirection: Axis.vertical,
-                                      itemCount: dateGroup.length,
-                                      separatorBuilder: (_, __) =>
-                                          const SizedBox(height: 8.0),
-                                      itemBuilder: (context, dateGroupIndex) {
-                                        final dateGroupItem =
-                                            dateGroup[dateGroupIndex];
-                                        return Visibility(
-                                          visible: valueOrDefault<bool>(
-                                            dateGroupItem.prayers.isNotEmpty,
-                                            false,
-                                          ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              if (valueOrDefault<bool>(
-                                                (dateGroupItem.name !=
-                                                            '') &&
-                                                    valueOrDefault<bool>(
-                                                      dateGroupItem
-                                                                  .description !=
-                                                              '',
-                                                      false,
-                                                    ),
-                                                false,
-                                              ))
-                                                Text(
-                                                  valueOrDefault<String>(
-                                                    dateGroupItem.name,
-                                                    'Rugăciuni',
-                                                  ),
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .titleSmall
-                                                      .override(
-                                                        fontFamily:
-                                                            'Merriweather',
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .alternate,
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                ),
-                                              Column(
-                                                mainAxisSize: MainAxisSize.max,
-                                                children: [
-                                                  Divider(
-                                                    height: 1.0,
-                                                    thickness: 1.0,
-                                                    indent: 10.0,
-                                                    endIndent: 10.0,
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .secondary,
-                                                  ),
-                                                  Builder(
-                                                    builder: (context) {
-                                                      final prayers =
-                                                          dateGroupItem.prayers
-                                                              .sortedList(
-                                                                  keyOf: (e) =>
-                                                                      e.sequence,
-                                                                  desc: false)
-                                                              .toList();
-
-                                                      return ListView.builder(
-                                                        padding:
-                                                            EdgeInsets.zero,
-                                                        primary: false,
-                                                        shrinkWrap: true,
-                                                        scrollDirection:
-                                                            Axis.vertical,
-                                                        itemCount:
-                                                            prayers.length,
-                                                        itemBuilder: (context,
-                                                            prayersIndex) {
-                                                          final prayersItem =
-                                                              prayers[
-                                                                  prayersIndex];
-                                                          return Column(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .max,
-                                                            children: [
-                                                              InkWell(
-                                                                splashColor: Colors
-                                                                    .transparent,
-                                                                focusColor: Colors
-                                                                    .transparent,
-                                                                hoverColor: Colors
-                                                                    .transparent,
-                                                                highlightColor:
-                                                                    Colors
-                                                                        .transparent,
-                                                                onTap:
-                                                                    () async {
-                                                                  await actions
-                                                                      .navigateWithRelacement(
-                                                                    context,
-                                                                    'RosaryPage',
-                                                                    <String,
-                                                                        String>{
-                                                                      'prayerId':
-                                                                          prayersItem
-                                                                              .id,
-                                                                    },
-                                                                  );
-                                                                },
-                                                                child: Material(
-                                                                  color: Colors
-                                                                      .transparent,
-                                                                  child:
-                                                                      ListTile(
-                                                                    title: Text(
-                                                                      prayersItem
-                                                                          .title,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .titleLarge
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'Merriweather',
-                                                                            color:
-                                                                                FlutterFlowTheme.of(context).alternate,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.w500,
-                                                                          ),
-                                                                    ),
-                                                                    subtitle:
-                                                                        Text(
-                                                                      prayersItem
-                                                                          .subtitle,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .labelMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'Inter',
-                                                                            color:
-                                                                                FlutterFlowTheme.of(context).alternate,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.w200,
-                                                                          ),
-                                                                    ),
-                                                                    trailing:
-                                                                        Icon(
-                                                                      Icons
-                                                                          .arrow_forward_ios_rounded,
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .alternate,
-                                                                      size:
-                                                                          16.0,
-                                                                    ),
-                                                                    dense: true,
-                                                                    contentPadding:
-                                                                        const EdgeInsetsDirectional.fromSTEB(
-                                                                            12.0,
-                                                                            0.0,
-                                                                            12.0,
-                                                                            0.0),
-                                                                    shape:
-                                                                        RoundedRectangleBorder(
-                                                                      borderRadius:
-                                                                          BorderRadius.circular(
-                                                                              8.0),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              Divider(
-                                                                height: 1.0,
-                                                                thickness: 1.0,
-                                                                indent: 10.0,
-                                                                endIndent: 10.0,
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondary,
-                                                              ),
-                                                            ],
-                                                          );
-                                                        },
-                                                      );
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ].divide(const SizedBox(height: 4.0)),
-                                          ),
+                          return RefreshIndicator(
+                            color: FlutterFlowTheme.of(context).primary,
+                            onRefresh: () async {
+                              safeSetState(
+                                  () => _model.apiRequestCompleter = null);
+                              await _model.waitForApiRequestCompleted();
+                            },
+                            child: ListView(
+                              padding: EdgeInsets.zero,
+                              scrollDirection: Axis.vertical,
+                              children: [
+                                if (listViewGetPrayerTypesResponse.succeeded)
+                                  wrapWithModel(
+                                    model: _model.subTypesViewModel,
+                                    updateCallback: () => safeSetState(() {}),
+                                    child: SubTypesViewWidget(
+                                      prayerTypes:
+                                          (listViewGetPrayerTypesResponse
+                                                      .jsonBody
+                                                      .toList()
+                                                      .map<PrayerTypeStruct?>(
+                                                          PrayerTypeStruct
+                                                              .maybeFromMap)
+                                                      .toList()
+                                                  as Iterable<
+                                                      PrayerTypeStruct?>)
+                                              .withoutNulls,
+                                      onSelectPrayer: (prayerId) async {
+                                        await actions.navigateWithRelacement(
+                                          context,
+                                          'RosaryPage',
+                                          <String, String?>{
+                                            'prayerId': prayerId,
+                                          },
                                         );
                                       },
-                                    );
-                                  },
-                                ),
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  InkWell(
-                                    splashColor: Colors.transparent,
-                                    focusColor: Colors.transparent,
-                                    hoverColor: Colors.transparent,
-                                    highlightColor: Colors.transparent,
-                                    onTap: () async {
-                                      context.pushNamed(
-                                        'AllPrayersPage',
-                                        extra: <String, dynamic>{
-                                          kTransitionInfoKey: const TransitionInfo(
-                                            hasTransition: true,
-                                            transitionType:
-                                                PageTransitionType.fade,
-                                            duration:
-                                                Duration(milliseconds: 250),
-                                          ),
-                                        },
-                                      );
-                                    },
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: ListTile(
-                                        title: Text(
-                                          'Toate rugăciunile',
-                                          style: FlutterFlowTheme.of(context)
-                                              .titleLarge
-                                              .override(
-                                                fontFamily: 'Merriweather',
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .alternate,
-                                                letterSpacing: 0.0,
-                                              ),
-                                        ),
-                                        trailing: Icon(
-                                          Icons.arrow_forward_ios_rounded,
-                                          color: FlutterFlowTheme.of(context)
-                                              .alternate,
-                                          size: 16.0,
-                                        ),
-                                        dense: true,
-                                        contentPadding:
-                                            const EdgeInsetsDirectional.fromSTEB(
-                                                12.0, 0.0, 12.0, 0.0),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                        ),
-                                      ),
                                     ),
                                   ),
-                                  Divider(
-                                    height: 1.0,
-                                    thickness: 1.0,
-                                    indent: 10.0,
-                                    endIndent: 10.0,
-                                    color:
-                                        FlutterFlowTheme.of(context).secondary,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
+                              ].divide(const SizedBox(height: 8.0)),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),

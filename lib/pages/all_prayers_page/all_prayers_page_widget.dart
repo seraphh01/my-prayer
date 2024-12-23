@@ -46,7 +46,7 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: FlutterFlowTheme.of(context).primary,
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(64.0),
           child: AppBar(
