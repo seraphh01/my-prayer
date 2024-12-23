@@ -9,3 +9,5 @@ export '/pages/downloaded_prayers_page/downloaded_prayers_page_widget.dart'
 export '/pages/all_prayers_page/all_prayers_page_widget.dart'
     show AllPrayersPageWidget;
 export '/pages/calendar_page/calendar_page_widget.dart' show CalendarPageWidget;
+export '/privacy_policy_page/privacy_policy_page_widget.dart'
+    show PrivacyPolicyPageWidget;
