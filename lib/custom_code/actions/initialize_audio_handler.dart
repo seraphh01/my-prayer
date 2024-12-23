@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 // Begin custom action code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'index.dart'; // Imports other custom actions
+
 import 'package:audio_service/audio_service.dart';
 import 'index.dart'; // Imports other custom actions
 import 'package:audio_service/audio_service.dart';
@@ -27,7 +29,7 @@ class MyAudioService {
 
   MyAudioService._internal();
 
-  void initialize() async {
+  Future initialize() async {
     audioHandler = await AudioService.init(
       builder: () => MyAudioHandler(),
       config: const AudioServiceConfig(
@@ -92,5 +94,5 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
 @override
 Future initializeAudioHandler() async {
   // Add your function code here!
-  MyAudioService().initialize();
+  await MyAudioService().initialize();
 }

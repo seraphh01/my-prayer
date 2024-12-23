@@ -14,6 +14,12 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'package:my_prayer/custom_code/actions/initialize_audio_handler.dart';
+
+import 'index.dart'; // Imports other custom widgets
+
+import 'index.dart'; // Imports other custom widgets
+
 import 'dart:async';
 
 import 'index.dart'; // Imports other custom widgets
@@ -26,7 +32,6 @@ import 'index.dart'; // Imports other custom widgets
 
 import '/components/choose_chapter_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class SectionsControlBar extends StatefulWidget {
@@ -68,7 +73,6 @@ class SectionsControlBar extends StatefulWidget {
 
 class _SectionsControlBarState extends State<SectionsControlBar> {
   late AudioPlayer _audioPlayer;
-  late FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
   late StreamSubscription<PlayerState> _playerStateSubscription;
   bool _isPlaying = false;
   bool _isLoading = false;
@@ -85,6 +89,8 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     }
     var duration = (await _audioPlayer.getDuration())!.inSeconds;
     widget.onAudioDurationChanged?.call(duration >= 0 ? duration : 0);
+
+    MyAudioService().audioHandler.playFromUri(Uri.parse(url));
   }
 
   @override
@@ -92,7 +98,6 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     super.initState();
     _currentTrackIndex = widget.initialTrackIndex ?? 0;
     _audioPlayer = AudioPlayer();
-    _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
     _audioPlayer.onPositionChanged.listen((position) {
       widget.onAudioPositionChanged
@@ -125,60 +130,13 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
       setState(() {
         _isPlaying = newState == PlayerState.playing;
       });
-      if (_isPlaying) {
-        _showNotification("Se redă audio");
-      } else {
-        _showNotification("Audio este pe pauză");
-      }
     });
-
-    _initializeNotifications();
-  }
-
-  Future<void> _initializeNotifications() async {
-    const android = AndroidInitializationSettings('@mipmap-hdpi/ic_launcher');
-    const initializationSettings = InitializationSettings(android: android);
-    await _flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onDidReceiveNotificationResponse: (details) {
-      print(details.payload);
-      if (details.payload == 'audio_play') {
-        if (context.mounted) {
-          _togglePlayPause();
-        }
-      }
-    });
-  }
-
-  Future<void> _showNotification(String title) async {
-    const androidDetails = AndroidNotificationDetails(
-        'audio_channel', 'Audio Notifications',
-        channelDescription: 'This is the channel for audio notifications.',
-        importance: Importance.high,
-        priority: Priority.high,
-        ongoing: true, // Keeps the notification alive
-        playSound: false,
-        autoCancel: false,
-        actions: [
-          AndroidNotificationAction("1", "Play", showsUserInterface: true)
-        ]);
-
-    const platformDetails = NotificationDetails(android: androidDetails);
-
-    // Display the notification with play/pause actions
-    await _flutterLocalNotificationsPlugin.show(
-      0,
-      title,
-      'Apasă pentru a opri/relua redarea.',
-      platformDetails,
-      payload: 'audio_play', // or 'audio_pause'
-    );
   }
 
   @override
   void dispose() {
     _playerStateSubscription.cancel();
     _audioPlayer.dispose();
-    _flutterLocalNotificationsPlugin.cancel(0);
     print('dispose');
     super.dispose();
   }
@@ -220,7 +178,6 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
 
   Future<void> _stopAudio() async {
     await _audioPlayer.stop();
-    await _flutterLocalNotificationsPlugin.cancel(0);
     print('stop');
   }
 
