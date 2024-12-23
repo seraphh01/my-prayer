@@ -9,4 +9,3 @@ export 'download_prayer.dart' show downloadPrayer;
 export 'compute_folder_size.dart' show computeFolderSize;
 export 'delete_file_or_folder.dart' show deleteFileOrFolder;
 export 'check_internet_connection.dart' show checkInternetConnection;
-export 'initialize_audio_handler.dart' show initializeAudioHandler;

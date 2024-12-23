@@ -12,17 +12,20 @@ class AudioPageWidget extends StatefulWidget {
     super.key,
     int? currentAudioTime,
     int? totalAudioTime,
+    double? bufferedAudioTime,
     String? title,
     String? subtitle,
     required this.onAudioTimeChanged,
     required this.imageUrl,
     this.texts,
   })  : currentAudioTime = currentAudioTime ?? 0,
+        bufferedAudioTime = bufferedAudioTime ?? 0,
         totalAudioTime = totalAudioTime ?? 0,
         title = title ?? 'Titlu',
         subtitle = subtitle ?? 'Subtitlu';
 
   final int currentAudioTime;
+  final double bufferedAudioTime;
   final int totalAudioTime;
   final String title;
   final String subtitle;
@@ -76,7 +79,8 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
               mainAxisSize: MainAxisSize.max,
               children: [
                 Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(32.0, 0.0, 32.0, 0.0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                      32.0, 0.0, 32.0, 0.0),
                   child: Container(
                     width: 280.0,
                     height: 280.0,
@@ -102,7 +106,8 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                      16.0, 0.0, 16.0, 0.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -135,7 +140,8 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
               ].divide(const SizedBox(height: 32.0)),
             ),
             Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+              padding:
+                  const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -148,8 +154,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                         decoration: const BoxDecoration(),
                         child: Visibility(
                           visible: valueOrDefault<bool>(
-                            widget.texts != null &&
-                                (widget.texts)!.isNotEmpty,
+                            widget.texts != null && (widget.texts)!.isNotEmpty,
                             false,
                           ),
                           child: Align(
@@ -232,6 +237,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                               width: double.infinity,
                               height: 32.0,
                               sliderValue: widget.currentAudioTime.toDouble(),
+                              bufferValue: widget.bufferedAudioTime,
                               minValue: 0,
                               maxValue: widget.totalAudioTime,
                               onValueChange: (newValue) async {
@@ -255,8 +261,8 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                     ],
                   ),
                   Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 0.0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        24.0, 0.0, 24.0, 0.0),
                     child: Row(
                       mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -299,7 +305,9 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                 ],
               ),
             ),
-          ].divide(const SizedBox(height: 32.0)).around(const SizedBox(height: 32.0)),
+          ]
+              .divide(const SizedBox(height: 32.0))
+              .around(const SizedBox(height: 32.0)),
         ),
       ),
     );

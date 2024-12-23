@@ -12,11 +12,10 @@ import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'package:flutter/scheduler.dart';
 import 'index.dart'; // Imports other custom widgets
 
 import 'index.dart'; // Imports other custom widgets
-
-import 'package:my_prayer/custom_code/actions/initialize_audio_handler.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
@@ -37,17 +36,24 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 import 'package:audio_service/audio_service.dart';
+import '../audio/services/service_locator.dart';
+import '../audio/page_manager.dart';
+import '../audio/notifiers/play_button_notifier.dart';
+import 'dart:convert'; // For base64 encoding
+import 'package:flutter/services.dart'; // For rootBundle
 
 class SectionsControlBar extends StatefulWidget {
   final int? initialAudioTime;
   final double? playbackRate;
   final int? initialTrackIndex;
   final List<PrayerSectionStruct> sections;
+  final List<PrayerSectionStruct> flattenedSections;
   final List<String> playlist;
   final double? width;
   final double? height;
   final Future Function(int currentAudioTime)? onAudioPositionChanged;
   final Future Function(int currentAudioDuration)? onAudioDurationChanged;
+  final Future Function(double currentBufferTime)? onBufferTimeChanged;
   final Future Function()? onAudioFinished;
   final Future Function()? nextPage;
   final Future Function(int pageIndex)? goToPage;
@@ -69,6 +75,8 @@ class SectionsControlBar extends StatefulWidget {
       this.goToPage,
       this.switchContent,
       this.onAudioDurationChanged,
+      this.onBufferTimeChanged,
+      required this.flattenedSections,
       required this.sections});
 
   @override
@@ -78,6 +86,8 @@ class SectionsControlBar extends StatefulWidget {
 class _SectionsControlBarState extends State<SectionsControlBar> {
   late AudioPlayer _audioPlayer;
   late StreamSubscription<PlayerState> _playerStateSubscription;
+  final _audioHandler = getIt<AudioHandler>();
+  final _pageManager = getIt<PageManager>();
   bool _isPlaying = false;
   bool _isLoading = false;
   int _lastAudioTime = 0;
@@ -93,20 +103,6 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     }
     var duration = (await _audioPlayer.getDuration())!.inSeconds;
     widget.onAudioDurationChanged?.call(duration >= 0 ? duration : 0);
-
-    var item = MediaItem(
-      id: url,
-      album: 'Album name',
-      title: 'Track title',
-      artist: 'Artist name',
-      duration: const Duration(milliseconds: 123456),
-      artUri: Uri.parse(url),
-    );
-
-    MyAudioService().audioHandler.playMediaItem(item);
-
-    //MyAudioService().audioHandler.playFromUri(Uri.parse(url));
-    MyAudioService().audioHandler.play();
   }
 
   @override
@@ -147,26 +143,54 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
         _isPlaying = newState == PlayerState.playing;
       });
     });
+
+    print(widget.playlist);
+    print(widget.sections.map((element) => element.title).toList());
+    print(widget.sections.map((element) => element.title).toList());
+
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      final mediaItems = await Future.wait(widget.sections.map((section) async {
+        final artUri = section.imageUrl.isNotEmpty
+            ? Uri.parse(section.imageUrl)
+            : Uri.parse(
+                'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo.jpg');
+
+        return MediaItem(
+          id: section.id,
+          album: section.subtitle,
+          title: section.title,
+          artUri: artUri,
+          extras: {'url': section.audioUrl},
+        );
+      }).toList());
+
+      _audioHandler.addQueueItems(mediaItems);
+
+      _pageManager.progressNotifier.addListener(() {
+        final progress = _pageManager.progressNotifier.value;
+        widget.onAudioPositionChanged?.call(progress.current.inSeconds);
+        widget.onAudioDurationChanged?.call(progress.total.inSeconds);
+        widget.onBufferTimeChanged
+            ?.call(progress.buffered.inSeconds.toDouble());
+      });
+
+      _pageManager.trackIndexNotifier.addListener(() {
+        _currentTrackIndex = _pageManager.trackIndexNotifier.value;
+        widget.goToPage?.call(_currentTrackIndex);
+      });
+    });
   }
 
   @override
   void dispose() {
     _playerStateSubscription.cancel();
     _audioPlayer.dispose();
+    _pageManager.clearQueue();
     print('dispose');
     super.dispose();
   }
 
   Future<void> _togglePlayPause() async {
-    final mediaItems = widget.playlist
-        .map((song) => MediaItem(
-              id: song,
-              album: 'Album name',
-              title: 'Hello',
-              extras: {'url': song},
-            ))
-        .toList();
-    MyAudioService().audioHandler.addQueueItems(mediaItems);
     if (_audioPlayer.state == PlayerState.playing) {
       await _audioPlayer.pause();
       print('pause');
@@ -195,7 +219,6 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
       }
 
       print('resume');
-      await MyAudioService().audioHandler.play();
       //await _audioPlayer.resume();
       await _audioPlayer.setPlaybackRate(widget.playbackRate ?? 1);
     }
@@ -223,8 +246,10 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
 
     widget.goToPage!.call(index);
     _currentTrackIndex = index;
-    var wasPlaying = _isPlaying;
+    var wasPlaying =
+        _pageManager.playButtonNotifier.value == ButtonState.playing;
     await _audioPlayer.stop();
+    await _pageManager.skipToIndex(index);
 
     if (wasPlaying && FFAppState().autoPlayNext) {
       await _togglePlayPause();
@@ -283,31 +308,50 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
             ),
             onPressed: () => _chooseChapter(context),
           ),
-          _isLoading
-              ? Container(
-                  width: 60,
-                  height: 60,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                      color: FlutterFlowTheme.of(context).primary,
-                      borderRadius: BorderRadius.all(Radius.circular(30))),
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      FlutterFlowTheme.of(context).primaryBackground,
-                    ),
-                  ),
-                )
-              : FlutterFlowIconButton(
-                  borderRadius: 30,
-                  buttonSize: 60,
-                  fillColor: FlutterFlowTheme.of(context).primary,
-                  icon: Icon(
-                    _isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: FlutterFlowTheme.of(context).primaryBackground,
-                    size: 32,
-                  ),
-                  onPressed: _togglePlayPause,
-                ),
+          ValueListenableBuilder(
+              valueListenable: _pageManager.playButtonNotifier,
+              builder: (_, value, __) {
+                switch (value) {
+                  case ButtonState.loading:
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).primary,
+                          borderRadius: BorderRadius.all(Radius.circular(30))),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          FlutterFlowTheme.of(context).primaryBackground,
+                        ),
+                      ),
+                    );
+                  case ButtonState.paused:
+                    return FlutterFlowIconButton(
+                      borderRadius: 30,
+                      buttonSize: 60,
+                      fillColor: FlutterFlowTheme.of(context).primary,
+                      icon: Icon(
+                        Icons.play_arrow,
+                        color: FlutterFlowTheme.of(context).primaryBackground,
+                        size: 32,
+                      ),
+                      onPressed: _pageManager.play,
+                    );
+                  case ButtonState.playing:
+                    return FlutterFlowIconButton(
+                      borderRadius: 30,
+                      buttonSize: 60,
+                      fillColor: FlutterFlowTheme.of(context).primary,
+                      icon: Icon(
+                        Icons.pause,
+                        color: FlutterFlowTheme.of(context).primaryBackground,
+                        size: 32,
+                      ),
+                      onPressed: _pageManager.pause,
+                    );
+                }
+              }),
           FlutterFlowIconButton(
             borderRadius: 20,
             buttonSize: 40,
