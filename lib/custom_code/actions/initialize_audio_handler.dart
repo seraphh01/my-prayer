@@ -13,6 +13,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom actions
 
+import 'index.dart'; // Imports other custom actions
+
 import 'package:audio_service/audio_service.dart';
 import 'index.dart'; // Imports other custom actions
 import 'package:audio_service/audio_service.dart';
@@ -45,10 +47,13 @@ class MyAudioService {
   }
 }
 
-class MyAudioHandler extends BaseAudioHandler with SeekHandler {
+class MyAudioHandler extends BaseAudioHandler {
   final _player = AudioPlayer();
+  final _playlist = ConcatenatingAudioSource(children: []);
 
   MyAudioHandler() {
+    _loadEmptyPlaylist();
+    _listenForCurrentSongIndexChanges();
     // Handle media item and playback state changes
     _player.playbackEventStream.listen((event) {
       playbackState.add(playbackState.value.copyWith(
@@ -64,6 +69,25 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     });
   }
 
+  void _listenForCurrentSongIndexChanges() {
+    _player.currentIndexStream.listen((index) {
+      final playlist = queue.value;
+      if (index == null || playlist.isEmpty) return;
+      if (_player.shuffleModeEnabled) {
+        index = _player.shuffleIndices!.indexOf(index);
+      }
+      mediaItem.add(playlist[index]);
+    });
+  }
+
+  Future<void> _loadEmptyPlaylist() async {
+    try {
+      await _player.setAudioSource(_playlist);
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
   // Playback controls
   @override
   Future<void> play() => _player.play();
@@ -71,6 +95,12 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> pause() => _player.pause();
   @override
   Future<void> stop() => _player.stop();
+
+  @override
+  Future<void> skipToNext() => _player.seekToNext();
+
+  @override
+  Future<void> skipToPrevious() => _player.seekToPrevious();
 
   // Utility: Map processing states
   AudioProcessingState _mapProcessingState(ProcessingState state) {
@@ -88,6 +118,24 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       default:
         throw Exception("Invalid state: $state");
     }
+  }
+
+  @override
+  Future<void> addQueueItems(List<MediaItem> mediaItems) async {
+    // manage Just Audio
+    final audioSource = mediaItems.map(_createAudioSource);
+    _playlist.addAll(audioSource.toList());
+
+    // notify system
+    final newQueue = queue.value..addAll(mediaItems);
+    queue.add(newQueue);
+  }
+
+  UriAudioSource _createAudioSource(MediaItem mediaItem) {
+    return AudioSource.uri(
+      Uri.parse(mediaItem.extras!['url'] as String),
+      tag: mediaItem,
+    );
   }
 }
 

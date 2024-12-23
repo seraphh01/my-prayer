@@ -14,6 +14,8 @@ import 'package:flutter/material.dart';
 
 import 'index.dart'; // Imports other custom widgets
 
+import 'index.dart'; // Imports other custom widgets
+
 import 'package:my_prayer/custom_code/actions/initialize_audio_handler.dart';
 
 import 'index.dart'; // Imports other custom widgets
@@ -33,6 +35,8 @@ import 'index.dart'; // Imports other custom widgets
 import '/components/choose_chapter_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import 'package:audioplayers/audioplayers.dart';
+
+import 'package:audio_service/audio_service.dart';
 
 class SectionsControlBar extends StatefulWidget {
   final int? initialAudioTime;
@@ -90,7 +94,19 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     var duration = (await _audioPlayer.getDuration())!.inSeconds;
     widget.onAudioDurationChanged?.call(duration >= 0 ? duration : 0);
 
-    MyAudioService().audioHandler.playFromUri(Uri.parse(url));
+    var item = MediaItem(
+      id: url,
+      album: 'Album name',
+      title: 'Track title',
+      artist: 'Artist name',
+      duration: const Duration(milliseconds: 123456),
+      artUri: Uri.parse(url),
+    );
+
+    MyAudioService().audioHandler.playMediaItem(item);
+
+    //MyAudioService().audioHandler.playFromUri(Uri.parse(url));
+    MyAudioService().audioHandler.play();
   }
 
   @override
@@ -142,6 +158,15 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
   }
 
   Future<void> _togglePlayPause() async {
+    final mediaItems = widget.playlist
+        .map((song) => MediaItem(
+              id: song,
+              album: 'Album name',
+              title: 'Hello',
+              extras: {'url': song},
+            ))
+        .toList();
+    MyAudioService().audioHandler.addQueueItems(mediaItems);
     if (_audioPlayer.state == PlayerState.playing) {
       await _audioPlayer.pause();
       print('pause');
@@ -170,8 +195,8 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
       }
 
       print('resume');
-
-      await _audioPlayer.resume();
+      await MyAudioService().audioHandler.play();
+      //await _audioPlayer.resume();
       await _audioPlayer.setPlaybackRate(widget.playbackRate ?? 1);
     }
   }
