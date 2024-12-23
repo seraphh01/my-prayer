@@ -1,5 +1,3 @@
-import 'package:my_prayer/custom_code/audio/page_manager.dart';
-
 import '/custom_code/actions/index.dart' as actions;
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +7,6 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import '/backend/supabase/supabase.dart';
 import 'backend/firebase/firebase_config.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
-import 'custom_code/audio/services/service_locator.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'flutter_flow/internationalization.dart';
 
@@ -29,9 +26,8 @@ void main() async {
 
   // Start final custom actions code
   await actions.checkInternetConnection();
-  //await actions.initializeAudioHandler();
   // End final custom actions code
-  await setupServiceLocator();
+
   runApp(ChangeNotifierProvider(
     create: (context) => appState,
     child: const MyApp(),
@@ -63,19 +59,11 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    getIt<PageManager>().init();
-
     _appStateNotifier = AppStateNotifier.instance;
     _router = createRouter(_appStateNotifier);
 
     Future.delayed(const Duration(milliseconds: 500),
         () => safeSetState(() => _appStateNotifier.stopShowingSplashImage()));
-  }
-
-  @override
-  void dispose() {
-    getIt<PageManager>().dispose();
-    super.dispose();
   }
 
   void setLocale(String language) {

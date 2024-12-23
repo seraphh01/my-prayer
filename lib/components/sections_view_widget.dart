@@ -1,6 +1,3 @@
-import 'package:my_prayer/custom_code/audio/page_manager.dart';
-import 'package:my_prayer/custom_code/audio/services/service_locator.dart';
-
 import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
@@ -248,8 +245,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                               .subsections.isNotEmpty) ==
                                           false,
                                       child: RefreshIndicator(
-                                        key: const Key(
-                                            'RefreshIndicator_zatxzwlf'),
+                                        key: const Key('RefreshIndicator_zatxzwlf'),
                                         color: FlutterFlowTheme.of(context)
                                             .primary,
                                         onRefresh: () async {
@@ -287,8 +283,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                         ),
                                                   ),
                                                   if (prayerSectionItem
-                                                          .subtitle !=
-                                                      '')
+                                                              .subtitle !=
+                                                          '')
                                                     AutoSizeText(
                                                       valueOrDefault<String>(
                                                         prayerSectionItem
@@ -321,13 +317,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                 .italic,
                                                           ),
                                                     ),
-                                                ].divide(const SizedBox(
-                                                    height: 4.0)),
+                                                ].divide(const SizedBox(height: 4.0)),
                                               ),
                                               Padding(
-                                                padding:
-                                                    const EdgeInsetsDirectional
-                                                        .fromSTEB(
+                                                padding: const EdgeInsetsDirectional
+                                                    .fromSTEB(
                                                         16.0, 0.0, 16.0, 0.0),
                                                 child: Builder(
                                                   builder: (context) {
@@ -483,10 +477,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                         size:
                                                                             16.0,
                                                                       ),
-                                                                  ].divide(
-                                                                      const SizedBox(
-                                                                          width:
-                                                                              8.0)),
+                                                                  ].divide(const SizedBox(
+                                                                      width:
+                                                                          8.0)),
                                                                 ),
                                                               ),
                                                             ),
@@ -566,7 +559,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                               (functions.sum(textsItem.startTime, functions.multiply(textElementItem.startTime, textsItem.intervalFactor)) <= _model.currentAudioTime!) && (functions.sum(textsItem.startTime, functions.multiply(textElementItem.endTime, textsItem.intervalFactor)) > _model.currentAudioTime!),
                                                                           onTextPressed:
                                                                               () async {
-                                                                            final newAudioTime = functions.sum(
+                                                                            _model.currentAudioTime = functions.sum(
                                                                                 textsItem.startTime,
                                                                                 functions.multiply(
                                                                                     textElementItem.startTime,
@@ -574,9 +567,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                                       textsItem.intervalFactor,
                                                                                       1.0,
                                                                                     )));
-                                                                            getIt<PageManager>().seek(Duration(seconds: newAudioTime.toInt()));
-                                                                            _model.currentAudioTime =
-                                                                                newAudioTime;
                                                                             safeSetState(() {});
                                                                           },
                                                                         ),
@@ -588,14 +578,10 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                 },
                                                               ),
                                                           ]
-                                                              .divide(
-                                                                  const SizedBox(
-                                                                      height:
-                                                                          8.0))
-                                                              .around(
-                                                                  const SizedBox(
-                                                                      height:
-                                                                          8.0)),
+                                                              .divide(const SizedBox(
+                                                                  height: 8.0))
+                                                              .around(const SizedBox(
+                                                                  height: 8.0)),
                                                         );
                                                       },
                                                     );
@@ -603,12 +589,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                 ),
                                               ),
                                             ]
-                                                .divide(const SizedBox(
-                                                    height: 16.0))
-                                                .addToStart(const SizedBox(
-                                                    height: 16.0))
-                                                .addToEnd(const SizedBox(
-                                                    height: 16.0)),
+                                                .divide(const SizedBox(height: 16.0))
+                                                .addToStart(
+                                                    const SizedBox(height: 16.0))
+                                                .addToEnd(
+                                                    const SizedBox(height: 16.0)),
                                           ),
                                         ),
                                       ),
@@ -635,8 +620,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                             _model.currentAudioTime),
                                         0,
                                       ),
-                                      bufferedAudioTime: valueOrDefault<double>(
-                                          _model.bufferedAudioTime, 0.0),
                                       totalAudioTime: valueOrDefault<int>(
                                         _model.currentAudioDuration,
                                         0,
@@ -650,8 +633,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                       texts: _model.currentSection?.texts,
                                       onAudioTimeChanged:
                                           (selectedAudioTime) async {
-                                        getIt<PageManager>().seek(Duration(
-                                            seconds: selectedAudioTime));
                                         _model.currentAudioTime =
                                             selectedAudioTime.toDouble();
                                         safeSetState(() {});
@@ -673,8 +654,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                               child: Visibility(
                                 visible: _model.isLoading,
                                 child: Align(
-                                  alignment:
-                                      const AlignmentDirectional(0.0, 0.0),
+                                  alignment: const AlignmentDirectional(0.0, 0.0),
                                   child: SizedBox(
                                     width: 64.0,
                                     height: 64.0,
@@ -716,7 +696,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                   playlist:
                       _model.flattenedSections.map((e) => e.audioUrl).toList(),
                   sections: widget.sections!,
-                  flattenedSections: _model.flattenedSections,
                   showingTextContent: !_model.displayAudioPage,
                   initialTrackIndex: valueOrDefault<int>(
                     widget.initialPage,
@@ -747,6 +726,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                     );
                   },
                   goToPage: (pageIndex) async {
+                    _model.currentAudioTime = 0.0;
+                    _model.currentAudioDuration = 0;
                     safeSetState(() {});
                     await _model.pageViewController?.animateToPage(
                       pageIndex,
@@ -760,10 +741,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                   },
                   onAudioDurationChanged: (currentAudioDuration) async {
                     _model.currentAudioDuration = currentAudioDuration;
-                    safeSetState(() {});
-                  },
-                  onBufferTimeChanged: (currentBufferTime) async {
-                    _model.bufferedAudioTime = currentBufferTime;
                     safeSetState(() {});
                   },
                 ),
