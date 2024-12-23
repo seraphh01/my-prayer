@@ -104,8 +104,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                     value: _model.switchListTileValue ??=
                         FFAppState().autoPlayNext,
                     onChanged: (newValue) async {
-                      safeSetState(
-                          () => _model.switchListTileValue = newValue);
+                      safeSetState(() => _model.switchListTileValue = newValue);
                       if (newValue) {
                         FFAppState().autoPlayNext = true;
                         safeSetState(() {});
@@ -136,13 +135,14 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                         FlutterFlowTheme.of(context).secondaryBackground,
                     dense: false,
                     controlAffinity: ListTileControlAffinity.trailing,
-                    contentPadding:
-                        const EdgeInsetsDirectional.fromSTEB(24.0, 12.0, 24.0, 12.0),
+                    contentPadding: const EdgeInsetsDirectional.fromSTEB(
+                        24.0, 12.0, 24.0, 12.0),
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -152,8 +152,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                     ),
                   ),
                   child: Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(2.0, 16.0, 0.0, 0.0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        2.0, 16.0, 0.0, 0.0),
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,7 +252,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -262,8 +263,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                     ),
                   ),
                   child: Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(24.0, 16.0, 24.0, 16.0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        24.0, 16.0, 24.0, 16.0),
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,7 +346,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -356,8 +358,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                     ),
                   ),
                   child: Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 0.0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        0.0, 16.0, 0.0, 0.0),
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -441,7 +443,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -452,8 +455,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                     ),
                   ),
                   child: Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(24.0, 16.0, 24.0, 16.0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        24.0, 16.0, 24.0, 16.0),
                     child: Row(
                       mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -518,8 +521,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                               TextButton(
                                                 onPressed: () => Navigator.pop(
                                                     alertDialogContext, true),
-                                                child:
-                                                    const Text('Eliberează spațiul'),
+                                                child: const Text(
+                                                    'Eliberează spațiul'),
                                               ),
                                             ],
                                           );
@@ -544,7 +547,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                         context: context,
                                         builder: (alertDialogContext) {
                                           return AlertDialog(
-                                            title: const Text('A apărut o eroare!'),
+                                            title: const Text(
+                                                'A apărut o eroare!'),
                                             content: const Text(
                                                 'Spațiul de stocare nu a putut fi eliberat. Încearcă să îl eliberezi din setările telefonului.'),
                                             actions: [
@@ -568,8 +572,88 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                   ),
                 ),
               ),
+              // Generated code for this Container Widget...
               Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(0.0, 32.0, 0.0, 0.0),
+                padding: EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                child: InkWell(
+                  splashColor: Colors.transparent,
+                  focusColor: Colors.transparent,
+                  hoverColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  onTap: () async {
+                    context.pushNamed(
+                      'PrivacyPolicyPage',
+                      extra: <String, dynamic>{
+                        kTransitionInfoKey: TransitionInfo(
+                          hasTransition: true,
+                          transitionType: PageTransitionType.fade,
+                          duration: Duration(milliseconds: 250),
+                        ),
+                      },
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).primaryBackground,
+                      border: Border.all(
+                        color: FlutterFlowTheme.of(context).secondaryBackground,
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(
+                          24.0, 16.0, 24.0, 16.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            width: MediaQuery.sizeOf(context).width * 0.7,
+                            decoration: BoxDecoration(),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Politica de confidențialite',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        fontFamily: 'Inter',
+                                        fontSize: 16.0,
+                                        letterSpacing: 0.0,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          FlutterFlowIconButton(
+                            borderColor: Colors.transparent,
+                            borderRadius: 8.0,
+                            buttonSize: 40.0,
+                            disabledIconColor: FlutterFlowTheme.of(context)
+                                .secondaryBackground,
+                            icon: Icon(
+                              Icons.privacy_tip_rounded,
+                              color: FlutterFlowTheme.of(context).primary,
+                              size: 24.0,
+                            ),
+                            onPressed: (_model.occupiedStorage! <= 0)
+                                ? null
+                                : () {
+                                    print('IconButton pressed ...');
+                                  },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(0.0, 32.0, 0.0, 0.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
                   child: Image.asset(
@@ -583,13 +667,14 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(0.0, 32.0, 0.0, 32.0),
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(0.0, 32.0, 0.0, 32.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                          16.0, 0.0, 16.0, 0.0),
                       child: AutoSizeText(
                         'CONGREGAȚIA SURORILOR MAICII DOMNULUI',
                         textAlign: TextAlign.center,
@@ -602,8 +687,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                       ),
                     ),
                     Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                          16.0, 0.0, 16.0, 0.0),
                       child: AutoSizeText(
                         'Str. Romul Ladea, nr. 6, 400481, Cluj-Napoca',
                         maxLines: 1,

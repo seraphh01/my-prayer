@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:my_prayer/pages/privacy_policy_page/privacy_policy_page_widget.dart';
 import 'package:provider/provider.dart';
 import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
@@ -124,6 +125,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: 'CalendarPage',
           path: '/calendarPage',
           builder: (context, params) => const CalendarPageWidget(),
+        ),
+        FFRoute(
+          name: 'PrivacyPolicyPage',
+          path: '/privacyPolicyPage',
+          builder: (context, params) => const PrivacyPolicyPageWidget(),
         )
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
