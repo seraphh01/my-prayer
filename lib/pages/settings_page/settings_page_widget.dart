@@ -640,11 +640,6 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                               color: FlutterFlowTheme.of(context).primary,
                               size: 24.0,
                             ),
-                            onPressed: (_model.occupiedStorage! <= 0)
-                                ? null
-                                : () {
-                                    print('IconButton pressed ...');
-                                  },
                           ),
                         ],
                       ),

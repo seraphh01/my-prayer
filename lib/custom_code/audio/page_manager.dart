@@ -30,7 +30,6 @@ class PageManager {
 
   void _listenToChangesInPlaylist() {
     _audioHandler.queue.listen((playlist) {
-      print(playlist);
       if (playlist.isEmpty) {
         playlistNotifier.value = [];
         trackIndexNotifier.value = 0;
@@ -164,6 +163,7 @@ class PageManager {
   }
 
   Future<void> clearQueue() async {
+    _audioHandler.seek(Duration(seconds: 0));
     _audioHandler.stop();
     _audioHandler.updateQueue([]);
   }

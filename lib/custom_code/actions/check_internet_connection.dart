@@ -27,7 +27,6 @@ class ConnectivityService {
   ConnectivityService._internal();
 
   void initialize() {
-    print('initialize service');
     // Listen for connectivity changes
     _subscription = Connectivity().onConnectivityChanged.listen((_) async {
       bool isConnected = await InternetConnectionChecker().hasConnection;
@@ -35,8 +34,6 @@ class ConnectivityService {
       // Update FFAppState with connectivity status
       FFAppState().isDeviceOnline = isConnected;
       FFAppState().update(() {});
-
-      print('Device online? $isConnected');
     });
   }
 

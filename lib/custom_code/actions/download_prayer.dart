@@ -41,7 +41,6 @@ Future<void> downloadPrayer(
   // Add your function code here!
 
   if (FFAppState().downloadedPrayers.any((p) => p.id == prayer.id)) {
-    print("prayer downloaded already");
     var downloadAgain = await showDialog<bool>(
           context: context,
           builder: (BuildContext context) {
@@ -213,7 +212,6 @@ Future<void> downloadPrayer(
 
     final file = File(filePath);
     if (await file.exists()) {
-      print(file.path);
       final fileSize = file.lengthSync();
       downloadedBytes += fileSize;
 

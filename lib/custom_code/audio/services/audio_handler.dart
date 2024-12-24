@@ -39,7 +39,6 @@ class MyAudioHandler extends BaseAudioHandler {
         controls: [
           MediaControl.skipToPrevious,
           if (playing) MediaControl.pause else MediaControl.play,
-          MediaControl.stop,
           MediaControl.skipToNext,
         ],
         systemActions: const {
@@ -107,11 +106,11 @@ class MyAudioHandler extends BaseAudioHandler {
   }
 
   @override
-  Future<void> updateQueue(List<MediaItem> mediaItems) {
+  Future<void> updateQueue(List<MediaItem> mediaItems) async {
     // manage Just Audio
     final audioSource = mediaItems.map(_createAudioSource);
     _playlist.clear();
-    _playlist.addAll(audioSource);
+    _playlist.addAll(audioSource.toList());
 
     // notify system
     queue.value.clear();
@@ -184,7 +183,14 @@ class MyAudioHandler extends BaseAudioHandler {
   Future<void> skipToNext() => _player.seekToNext();
 
   @override
-  Future<void> skipToPrevious() => _player.seekToPrevious();
+  Future<void> skipToPrevious() async {
+    if (_player.position.inSeconds > 3) {
+      _player.seek(Duration.zero);
+      return;
+    }
+
+    _player.seekToPrevious();
+  }
 
   @override
   Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {

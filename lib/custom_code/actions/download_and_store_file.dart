@@ -29,7 +29,6 @@ Future<String> downloadAndStoreFile(String fileUrl, String fileName) async {
     return savePath;
   } catch (e) {
     // If an error occurs, print it and return an error message
-    print('Error downloading file: $e');
     return 'Error downloading file';
   }
 }

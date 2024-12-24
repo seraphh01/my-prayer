@@ -38,11 +38,9 @@ Future<String?> downloadFile(String url) async {
       // Return the file path
       return filePath;
     } else {
-      print('Failed to download file: ${response.statusCode}');
       return null;
     }
   } catch (e) {
-    print('Error downloading file: $e');
     return null;
   }
 }

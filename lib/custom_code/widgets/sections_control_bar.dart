@@ -84,7 +84,6 @@ class SectionsControlBar extends StatefulWidget {
 }
 
 class _SectionsControlBarState extends State<SectionsControlBar> {
-  late StreamSubscription<PlayerState> _playerStateSubscription;
   final _audioHandler = getIt<AudioHandler>();
   final _pageManager = getIt<PageManager>();
   bool _isPlaying = false;
@@ -121,26 +120,30 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
 
       _pageManager.setQueue(mediaItems);
 
-      _pageManager.progressNotifier.addListener(() {
-        final progress = _pageManager.progressNotifier.value;
-        widget.onAudioPositionChanged?.call(progress.current.inSeconds);
-        widget.onAudioDurationChanged?.call(progress.total.inSeconds);
-        widget.onBufferTimeChanged
-            ?.call(progress.buffered.inSeconds.toDouble());
-      });
+      _pageManager.progressNotifier.addListener(onTrackProgressChanged);
 
-      _pageManager.trackIndexNotifier.addListener(() {
-        _currentTrackIndex = _pageManager.trackIndexNotifier.value;
-        widget.goToPage?.call(_currentTrackIndex);
-      });
+      _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
     });
   }
 
   @override
   void dispose() {
-    _playerStateSubscription.cancel();
     _pageManager.clearQueue();
+    _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
+    _pageManager.progressNotifier.removeListener(onTrackProgressChanged);
     super.dispose();
+  }
+
+  void onTrackProgressChanged() {
+    final progress = _pageManager.progressNotifier.value;
+    widget.onAudioPositionChanged?.call(progress.current.inSeconds);
+    widget.onAudioDurationChanged?.call(progress.total.inSeconds);
+    widget.onBufferTimeChanged?.call(progress.buffered.inSeconds.toDouble());
+  }
+
+  void onTrackIndexChanged() {
+    _currentTrackIndex = _pageManager.trackIndexNotifier.value;
+    widget.goToPage?.call(_currentTrackIndex);
   }
 
   Future<void> _chooseChapter(BuildContext content) async {
