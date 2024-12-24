@@ -7,6 +7,7 @@ import 'services/service_locator.dart';
 class PageManager {
   // Listeners: Updates going to the UI
   final trackIndexNotifier = ValueNotifier<int>(0);
+  final playbackSpeedNotifier = ValueNotifier<double>(1.0);
   final playlistNotifier = ValueNotifier<List<String>>([]);
   final progressNotifier = ProgressNotifier();
   final isFirstSongNotifier = ValueNotifier<bool>(true);
@@ -97,6 +98,10 @@ class PageManager {
       // Track index change only when it is a new item or a skip
       final newIndex = playbackState.queueIndex ?? 0;
 
+      if (playBackStateNotifier.value != playbackState.processingState) {
+        playBackStateNotifier.value = playbackState.processingState;
+      }
+
       if (trackIndexNotifier.value != newIndex) {
         trackIndexNotifier.value = newIndex;
       }
@@ -131,6 +136,10 @@ class PageManager {
 
   Future<void> skipToIndex(int index) async {
     await _audioHandler.skipToQueueItem(index);
+  }
+
+  Future<void> setPlaybackSpeed(double speed) async {
+    await _audioHandler.setSpeed(speed);
   }
 
   void shuffle() {

@@ -104,12 +104,18 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
             : Uri.parse(
                 'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo.jpg');
 
+        final filePath = await retrieveAudioFile(section.audioUrl);
+
         return MediaItem(
           id: section.id,
           album: section.subtitle,
           title: section.title,
           artUri: artUri,
-          extras: {'url': section.audioUrl},
+          extras: {
+            'url': section.audioUrl,
+            'isDownloaded': filePath != null,
+            'filePath': filePath
+          },
         );
       }).toList());
 
@@ -163,6 +169,10 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.playbackRate != null &&
+        _pageManager.playBackStateNotifier.value != widget.playbackRate) {
+      _pageManager.setPlaybackSpeed(widget.playbackRate ?? 1.0);
+    }
     return Container(
       width: widget.width,
       height: widget.height,

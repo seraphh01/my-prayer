@@ -142,7 +142,9 @@ class MyAudioHandler extends BaseAudioHandler {
 
   UriAudioSource _createAudioSource(MediaItem mediaItem) {
     return AudioSource.uri(
-      Uri.parse(mediaItem.extras!['url'] as String),
+      mediaItem.extras!['isDownloaded']
+          ? Uri.file(mediaItem.extras!['filePath'] as String)
+          : Uri.parse(mediaItem.extras!['url'] as String),
       tag: mediaItem,
     );
   }
@@ -164,7 +166,8 @@ class MyAudioHandler extends BaseAudioHandler {
   Future<void> pause() => _player.pause();
 
   @override
-  Future<void> seek(Duration position) => _player.seek(position);
+  Future<void> seek(Duration position) async => await _player.seek(position);
+
   @override
   Future<void> skipToQueueItem(int index) async {
     if (index < 0 || index >= queue.value.length) return;
@@ -173,6 +176,9 @@ class MyAudioHandler extends BaseAudioHandler {
     }
     _player.seek(Duration.zero, index: index);
   }
+
+  @override
+  Future<void> setSpeed(double speed) => _player.setSpeed(speed);
 
   @override
   Future<void> skipToNext() => _player.seekToNext();
