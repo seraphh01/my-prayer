@@ -574,7 +574,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
               ),
               // Generated code for this Container Widget...
               Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
                 child: InkWell(
                   splashColor: Colors.transparent,
                   focusColor: Colors.transparent,
@@ -584,7 +585,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                     context.pushNamed(
                       'PrivacyPolicyPage',
                       extra: <String, dynamic>{
-                        kTransitionInfoKey: TransitionInfo(
+                        kTransitionInfoKey: const TransitionInfo(
                           hasTransition: true,
                           transitionType: PageTransitionType.fade,
                           duration: Duration(milliseconds: 250),
@@ -602,7 +603,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                       ),
                     ),
                     child: Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
                           24.0, 16.0, 24.0, 16.0),
                       child: Row(
                         mainAxisSize: MainAxisSize.max,
@@ -610,7 +611,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                         children: [
                           Container(
                             width: MediaQuery.sizeOf(context).width * 0.7,
-                            decoration: BoxDecoration(),
+                            decoration: const BoxDecoration(),
                             child: Column(
                               mainAxisSize: MainAxisSize.max,
                               crossAxisAlignment: CrossAxisAlignment.start,

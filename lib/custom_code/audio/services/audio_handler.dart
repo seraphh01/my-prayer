@@ -107,9 +107,19 @@ class MyAudioHandler extends BaseAudioHandler {
   }
 
   @override
+  Future<void> updateQueue(List<MediaItem> mediaItems) {
+    // manage Just Audio
+    final audioSource = mediaItems.map(_createAudioSource);
+    _playlist.clear();
+    _playlist.addAll(audioSource);
+
+    // notify system
+    queue.value.clear();
+    queue.add(mediaItems);
+  }
+
+  @override
   Future<void> addQueueItems(List<MediaItem> mediaItems) async {
-    print('adding items to queue');
-    print(mediaItems);
     // manage Just Audio
     final audioSource = mediaItems.map(_createAudioSource);
     _playlist.addAll(audioSource.toList());
@@ -155,7 +165,6 @@ class MyAudioHandler extends BaseAudioHandler {
 
   @override
   Future<void> seek(Duration position) => _player.seek(position);
-
   @override
   Future<void> skipToQueueItem(int index) async {
     if (index < 0 || index >= queue.value.length) return;

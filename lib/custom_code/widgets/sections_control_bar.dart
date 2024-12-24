@@ -84,7 +84,6 @@ class SectionsControlBar extends StatefulWidget {
 }
 
 class _SectionsControlBarState extends State<SectionsControlBar> {
-  late AudioPlayer _audioPlayer;
   late StreamSubscription<PlayerState> _playerStateSubscription;
   final _audioHandler = getIt<AudioHandler>();
   final _pageManager = getIt<PageManager>();
@@ -93,60 +92,10 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
   int _lastAudioTime = 0;
   int _currentTrackIndex = 0;
 
-  Future<void> setAudioPlayerUrl(String url) async {
-    var existingFilePath = await retrieveAudioFile(url);
-
-    if (existingFilePath != null) {
-      await _audioPlayer.setSourceDeviceFile(existingFilePath);
-    } else {
-      await _audioPlayer.setSourceUrl(url);
-    }
-    var duration = (await _audioPlayer.getDuration())!.inSeconds;
-    widget.onAudioDurationChanged?.call(duration >= 0 ? duration : 0);
-  }
-
   @override
   void initState() {
     super.initState();
     _currentTrackIndex = widget.initialTrackIndex ?? 0;
-    _audioPlayer = AudioPlayer();
-
-    _audioPlayer.onPositionChanged.listen((position) {
-      widget.onAudioPositionChanged
-          ?.call(position.inSeconds >= 0 ? position.inSeconds : 0);
-      _lastAudioTime = position.inSeconds;
-    });
-
-    _audioPlayer.onPlayerComplete.listen((event) async {
-      widget.onAudioFinished?.call();
-
-      if (_currentTrackIndex < widget.playlist.length - 1) {
-        if (FFAppState().autoPlayNext) {
-          _currentTrackIndex += 1;
-          setState(() {
-            _isLoading = true;
-          });
-          await setAudioPlayerUrl(widget.playlist[_currentTrackIndex]);
-          setState(() {
-            _isLoading = false;
-          });
-          await _audioPlayer.resume();
-        }
-      } else {
-        await _stopAudio();
-      }
-    });
-
-    _playerStateSubscription =
-        _audioPlayer.onPlayerStateChanged.listen((newState) async {
-      setState(() {
-        _isPlaying = newState == PlayerState.playing;
-      });
-    });
-
-    print(widget.playlist);
-    print(widget.sections.map((element) => element.title).toList());
-    print(widget.sections.map((element) => element.title).toList());
 
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       final mediaItems = await Future.wait(widget.sections.map((section) async {
@@ -164,7 +113,7 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
         );
       }).toList());
 
-      _audioHandler.addQueueItems(mediaItems);
+      _pageManager.setQueue(mediaItems);
 
       _pageManager.progressNotifier.addListener(() {
         final progress = _pageManager.progressNotifier.value;
@@ -184,49 +133,8 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
   @override
   void dispose() {
     _playerStateSubscription.cancel();
-    _audioPlayer.dispose();
     _pageManager.clearQueue();
-    print('dispose');
     super.dispose();
-  }
-
-  Future<void> _togglePlayPause() async {
-    if (_audioPlayer.state == PlayerState.playing) {
-      await _audioPlayer.pause();
-      print('pause');
-    } else {
-      if (_audioPlayer.state == PlayerState.stopped &&
-          widget.playlist.isNotEmpty) {
-        print("is  loading true");
-        setState(() {
-          _isLoading = true;
-        });
-        await setAudioPlayerUrl(widget.playlist[
-                _currentTrackIndex > widget.playlist.length
-                    ? widget.playlist.length - 1
-                    : _currentTrackIndex])
-            .catchError((error) {
-          print("Error loading audio: $error");
-        });
-        print("is  loading false");
-        setState(() {
-          _isLoading = false;
-        });
-        await _audioPlayer
-            .seek(Duration(seconds: widget.initialAudioTime ?? 0));
-
-        print('reset audio');
-      }
-
-      print('resume');
-      //await _audioPlayer.resume();
-      await _audioPlayer.setPlaybackRate(widget.playbackRate ?? 1);
-    }
-  }
-
-  Future<void> _stopAudio() async {
-    await _audioPlayer.stop();
-    print('stop');
   }
 
   Future<void> _chooseChapter(BuildContext content) async {
@@ -246,49 +154,15 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
 
     widget.goToPage!.call(index);
     _currentTrackIndex = index;
-    var wasPlaying =
-        _pageManager.playButtonNotifier.value == ButtonState.playing;
-    await _audioPlayer.stop();
     await _pageManager.skipToIndex(index);
-
-    if (wasPlaying && FFAppState().autoPlayNext) {
-      await _togglePlayPause();
-
-      return;
-    }
   }
 
   void _switchContent() {
     widget.switchContent!();
   }
 
-  Future<void> _nextPage() async {
-    if (_currentTrackIndex + 1 >= widget.playlist.length) {
-      return;
-    }
-
-    widget.nextPage!();
-    _currentTrackIndex += 1;
-    var wasPlaying = _isPlaying;
-    await _audioPlayer.stop();
-
-    if (wasPlaying && FFAppState().autoPlayNext) {
-      await _togglePlayPause();
-
-      return;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_lastAudioTime != widget.initialAudioTime) {
-      _audioPlayer.seek(Duration(seconds: widget.initialAudioTime ?? 0));
-      _lastAudioTime = widget.initialAudioTime ?? 0;
-    }
-    if (widget.playbackRate != null &&
-        _audioPlayer.playbackRate != widget.playbackRate) {
-      _audioPlayer.setPlaybackRate(widget.playbackRate ?? 1.0);
-    }
     return Container(
       width: widget.width,
       height: widget.height,
