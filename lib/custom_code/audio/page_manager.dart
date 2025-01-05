@@ -128,7 +128,8 @@ class PageManager {
   void play() => _audioHandler.play();
   void pause() => _audioHandler.pause();
 
-  void seek(Duration position) => _audioHandler.seek(position);
+  Future<void> seek(Duration position) async =>
+      await _audioHandler.seek(position);
 
   void previous() => _audioHandler.skipToPrevious();
   void next() => _audioHandler.skipToNext();
@@ -163,6 +164,7 @@ class PageManager {
   }
 
   Future<void> clearQueue() async {
+    _audioHandler.skipToQueueItem(0);
     _audioHandler.seek(Duration(seconds: 0));
     _audioHandler.stop();
     _audioHandler.updateQueue([]);

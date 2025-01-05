@@ -368,7 +368,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                           padding: const EdgeInsetsDirectional.fromSTEB(
                               24.0, 0.0, 0.0, 0.0),
                           child: Text(
-                            'Mărime font (indisponibil)',
+                            'Mărime font',
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
@@ -640,6 +640,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                               color: FlutterFlowTheme.of(context).primary,
                               size: 24.0,
                             ),
+                            onPressed: () {},
                           ),
                         ],
                       ),

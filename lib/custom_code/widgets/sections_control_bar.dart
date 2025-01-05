@@ -84,17 +84,11 @@ class SectionsControlBar extends StatefulWidget {
 }
 
 class _SectionsControlBarState extends State<SectionsControlBar> {
-  final _audioHandler = getIt<AudioHandler>();
   final _pageManager = getIt<PageManager>();
-  bool _isPlaying = false;
-  bool _isLoading = false;
-  int _lastAudioTime = 0;
-  int _currentTrackIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _currentTrackIndex = widget.initialTrackIndex ?? 0;
 
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       final mediaItems = await Future.wait(widget.sections.map((section) async {
@@ -118,11 +112,14 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
         );
       }).toList());
 
-      _pageManager.setQueue(mediaItems);
+      await _pageManager.setQueue(mediaItems);
 
       _pageManager.progressNotifier.addListener(onTrackProgressChanged);
 
       _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
+
+      await _pageManager.skipToIndex(widget.initialTrackIndex ?? 0);
+      await _pageManager.seek(Duration(seconds: widget.initialAudioTime ?? 0));
     });
   }
 
@@ -136,14 +133,13 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
 
   void onTrackProgressChanged() {
     final progress = _pageManager.progressNotifier.value;
-    widget.onAudioPositionChanged?.call(progress.current.inSeconds);
     widget.onAudioDurationChanged?.call(progress.total.inSeconds);
+    widget.onAudioPositionChanged?.call(progress.current.inSeconds);
     widget.onBufferTimeChanged?.call(progress.buffered.inSeconds.toDouble());
   }
 
   void onTrackIndexChanged() {
-    _currentTrackIndex = _pageManager.trackIndexNotifier.value;
-    widget.goToPage?.call(_currentTrackIndex);
+    widget.goToPage?.call(_pageManager.trackIndexNotifier.value);
   }
 
   Future<void> _chooseChapter(BuildContext content) async {
@@ -153,7 +149,7 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
         context: context,
         builder: (context) {
           return ChooseChapterWidget(
-              currentChapterIndex: _currentTrackIndex,
+              currentChapterIndex: _pageManager.trackIndexNotifier.value,
               chapterOptions:
                   convertPrayerSectionToChapterOption(widget.sections));
         });
@@ -161,8 +157,6 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
       return;
     }
 
-    widget.goToPage!.call(index);
-    _currentTrackIndex = index;
     await _pageManager.skipToIndex(index);
   }
 

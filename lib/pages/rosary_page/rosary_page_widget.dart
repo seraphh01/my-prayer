@@ -293,10 +293,9 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                             MediaQuery.viewInsetsOf(context),
                                         child: PrayerOptionsWidget(
                                           prayer: _model.currentPrayer!,
-                                          enableDownloadButton:
-                                              FFAppState().isDeviceOnline &&
-                                                  (widget.downloadedPrayer ==
-                                                      null),
+                                          enableDownloadButton: FFAppState()
+                                                  .isDeviceOnline &&
+                                              (widget.downloadedPrayer == null),
                                           currentPageIndex: _model
                                               .sectionsViewModel
                                               .pageViewCurrentIndex,
@@ -396,10 +395,10 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        'Semnu de carte către${valueOrDefault<String>(
+                                        'Semnul de carte către „${valueOrDefault<String>(
                                           _model.currentPrayer?.title,
                                           'Titlu Rugăciune',
-                                        )} - ${(functions.flattenSectionsList(_model.currentPrayer!.sections.toList())?.elementAtOrNull(_model.sectionsViewModel.pageViewCurrentIndex))?.title} a fost salvat!',
+                                        )}” - ”${(functions.flattenSectionsList(_model.currentPrayer!.sections.toList())?.elementAtOrNull(_model.sectionsViewModel.pageViewCurrentIndex))?.title}” a fost salvat!',
                                         style: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .override(
@@ -410,7 +409,8 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                               letterSpacing: 0.0,
                                             ),
                                       ),
-                                      duration: const Duration(milliseconds: 5000),
+                                      duration:
+                                          const Duration(milliseconds: 5000),
                                       backgroundColor:
                                           FlutterFlowTheme.of(context).primary,
                                       action: SnackBarAction(
@@ -448,7 +448,8 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                           FlutterFlowTheme.of(context).primary,
                                     ),
                                     child: Align(
-                                      alignment: const AlignmentDirectional(0.0, 0.0),
+                                      alignment:
+                                          const AlignmentDirectional(0.0, 0.0),
                                       child: SizedBox(
                                         width: 20.0,
                                         height: 20.0,
@@ -498,17 +499,17 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                       elevation: 4.0,
                                       tailBaseWidth: 24.0,
                                       tailLength: 12.0,
-                                      waitDuration: const Duration(milliseconds: 100),
+                                      waitDuration:
+                                          const Duration(milliseconds: 100),
                                       showDuration:
                                           const Duration(milliseconds: 1000),
                                       triggerMode: TooltipTriggerMode.tap,
                                       child: Align(
-                                        alignment:
-                                            const AlignmentDirectional(0.0, 0.0),
+                                        alignment: const AlignmentDirectional(
+                                            0.0, 0.0),
                                         child: Padding(
-                                          padding:
-                                              const EdgeInsetsDirectional.fromSTEB(
-                                                  0.0, 4.0, 0.0, 0.0),
+                                          padding: const EdgeInsetsDirectional
+                                              .fromSTEB(0.0, 4.0, 0.0, 0.0),
                                           child: CircularPercentIndicator(
                                             percent: _model.downloadProgress,
                                             radius: 12.0,
@@ -518,7 +519,8 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                             progressColor:
                                                 FlutterFlowTheme.of(context)
                                                     .alternate,
-                                            backgroundColor: const Color(0xFF676767),
+                                            backgroundColor:
+                                                const Color(0xFF676767),
                                             startAngle: 0.0,
                                           ),
                                         ),
