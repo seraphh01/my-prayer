@@ -82,8 +82,8 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 1.0, 2.0),
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                          0.0, 0.0, 1.0, 2.0),
                       child: InkWell(
                         splashColor: Colors.transparent,
                         focusColor: Colors.transparent,
@@ -136,8 +136,9 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                               size: 24.0,
                             ),
                             dense: true,
-                            contentPadding: const EdgeInsetsDirectional.fromSTEB(
-                                12.0, 0.0, 12.0, 0.0),
+                            contentPadding:
+                                const EdgeInsetsDirectional.fromSTEB(
+                                    12.0, 0.0, 12.0, 0.0),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(0.0),
                             ),
@@ -176,8 +177,9 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                 itemBuilder: (context, prayersIndex) {
                                   final prayersItem = prayers[prayersIndex];
                                   return Padding(
-                                    padding: const EdgeInsetsDirectional.fromSTEB(
-                                        0.0, 0.0, 1.0, 2.0),
+                                    padding:
+                                        const EdgeInsetsDirectional.fromSTEB(
+                                            0.0, 0.0, 1.0, 2.0),
                                     child: InkWell(
                                       splashColor: Colors.transparent,
                                       focusColor: Colors.transparent,
@@ -220,7 +222,8 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                           ),
                                           dense: true,
                                           contentPadding:
-                                              const EdgeInsetsDirectional.fromSTEB(
+                                              const EdgeInsetsDirectional
+                                                  .fromSTEB(
                                                   12.0, 0.0, 12.0, 0.0),
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
@@ -250,7 +253,11 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                 'Keyf0l_${subTypesItem.id.toString()}',
                               ),
                               prayerTypes: subTypesItem.subtypes,
-                              onSelectPrayer: (prayerId) async {},
+                              onSelectPrayer: (prayerId) async {
+                                await widget.onSelectPrayer?.call(
+                                  prayerId,
+                                );
+                              },
                             ),
                           ),
                         ),
