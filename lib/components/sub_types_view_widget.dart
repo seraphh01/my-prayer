@@ -91,19 +91,11 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                         highlightColor: Colors.transparent,
                         onTap: () async {
                           if (subTypesItem.prayers.length == 1) {
+                            _model.currentExpandedType = null;
+                            safeSetState(() {});
                             await widget.onSelectPrayer?.call(
                               subTypesItem.prayers.firstOrNull!.id,
                             );
-                            if (!true) {
-                              await actions.navigateWithRelacement(
-                                context,
-                                'RosaryPage',
-                                <String, String>{
-                                  'prayerId':
-                                      subTypesItem.prayers.firstOrNull!.id,
-                                },
-                              );
-                            }
                           } else {
                             if (_model.currentExpandedType == subTypesItem.id) {
                               _model.currentExpandedType = null;
@@ -186,15 +178,8 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                       hoverColor: Colors.transparent,
                                       highlightColor: Colors.transparent,
                                       onTap: () async {
-                                        if (!true) {
-                                          await actions.navigateWithRelacement(
-                                            context,
-                                            'RosaryPage',
-                                            <String, String>{
-                                              'prayerId': prayersItem.id,
-                                            },
-                                          );
-                                        }
+                                        _model.currentExpandedType = null;
+                                        safeSetState(() {});
                                         await widget.onSelectPrayer?.call(
                                           prayersItem.id,
                                         );

@@ -143,7 +143,7 @@ class _DownloadedPrayersPageWidgetState
                               hoverColor: Colors.transparent,
                               highlightColor: Colors.transparent,
                               onTap: () async {
-                                context.goNamed(
+                                context.pushReplacementNamed(
                                   'RosaryPage',
                                   queryParameters: {
                                     'prayerId': serializeParam(

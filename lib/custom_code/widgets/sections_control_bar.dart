@@ -59,6 +59,7 @@ class SectionsControlBar extends StatefulWidget {
   final Future Function(int pageIndex)? goToPage;
   final Future Function()? switchContent;
   final bool? showingTextContent;
+  final bool? continueAudio;
 
   const SectionsControlBar(
       {super.key,
@@ -76,6 +77,7 @@ class SectionsControlBar extends StatefulWidget {
       this.switchContent,
       this.onAudioDurationChanged,
       this.onBufferTimeChanged,
+      this.continueAudio,
       required this.flattenedSections,
       required this.sections});
 
@@ -91,41 +93,45 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     super.initState();
 
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      final mediaItems = await Future.wait(widget.sections.map((section) async {
-        final artUri = section.imageUrl.isNotEmpty
-            ? Uri.parse(section.imageUrl)
-            : Uri.parse(
-                'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo.jpg');
-
-        final filePath = await retrieveAudioFile(section.audioUrl);
-
-        return MediaItem(
-          id: section.id,
-          album: section.subtitle,
-          title: section.title,
-          artUri: artUri,
-          extras: {
-            'url': section.audioUrl,
-            'isDownloaded': filePath != null,
-            'filePath': filePath
-          },
-        );
-      }).toList());
-
-      await _pageManager.setQueue(mediaItems);
-
       _pageManager.progressNotifier.addListener(onTrackProgressChanged);
 
       _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
+      if (!(widget.continueAudio ?? false)) {
+        _pageManager.clearQueue();
 
-      await _pageManager.skipToIndex(widget.initialTrackIndex ?? 0);
-      await _pageManager.seek(Duration(seconds: widget.initialAudioTime ?? 0));
+        final mediaItems =
+            await Future.wait(widget.sections.map((section) async {
+          final artUri = section.imageUrl.isNotEmpty
+              ? Uri.parse(section.imageUrl)
+              : Uri.parse(
+                  'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo.jpg');
+
+          final filePath = await retrieveAudioFile(section.audioUrl);
+
+          return MediaItem(
+            id: section.id,
+            album: section.subtitle,
+            title: section.title,
+            artUri: artUri,
+            extras: {
+              'url': section.audioUrl,
+              'isDownloaded': filePath != null,
+              'filePath': filePath,
+            },
+          );
+        }).toList());
+
+        await _pageManager.setQueue(mediaItems);
+
+        await _pageManager.skipToIndex(widget.initialTrackIndex ?? 0);
+        await _pageManager
+            .seek(Duration(seconds: widget.initialAudioTime ?? 0));
+      }
     });
   }
 
   @override
   void dispose() {
-    _pageManager.clearQueue();
     _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
     _pageManager.progressNotifier.removeListener(onTrackProgressChanged);
     super.dispose();

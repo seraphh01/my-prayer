@@ -104,6 +104,10 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               'initialAudioTime',
               ParamType.double,
             ),
+            continueAudio: params.getParam(
+              'continueAudio',
+              ParamType.bool,
+            ),
           ),
         ),
         FFRoute(

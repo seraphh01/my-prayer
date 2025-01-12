@@ -3,7 +3,6 @@ export 'download_file.dart' show downloadFile;
 export 'retrieve_audio_file.dart' show retrieveAudioFile;
 export 'save_prayer_data.dart' show savePrayerData;
 export 'load_prayer_data_from_file.dart' show loadPrayerDataFromFile;
-export 'navigate_with_relacement.dart' show navigateWithRelacement;
 export 'link_size.dart' show linkSize;
 export 'download_prayer.dart' show downloadPrayer;
 export 'compute_folder_size.dart' show computeFolderSize;

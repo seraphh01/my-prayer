@@ -75,7 +75,8 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
             height: double.infinity,
             decoration: const BoxDecoration(),
             child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 8.0),
+              padding:
+                  const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 8.0),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
@@ -132,13 +133,10 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
                                                 as Iterable<PrayerTypeStruct?>)
                                             .withoutNulls,
                                     onSelectPrayer: (prayerId) async {
-                                      await actions.navigateWithRelacement(
-                                        context,
-                                        'RosaryPage',
-                                        <String, String?>{
-                                          'prayerId': prayerId,
-                                        },
-                                      );
+                                      context.pushReplacementNamed('RosaryPage',
+                                          queryParameters: {
+                                            'prayerId': prayerId,
+                                          }.withoutNulls);
                                     },
                                   ),
                                 ),

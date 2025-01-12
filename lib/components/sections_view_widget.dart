@@ -26,12 +26,15 @@ class SectionsViewWidget extends StatefulWidget {
     this.sections,
     int? initialPage,
     double? initialAudioTime,
+    bool? continueAudio,
   })  : initialPage = initialPage ?? 0,
+        continueAudio = continueAudio ?? false,
         initialAudioTime = initialAudioTime ?? 0.0;
 
   final List<PrayerSectionStruct>? sections;
   final int initialPage;
   final double initialAudioTime;
+  final bool continueAudio;
 
   @override
   State<SectionsViewWidget> createState() => _SectionsViewWidgetState();
@@ -436,7 +439,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                           );
                                                                         } else {
                                                                           return Text(
-                                                                            '${textsItem.repetition != 1 ? textsItem.repetition.toString() : ''}${textsItem.repetition != 1 ? ' ' : ''}${textsItem.title}',
+                                                                            '${textsItem.repetition > 1 ? textsItem.repetition.toString() : ''}${textsItem.repetition > 1 ? ' ' : ''}${textsItem.title}',
                                                                             textAlign:
                                                                                 TextAlign.center,
                                                                             style: FlutterFlowTheme.of(context).titleMedium.override(
@@ -709,6 +712,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                   ),
                   playlist:
                       _model.flattenedSections.map((e) => e.audioUrl).toList(),
+                  continueAudio: widget.continueAudio,
                   sections: widget.sections!,
                   flattenedSections: _model.flattenedSections,
                   showingTextContent: !_model.displayAudioPage,

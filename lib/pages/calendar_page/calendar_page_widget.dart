@@ -144,7 +144,8 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                           shrinkWrap: true,
                           scrollDirection: Axis.vertical,
                           itemCount: dateGroup.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8.0),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 8.0),
                           itemBuilder: (context, dateGroupIndex) {
                             final dateGroupItem = dateGroup[dateGroupIndex];
                             return Visibility(
@@ -215,16 +216,15 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                                         Colors.transparent,
                                                     highlightColor:
                                                         Colors.transparent,
-                                                    onTap: () async {
-                                                      await actions
-                                                          .navigateWithRelacement(
-                                                        context,
-                                                        'RosaryPage',
-                                                        <String, String>{
-                                                          'prayerId':
-                                                              prayersItem.id,
-                                                        },
-                                                      );
+                                                    onTap: () {
+                                                      context
+                                                          .pushReplacementNamed(
+                                                              'RosaryPage',
+                                                              queryParameters: {
+                                                                'prayerId':
+                                                                    prayersItem
+                                                                        .id,
+                                                              }.withoutNulls);
                                                     },
                                                     child: Material(
                                                       color: Colors.transparent,
@@ -264,11 +264,8 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                                         dense: true,
                                                         contentPadding:
                                                             const EdgeInsetsDirectional
-                                                                .fromSTEB(
-                                                                    12.0,
-                                                                    0.0,
-                                                                    12.0,
-                                                                    0.0),
+                                                                .fromSTEB(12.0,
+                                                                0.0, 12.0, 0.0),
                                                         shape:
                                                             RoundedRectangleBorder(
                                                           borderRadius:

@@ -141,14 +141,11 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                               focusColor: Colors.transparent,
                               hoverColor: Colors.transparent,
                               highlightColor: Colors.transparent,
-                              onTap: () async {
-                                await actions.navigateWithRelacement(
-                                  context,
-                                  'RosaryPage',
-                                  <String, String>{
-                                    'prayerId': favoritePrayerItem.id,
-                                  },
-                                );
+                              onTap: () {
+                                context.pushReplacementNamed('RosaryPage',
+                                    queryParameters: {
+                                      'prayerId': favoritePrayerItem.id,
+                                    }.withoutNulls);
                               },
                               child: Slidable(
                                 endActionPane: ActionPane(

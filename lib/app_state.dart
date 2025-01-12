@@ -235,6 +235,12 @@ class FFAppState extends ChangeNotifier {
     _isDeviceOnline = value;
   }
 
+  String _currentPrayerId = '';
+  String get currentPrayerId => _currentPrayerId;
+  set currentPrayerId(String value) {
+    _currentPrayerId = value;
+  }
+
   SavedPrayerDataStruct _savedPrayer = SavedPrayerDataStruct();
   SavedPrayerDataStruct get savedPrayer => _savedPrayer;
   set savedPrayer(SavedPrayerDataStruct value) {
@@ -304,5 +310,6 @@ extension FlutterSecureStorageExtensions on FlutterSecureStorage {
             .toList();
       });
   Future<void> setStringList(String key, List<String> value) async =>
-      await writeSync(key: key, value: const ListToCsvConverter().convert([value]));
+      await writeSync(
+          key: key, value: const ListToCsvConverter().convert([value]));
 }

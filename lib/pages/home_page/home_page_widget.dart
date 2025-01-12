@@ -1,3 +1,8 @@
+import 'package:audio_service/audio_service.dart';
+import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
+import 'package:my_prayer/custom_code/audio/page_manager.dart';
+import 'package:my_prayer/custom_code/audio/services/service_locator.dart';
+
 import '/backend/api_requests/api_calls.dart';
 import '/components/sub_types_view_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -28,6 +33,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   late HomePageModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final _pageManager = getIt<PageManager>();
+  final _audioHandler = getIt<AudioHandler>();
 
   @override
   void initState() {
@@ -62,7 +69,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             backgroundColor: FlutterFlowTheme.of(context).primary,
             iconTheme:
                 IconThemeData(color: FlutterFlowTheme.of(context).alternate),
-            automaticallyImplyLeading: true,
             actions: [
               Align(
                 alignment: const AlignmentDirectional(1.0, 0.0),
@@ -195,8 +201,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Padding(
-                      padding:
-                          const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                          16.0, 0.0, 16.0, 0.0),
                       child: AutoSizeText(
                         'Congregația Surorilor Maicii Domnului',
                         textAlign: TextAlign.center,
@@ -242,7 +248,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                   false,
                 ))
                   Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(8.0, 0.0, 8.0, 0.0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        8.0, 0.0, 8.0, 0.0),
                     child: InkWell(
                       splashColor: Colors.transparent,
                       focusColor: Colors.transparent,
@@ -324,10 +331,170 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       ),
                     ),
                   ),
+                StreamBuilder(
+                    stream: _audioHandler.queue,
+                    builder: (context, snapshot) {
+                      var queue = snapshot.data;
+                      return Visibility(
+                          visible: snapshot.data != null,
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                                16.0, 8.0, 16.0, 8.0),
+                            child: GestureDetector(
+                              onTap: () => context.pushNamed('RosaryPage',
+                                  queryParameters: {
+                                    'prayerId': serializeParam(
+                                      valueOrDefault<String>(
+                                          FFAppState().currentPrayerId, ''),
+                                      ParamType.String,
+                                    ),
+                                    'continueAudio': serializeParam(
+                                      true,
+                                      ParamType.bool,
+                                    ),
+                                    'page': serializeParam(
+                                      valueOrDefault<int>(
+                                          _pageManager.trackIndexNotifier.value,
+                                          0),
+                                      ParamType.int,
+                                    ),
+                                    'initialAudioTime': serializeParam(
+                                      valueOrDefault<double>(
+                                          _pageManager.progressNotifier.value
+                                              .current.inSeconds
+                                              .toDouble(),
+                                          0.0),
+                                      ParamType.double,
+                                    ),
+                                  }.withoutNulls),
+                              child: Container(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    16.0, 8.0, 16.0, 8.0),
+                                decoration: BoxDecoration(
+                                  color: FlutterFlowTheme.of(context).alternate,
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                                child: StreamBuilder(
+                                    stream: _audioHandler.mediaItem,
+                                    builder: (context, snapshot) {
+                                      final mediaItem = queue != null &&
+                                              queue.length >
+                                                  _pageManager
+                                                      .trackIndexNotifier.value
+                                          ? queue[_pageManager
+                                              .trackIndexNotifier.value]
+                                          : null;
+                                      return mediaItem != null
+                                          ? Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              mainAxisSize: MainAxisSize.max,
+                                              children: [
+                                                ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          12.0),
+                                                  child: Image.network(
+                                                    mediaItem.artUri
+                                                            .toString() ??
+                                                        '',
+                                                    width: 64,
+                                                    height: 64,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text('Se redă acum',
+                                                        style:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .override(
+                                                                  fontFamily:
+                                                                      'Inter',
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .primary,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                )),
+                                                    Text(
+                                                      mediaItem.title ?? '',
+                                                      style:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .titleMedium
+                                                              .override(
+                                                                fontFamily:
+                                                                    'Merriweather',
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                                letterSpacing:
+                                                                    0.0,
+                                                              ),
+                                                    ),
+                                                    Text(
+                                                      mediaItem.album ?? '',
+                                                      style: FlutterFlowTheme
+                                                              .of(context)
+                                                          .labelMedium
+                                                          .override(
+                                                            fontFamily: 'Inter',
+                                                            color: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .primary,
+                                                            letterSpacing: 0.0,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                ValueListenableBuilder(
+                                                    valueListenable:
+                                                        _pageManager
+                                                            .playButtonNotifier,
+                                                    builder: (_, value, __) {
+                                                      return FlutterFlowIconButton(
+                                                          icon: Icon(
+                                                              value ==
+                                                                      ButtonState
+                                                                          .playing
+                                                                  ? Icons
+                                                                      .pause_rounded
+                                                                  : Icons
+                                                                      .play_arrow_rounded,
+                                                              color: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .primary),
+                                                          onPressed: () {
+                                                            value ==
+                                                                    ButtonState
+                                                                        .playing
+                                                                ? _pageManager
+                                                                    .pause()
+                                                                : _pageManager
+                                                                    .play();
+                                                          });
+                                                    }),
+                                              ],
+                                            )
+                                          : const SizedBox();
+                                    }),
+                              ),
+                            ),
+                          ));
+                    }),
                 Expanded(
                   child: Padding(
-                    padding:
-                        const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0, 0.0, 16.0, 0.0),
                     child: Container(
                       decoration: const BoxDecoration(),
                       child: FutureBuilder<ApiCallResponse>(
@@ -382,11 +549,23 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                       PrayerTypeStruct?>)
                                               .withoutNulls,
                                       onSelectPrayer: (prayerId) async {
-                                        await actions.navigateWithRelacement(
-                                          context,
+                                        context.pushNamed(
                                           'RosaryPage',
-                                          <String, String?>{
-                                            'prayerId': prayerId,
+                                          queryParameters: {
+                                            'prayerId': serializeParam(
+                                              prayerId,
+                                              ParamType.String,
+                                            ),
+                                          }.withoutNulls,
+                                          extra: <String, dynamic>{
+                                            kTransitionInfoKey:
+                                                const TransitionInfo(
+                                              hasTransition: true,
+                                              transitionType:
+                                                  PageTransitionType.fade,
+                                              duration:
+                                                  Duration(milliseconds: 250),
+                                            ),
                                           },
                                         );
                                       },
@@ -401,7 +580,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 16.0),
+                  padding:
+                      const EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 16.0),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
                     child: Image.asset(

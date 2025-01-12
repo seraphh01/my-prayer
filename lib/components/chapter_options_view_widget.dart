@@ -105,7 +105,15 @@ class _ChapterOptionsViewWidgetState extends State<ChapterOptionsViewWidget> {
                               .labelMedium
                               .override(
                                 fontFamily: 'Inter',
-                                color: FlutterFlowTheme.of(context).primaryText,
+                                color: valueOrDefault<Color>(
+                                  (childOptionItem.index != null) &&
+                                          (widget.currentChapterIndex ==
+                                              childOptionItem.index)
+                                      ? FlutterFlowTheme.of(context).alternate
+                                      : FlutterFlowTheme.of(context)
+                                          .primaryText,
+                                  FlutterFlowTheme.of(context).primaryText,
+                                ),
                                 letterSpacing: 0.0,
                               ),
                         ),
@@ -217,7 +225,8 @@ class _ChapterOptionsViewWidgetState extends State<ChapterOptionsViewWidget> {
                                               : const Color(0x00FFFFFF),
                                           dense: true,
                                           contentPadding:
-                                              const EdgeInsetsDirectional.fromSTEB(
+                                              const EdgeInsetsDirectional
+                                                  .fromSTEB(
                                                   12.0, 0.0, 12.0, 0.0),
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
