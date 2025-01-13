@@ -336,7 +336,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     builder: (context, snapshot) {
                       var queue = snapshot.data;
                       return Visibility(
-                          visible: snapshot.data != null,
+                          visible: snapshot.data != null &&
+                              FFAppState().currentPrayerId.isNotEmpty,
                           child: Padding(
                             padding: const EdgeInsetsDirectional.fromSTEB(
                                 16.0, 8.0, 16.0, 8.0),
