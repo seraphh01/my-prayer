@@ -59,7 +59,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       FFAppState().currentPrayerId = widget.prayerId ?? '';
       if (widget.clearSavedPrayer) {
         FFAppState().deleteSavedPrayer();
-        FFAppState().savedPrayer = SavedPrayerDataStruct();
+        FFAppState().savedPrayer = SavedPrayerDataStruct(prayer: null);
 
         safeSetState(() {});
       }
