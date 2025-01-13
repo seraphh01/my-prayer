@@ -667,10 +667,12 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                   focusColor: Colors.transparent,
                   hoverColor: Colors.transparent,
                   highlightColor: Colors.transparent,
-                  onTap: () async {
-                    await launchURL(
-                        'https://play.google.com/store/apps/details?id=com.sserafim.socaciu.wings');
-                  },
+                  onTap: isWeb
+                      ? null
+                      : () async {
+                          await launchURL(
+                              'https://play.google.com/store/apps/details?id=com.sserafim.socaciu.wings');
+                        },
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(

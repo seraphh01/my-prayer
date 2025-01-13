@@ -247,9 +247,8 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Visibility(
-                        visible: !isWeb,
-                        child: FlutterFlowIconButton(
+                      if (!isWeb)
+                        FlutterFlowIconButton(
                           borderColor: Colors.transparent,
                           borderRadius: 20.0,
                           buttonSize: 40.0,
@@ -269,7 +268,6 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                                   Navigator.pop(context, 'download');
                                 },
                         ),
-                      ),
                       Builder(
                         builder: (context) {
                           if (FFAppState()
