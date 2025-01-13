@@ -162,7 +162,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
               Row(
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  if (!FFAppState().isDeviceOnline)
+                  if (!FFAppState().isDeviceOnline && !isWeb)
                     Container(
                       width: 48.0,
                       height: 48.0,

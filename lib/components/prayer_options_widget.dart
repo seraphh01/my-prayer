@@ -83,7 +83,8 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
               mainAxisSize: MainAxisSize.max,
               children: [
                 Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                  padding:
+                      const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -160,7 +161,8 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                  padding:
+                      const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
                   child: Container(
                     width: double.infinity,
                     decoration: const BoxDecoration(),
@@ -238,31 +240,35 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
               child: Container(
                 decoration: const BoxDecoration(),
                 child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 16.0),
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                      0.0, 16.0, 0.0, 16.0),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      FlutterFlowIconButton(
-                        borderColor: Colors.transparent,
-                        borderRadius: 20.0,
-                        buttonSize: 40.0,
-                        fillColor: FlutterFlowTheme.of(context).primary,
-                        disabledColor:
-                            FlutterFlowTheme.of(context).secondaryBackground,
-                        disabledIconColor:
-                            FlutterFlowTheme.of(context).alternate,
-                        icon: Icon(
-                          Icons.download_rounded,
-                          color: FlutterFlowTheme.of(context).alternate,
-                          size: 24.0,
+                      Visibility(
+                        visible: !isWeb,
+                        child: FlutterFlowIconButton(
+                          borderColor: Colors.transparent,
+                          borderRadius: 20.0,
+                          buttonSize: 40.0,
+                          fillColor: FlutterFlowTheme.of(context).primary,
+                          disabledColor:
+                              FlutterFlowTheme.of(context).secondaryBackground,
+                          disabledIconColor:
+                              FlutterFlowTheme.of(context).alternate,
+                          icon: Icon(
+                            Icons.download_rounded,
+                            color: FlutterFlowTheme.of(context).alternate,
+                            size: 24.0,
+                          ),
+                          onPressed: !widget.enableDownloadButton
+                              ? null
+                              : () async {
+                                  Navigator.pop(context, 'download');
+                                },
                         ),
-                        onPressed: !widget.enableDownloadButton
-                            ? null
-                            : () async {
-                                Navigator.pop(context, 'download');
-                              },
                       ),
                       Builder(
                         builder: (context) {
@@ -298,7 +304,8 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                                             letterSpacing: 0.0,
                                           ),
                                     ),
-                                    duration: const Duration(milliseconds: 2500),
+                                    duration:
+                                        const Duration(milliseconds: 2500),
                                     backgroundColor:
                                         FlutterFlowTheme.of(context).secondary,
                                   ),
@@ -334,7 +341,8 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                                             letterSpacing: 0.0,
                                           ),
                                     ),
-                                    duration: const Duration(milliseconds: 2500),
+                                    duration:
+                                        const Duration(milliseconds: 2500),
                                     backgroundColor:
                                         FlutterFlowTheme.of(context).success,
                                   ),

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -442,132 +444,141 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                   ),
                 ),
               ),
-              Padding(
-                padding:
-                    const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: FlutterFlowTheme.of(context).primaryBackground,
-                    border: Border.all(
-                      color: FlutterFlowTheme.of(context).secondaryBackground,
-                      width: 1.0,
+              Visibility(
+                visible: !kIsWeb,
+                child: Padding(
+                  padding:
+                      const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).primaryBackground,
+                      border: Border.all(
+                        color: FlutterFlowTheme.of(context).secondaryBackground,
+                        width: 1.0,
+                      ),
                     ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        24.0, 16.0, 24.0, 16.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          width: MediaQuery.sizeOf(context).width * 0.7,
-                          decoration: const BoxDecoration(),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Eliberează spațiul de stocare',
-                                style: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .override(
-                                      fontFamily: 'Inter',
-                                      fontSize: 16.0,
-                                      letterSpacing: 0.0,
-                                    ),
-                              ),
-                              Text(
-                                'Descărcările ocupă ${((_model.occupiedStorage!) / (1024 * 1024)).toStringAsFixed(2)} MB în memorie.',
-                                style: FlutterFlowTheme.of(context)
-                                    .labelMedium
-                                    .override(
-                                      fontFamily: 'Inter',
-                                      letterSpacing: 0.0,
-                                    ),
-                              ),
-                            ],
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                          24.0, 16.0, 24.0, 16.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            width: MediaQuery.sizeOf(context).width * 0.7,
+                            decoration: const BoxDecoration(),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Eliberează spațiul de stocare',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        fontFamily: 'Inter',
+                                        fontSize: 16.0,
+                                        letterSpacing: 0.0,
+                                      ),
+                                ),
+                                Text(
+                                  'Descărcările ocupă ${((_model.occupiedStorage!) / (1024 * 1024)).toStringAsFixed(2)} MB în memorie.',
+                                  style: FlutterFlowTheme.of(context)
+                                      .labelMedium
+                                      .override(
+                                        fontFamily: 'Inter',
+                                        letterSpacing: 0.0,
+                                      ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        FlutterFlowIconButton(
-                          borderRadius: 8.0,
-                          buttonSize: 40.0,
-                          disabledIconColor:
-                              FlutterFlowTheme.of(context).secondaryBackground,
-                          icon: Icon(
-                            Icons.delete_rounded,
-                            color: FlutterFlowTheme.of(context).primary,
-                            size: 24.0,
-                          ),
-                          onPressed: (_model.occupiedStorage! <= 0)
-                              ? null
-                              : () async {
-                                  var confirmDialogResponse = await showDialog<
-                                          bool>(
-                                        context: context,
-                                        builder: (alertDialogContext) {
-                                          return AlertDialog(
-                                            title: const Text(
-                                                'Eliberare spațiu de stocare'),
-                                            content: Text(
-                                                'Această acțiune va șterge descărcările din memoria telefonului. Vei elibera ${((_model.occupiedStorage!) / (1024 * 1024)).toStringAsFixed(2)} MB, iar rugăciunile nu vor mai fi disponibile fără conexiune la internet.'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(
-                                                    alertDialogContext, false),
-                                                child: const Text('Anulează'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(
-                                                    alertDialogContext, true),
-                                                child: const Text(
-                                                    'Eliberează spațiul'),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      ) ??
-                                      false;
-                                  if (confirmDialogResponse) {
-                                    _model.success =
-                                        await actions.deleteFileOrFolder(
-                                      '',
-                                      '',
-                                    );
-                                    if (_model.success!) {
-                                      FFAppState().deleteDownloadedPrayers();
-                                      FFAppState().downloadedPrayers = [];
-
-                                      FFAppState().update(() {});
-                                      _model.occupiedStorage = 0;
-                                      safeSetState(() {});
-                                    } else {
-                                      await showDialog(
-                                        context: context,
-                                        builder: (alertDialogContext) {
-                                          return AlertDialog(
-                                            title: const Text(
-                                                'A apărut o eroare!'),
-                                            content: const Text(
-                                                'Spațiul de stocare nu a putut fi eliberat. Încearcă să îl eliberezi din setările telefonului.'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(
-                                                    alertDialogContext),
-                                                child: const Text('Ok'),
-                                              ),
-                                            ],
-                                          );
-                                        },
+                          FlutterFlowIconButton(
+                            borderRadius: 8.0,
+                            buttonSize: 40.0,
+                            disabledIconColor: FlutterFlowTheme.of(context)
+                                .secondaryBackground,
+                            icon: Icon(
+                              Icons.delete_rounded,
+                              color: FlutterFlowTheme.of(context).primary,
+                              size: 24.0,
+                            ),
+                            onPressed: (_model.occupiedStorage! <= 0)
+                                ? null
+                                : () async {
+                                    var confirmDialogResponse =
+                                        await showDialog<bool>(
+                                              context: context,
+                                              builder: (alertDialogContext) {
+                                                return AlertDialog(
+                                                  title: const Text(
+                                                      'Eliberare spațiu de stocare'),
+                                                  content: Text(
+                                                      'Această acțiune va șterge descărcările din memoria telefonului. Vei elibera ${((_model.occupiedStorage!) / (1024 * 1024)).toStringAsFixed(2)} MB, iar rugăciunile nu vor mai fi disponibile fără conexiune la internet.'),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                              alertDialogContext,
+                                                              false),
+                                                      child: const Text(
+                                                          'Anulează'),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                              alertDialogContext,
+                                                              true),
+                                                      child: const Text(
+                                                          'Eliberează spațiul'),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            ) ??
+                                            false;
+                                    if (confirmDialogResponse) {
+                                      _model.success =
+                                          await actions.deleteFileOrFolder(
+                                        '',
+                                        '',
                                       );
-                                    }
-                                  }
+                                      if (_model.success!) {
+                                        FFAppState().deleteDownloadedPrayers();
+                                        FFAppState().downloadedPrayers = [];
 
-                                  safeSetState(() {});
-                                },
-                        ),
-                      ],
+                                        FFAppState().update(() {});
+                                        _model.occupiedStorage = 0;
+                                        safeSetState(() {});
+                                      } else {
+                                        await showDialog(
+                                          context: context,
+                                          builder: (alertDialogContext) {
+                                            return AlertDialog(
+                                              title: const Text(
+                                                  'A apărut o eroare!'),
+                                              content: const Text(
+                                                  'Spațiul de stocare nu a putut fi eliberat. Încearcă să îl eliberezi din setările telefonului.'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          alertDialogContext),
+                                                  child: const Text('Ok'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      }
+                                    }
+
+                                    safeSetState(() {});
+                                  },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -637,6 +648,83 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                 .secondaryBackground,
                             icon: Icon(
                               Icons.privacy_tip_rounded,
+                              color: FlutterFlowTheme.of(context).primary,
+                              size: 24.0,
+                            ),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                child: InkWell(
+                  splashColor: Colors.transparent,
+                  focusColor: Colors.transparent,
+                  hoverColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  onTap: () async {
+                    await launchURL(
+                        'https://play.google.com/store/apps/details?id=com.sserafim.socaciu.wings');
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).primaryBackground,
+                      border: Border.all(
+                        color: FlutterFlowTheme.of(context).secondaryBackground,
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                          24.0, 16.0, 24.0, 16.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            width: MediaQuery.sizeOf(context).width * 0.7,
+                            decoration: const BoxDecoration(),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Verifică actualizările aplicației',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        fontFamily: 'Inter',
+                                        fontSize: 16.0,
+                                        letterSpacing: 0.0,
+                                      ),
+                                ),
+                                Text(
+                                  'Versiunea curentă: 1.0.26',
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodySmall
+                                      .override(
+                                        fontFamily: 'Inter',
+                                        fontSize: 14.0,
+                                        letterSpacing: 0.0,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          FlutterFlowIconButton(
+                            borderColor: Colors.transparent,
+                            borderRadius: 8.0,
+                            buttonSize: 40.0,
+                            disabledIconColor: FlutterFlowTheme.of(context)
+                                .secondaryBackground,
+                            icon: Icon(
+                              Icons.update_rounded,
                               color: FlutterFlowTheme.of(context).primary,
                               size: 24.0,
                             ),

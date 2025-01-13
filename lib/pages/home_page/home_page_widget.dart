@@ -1,4 +1,5 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/audio/services/service_locator.dart';
@@ -98,27 +99,30 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         );
                       },
                     ),
-                    FlutterFlowIconButton(
-                      borderColor: Colors.transparent,
-                      borderRadius: 8.0,
-                      buttonSize: 48.0,
-                      icon: Icon(
-                        Icons.download_rounded,
-                        color: FlutterFlowTheme.of(context).alternate,
-                        size: 24.0,
+                    Visibility(
+                      visible: !kIsWeb,
+                      child: FlutterFlowIconButton(
+                        borderColor: Colors.transparent,
+                        borderRadius: 8.0,
+                        buttonSize: 48.0,
+                        icon: Icon(
+                          Icons.download_rounded,
+                          color: FlutterFlowTheme.of(context).alternate,
+                          size: 24.0,
+                        ),
+                        onPressed: () async {
+                          context.pushNamed(
+                            'DownloadedPrayersPage',
+                            extra: <String, dynamic>{
+                              kTransitionInfoKey: const TransitionInfo(
+                                hasTransition: true,
+                                transitionType: PageTransitionType.fade,
+                                duration: Duration(milliseconds: 250),
+                              ),
+                            },
+                          );
+                        },
                       ),
-                      onPressed: () async {
-                        context.pushNamed(
-                          'DownloadedPrayersPage',
-                          extra: <String, dynamic>{
-                            kTransitionInfoKey: const TransitionInfo(
-                              hasTransition: true,
-                              transitionType: PageTransitionType.fade,
-                              duration: Duration(milliseconds: 250),
-                            ),
-                          },
-                        );
-                      },
                     ),
                     FlutterFlowIconButton(
                       borderColor: Colors.transparent,
@@ -131,20 +135,18 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         color: FlutterFlowTheme.of(context).alternate,
                         size: 24.0,
                       ),
-                      onPressed: !FFAppState().isDeviceOnline
-                          ? null
-                          : () async {
-                              context.pushNamed(
-                                'FavoritePrayersPage',
-                                extra: <String, dynamic>{
-                                  kTransitionInfoKey: const TransitionInfo(
-                                    hasTransition: true,
-                                    transitionType: PageTransitionType.fade,
-                                    duration: Duration(milliseconds: 250),
-                                  ),
-                                },
-                              );
-                            },
+                      onPressed: () async {
+                        context.pushNamed(
+                          'FavoritePrayersPage',
+                          extra: <String, dynamic>{
+                            kTransitionInfoKey: const TransitionInfo(
+                              hasTransition: true,
+                              transitionType: PageTransitionType.fade,
+                              duration: Duration(milliseconds: 250),
+                            ),
+                          },
+                        );
+                      },
                     ),
                     FlutterFlowIconButton(
                       borderColor: Colors.transparent,
