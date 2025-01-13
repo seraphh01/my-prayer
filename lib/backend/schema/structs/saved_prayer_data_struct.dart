@@ -20,7 +20,7 @@ class SavedPrayerDataStruct extends FFFirebaseStruct {
 
   // "prayer" field.
   PrayerStruct? _prayer;
-  PrayerStruct get prayer => _prayer ?? PrayerStruct();
+  PrayerStruct? get prayer => _prayer;
   set prayer(PrayerStruct? val) => _prayer = val;
 
   void updatePrayer(Function(PrayerStruct) updateFn) {

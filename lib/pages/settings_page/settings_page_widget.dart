@@ -60,20 +60,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
         preferredSize: const Size.fromHeight(64.0),
         child: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).primary,
-          automaticallyImplyLeading: false,
-          leading: FlutterFlowIconButton(
-            borderColor: Colors.transparent,
-            borderRadius: 32.0,
-            buttonSize: 64.0,
-            icon: Icon(
-              Icons.arrow_back_rounded,
-              color: FlutterFlowTheme.of(context).alternate,
-              size: 24.0,
-            ),
-            onPressed: () async {
-              context.safePop();
-            },
-          ),
+          iconTheme:
+              IconThemeData(color: FlutterFlowTheme.of(context).alternate),
           title: Text(
             'Setări',
             style: FlutterFlowTheme.of(context).titleLarge.override(
@@ -707,7 +695,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                       ),
                                 ),
                                 Text(
-                                  'Versiunea curentă: 1.0.27',
+                                  'Versiunea curentă: 1.0.28',
                                   style: FlutterFlowTheme.of(context)
                                       .bodySmall
                                       .override(
