@@ -242,14 +242,14 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     ),
                   ],
                 ),
-                if (valueOrDefault<bool>(
-                  (FFAppState().savedPrayer != null) &&
-                      !widget.hasNavigatedHere &&
-                      (FFAppState().savedPrayer.prayer != null) &&
-                      (FFAppState().savedPrayer.prayer.id != ''),
-                  false,
-                ))
-                  Padding(
+                Visibility(
+                  visible: valueOrDefault<bool>(
+                    !widget.hasNavigatedHere &&
+                        (FFAppState().savedPrayer.prayer != null) &&
+                        (FFAppState().savedPrayer.prayer?.id != ''),
+                    false,
+                  ),
+                  child: Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
                         8.0, 0.0, 8.0, 0.0),
                     child: InkWell(
@@ -258,16 +258,46 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       hoverColor: Colors.transparent,
                       highlightColor: Colors.transparent,
                       onTap: () async {
-                        context.goNamed(
+                        var prayerId = FFAppState().savedPrayer.prayer?.id;
+                        var page = FFAppState().savedPrayer.page;
+                        var audioTime = FFAppState().savedPrayer.audioTime;
+
+                        FFAppState().deleteSavedPrayer();
+                        FFAppState().savedPrayer = SavedPrayerDataStruct();
+
+                        safeSetState(() {});
+
+                        if (prayerId == null || prayerId.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor:
+                                  FlutterFlowTheme.of(context).alternate,
+                              content: Text(
+                                'Rugăciunea salvată nu este validă. Vă rugăm să salvați o rugăciune din nou.',
+                                style: FlutterFlowTheme.of(context)
+                                    .labelMedium
+                                    .override(
+                                      fontFamily: 'Inter',
+                                      color:
+                                          FlutterFlowTheme.of(context).primary,
+                                      letterSpacing: 0.0,
+                                    ),
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        context.pushNamed(
                           'RosaryPage',
                           queryParameters: {
                             'prayerId': serializeParam(
-                              FFAppState().savedPrayer.prayer.id,
+                              prayerId,
                               ParamType.String,
                             ),
                             'page': serializeParam(
                               valueOrDefault<int>(
-                                FFAppState().savedPrayer.page,
+                                page,
                                 0,
                               ),
                               ParamType.int,
@@ -278,7 +308,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             ),
                             'initialAudioTime': serializeParam(
                               valueOrDefault<double>(
-                                FFAppState().savedPrayer.audioTime,
+                                audioTime,
                                 0.0,
                               ),
                               ParamType.double,
@@ -307,7 +337,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                 ),
                           ),
                           subtitle: Text(
-                            '${FFAppState().savedPrayer.prayer.title} - ${FFAppState().savedPrayer.prayer.subtitle}',
+                            '${FFAppState().savedPrayer.prayer?.title} - ${FFAppState().savedPrayer.prayer?.subtitle}',
                             textAlign: TextAlign.start,
                             style: FlutterFlowTheme.of(context)
                                 .labelMedium
@@ -333,6 +363,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       ),
                     ),
                   ),
+                ),
                 StreamBuilder(
                     stream: _audioHandler.queue,
                     builder: (context, snapshot) {
@@ -464,27 +495,53 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                         _pageManager
                                                             .playButtonNotifier,
                                                     builder: (_, value, __) {
-                                                      return FlutterFlowIconButton(
-                                                          icon: Icon(
-                                                              value ==
-                                                                      ButtonState
-                                                                          .playing
-                                                                  ? Icons
-                                                                      .pause_rounded
-                                                                  : Icons
+                                                      switch (value) {
+                                                        case ButtonState
+                                                              .loading:
+                                                          return Container(
+                                                            width: 48,
+                                                            height: 48,
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(16),
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                              valueColor:
+                                                                  AlwaysStoppedAnimation<
+                                                                      Color>(
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary,
+                                                              ),
+                                                            ),
+                                                          );
+                                                        case ButtonState.paused:
+                                                          return FlutterFlowIconButton(
+                                                              buttonSize: 48,
+                                                              icon: Icon(
+                                                                  Icons
                                                                       .play_arrow_rounded,
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .primary),
-                                                          onPressed: () {
-                                                            value ==
-                                                                    ButtonState
-                                                                        .playing
-                                                                ? _pageManager
-                                                                    .pause()
-                                                                : _pageManager
-                                                                    .play();
-                                                          });
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .primary),
+                                                              onPressed:
+                                                                  _pageManager
+                                                                      .play);
+                                                        case ButtonState
+                                                              .playing:
+                                                          return FlutterFlowIconButton(
+                                                            buttonSize: 48,
+                                                            icon: Icon(
+                                                                Icons
+                                                                    .pause_rounded,
+                                                                color: FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .primary),
+                                                            onPressed:
+                                                                _pageManager
+                                                                    .pause,
+                                                          );
+                                                      }
                                                     }),
                                               ],
                                             )

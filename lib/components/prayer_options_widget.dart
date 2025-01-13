@@ -353,7 +353,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                       Builder(
                         builder: (context) {
                           if (valueOrDefault<bool>(
-                            (FFAppState().savedPrayer.prayer.id ==
+                            (FFAppState().savedPrayer.prayer?.id ==
                                     widget.prayer?.id) &&
                                 (widget.currentPageIndex ==
                                     FFAppState().savedPrayer.page),
