@@ -9,7 +9,11 @@ class PageManager {
   final trackIndexNotifier = ValueNotifier<int>(0);
   final playbackSpeedNotifier = ValueNotifier<double>(1.0);
   final playlistNotifier = ValueNotifier<List<String>>([]);
-  final progressNotifier = ProgressNotifier();
+
+  final currentProgressNotifier = ValueNotifier<Duration>(Duration.zero);
+  final totalDurationNotifier = ValueNotifier<Duration>(Duration.zero);
+  final bufferedTimeNotifier = ValueNotifier<Duration>(Duration.zero);
+
   final isFirstSongNotifier = ValueNotifier<bool>(true);
   final playButtonNotifier = PlayButtonNotifier();
   final isLastSongNotifier = ValueNotifier<bool>(true);
@@ -61,34 +65,19 @@ class PageManager {
 
   void _listenToCurrentPosition() {
     AudioService.position.listen((position) {
-      final oldState = progressNotifier.value;
-      progressNotifier.value = ProgressBarState(
-        current: position,
-        buffered: oldState.buffered,
-        total: oldState.total,
-      );
+      currentProgressNotifier.value = position;
     });
   }
 
   void _listenToBufferedPosition() {
     _audioHandler.playbackState.listen((playbackState) {
-      final oldState = progressNotifier.value;
-      progressNotifier.value = ProgressBarState(
-        current: oldState.current,
-        buffered: playbackState.bufferedPosition,
-        total: oldState.total,
-      );
+      bufferedTimeNotifier.value = playbackState.bufferedPosition;
     });
   }
 
   void _listenToTotalDuration() {
     _audioHandler.mediaItem.listen((mediaItem) {
-      final oldState = progressNotifier.value;
-      progressNotifier.value = ProgressBarState(
-        current: oldState.current,
-        buffered: oldState.buffered,
-        total: mediaItem?.duration ?? Duration.zero,
-      );
+      totalDurationNotifier.value = mediaItem?.duration ?? Duration.zero;
     });
   }
 

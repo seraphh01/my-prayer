@@ -394,8 +394,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                     ),
                                     'initialAudioTime': serializeParam(
                                       valueOrDefault<double>(
-                                          _pageManager.progressNotifier.value
-                                              .current.inSeconds
+                                          _pageManager.currentProgressNotifier
+                                              .value.inSeconds
                                               .toDouble(),
                                           0.0),
                                       ParamType.double,

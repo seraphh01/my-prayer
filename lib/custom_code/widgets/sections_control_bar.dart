@@ -93,7 +93,10 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     super.initState();
 
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _pageManager.progressNotifier.addListener(onTrackProgressChanged);
+      _pageManager.currentProgressNotifier
+          .addListener(onCurrentProgressChanged);
+      _pageManager.bufferedTimeNotifier.addListener(onBufferTimeChanged);
+      _pageManager.totalDurationNotifier.addListener(onTotalDurationChanged);
 
       _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
       if (!(widget.continueAudio ?? false)) {
@@ -133,15 +136,26 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
   @override
   void dispose() {
     _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
-    _pageManager.progressNotifier.removeListener(onTrackProgressChanged);
+    _pageManager.currentProgressNotifier
+        .removeListener(onCurrentProgressChanged);
+    _pageManager.bufferedTimeNotifier.removeListener(onBufferTimeChanged);
+    _pageManager.totalDurationNotifier.removeListener(onTotalDurationChanged);
     super.dispose();
   }
 
-  void onTrackProgressChanged() {
-    final progress = _pageManager.progressNotifier.value;
-    widget.onAudioDurationChanged?.call(progress.total.inSeconds);
-    widget.onAudioPositionChanged?.call(progress.current.inSeconds);
-    widget.onBufferTimeChanged?.call(progress.buffered.inSeconds.toDouble());
+  void onCurrentProgressChanged() {
+    final progress = _pageManager.currentProgressNotifier.value;
+    widget.onAudioPositionChanged?.call(progress.inSeconds);
+  }
+
+  void onBufferTimeChanged() {
+    final progress = _pageManager.bufferedTimeNotifier.value;
+    widget.onBufferTimeChanged?.call(progress.inSeconds.toDouble());
+  }
+
+  void onTotalDurationChanged() {
+    final progress = _pageManager.totalDurationNotifier.value;
+    widget.onAudioDurationChanged?.call(progress.inSeconds);
   }
 
   void onTrackIndexChanged() {
