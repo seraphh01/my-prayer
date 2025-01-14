@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/audio/services/service_locator.dart';
 
@@ -25,15 +27,15 @@ class SectionsViewWidget extends StatefulWidget {
     super.key,
     this.sections,
     int? initialPage,
-    double? initialAudioTime,
+    int? initialAudioTime,
     bool? continueAudio,
   })  : initialPage = initialPage ?? 0,
         continueAudio = continueAudio ?? false,
-        initialAudioTime = initialAudioTime ?? 0.0;
+        initialAudioTime = initialAudioTime ?? 0;
 
   final List<PrayerSectionStruct>? sections;
   final int initialPage;
-  final double initialAudioTime;
+  final int initialAudioTime;
   final bool continueAudio;
 
   @override
@@ -43,6 +45,10 @@ class SectionsViewWidget extends StatefulWidget {
 class _SectionsViewWidgetState extends State<SectionsViewWidget>
     with TickerProviderStateMixin {
   late SectionsViewModel _model;
+  late List<ScrollController> _scrollControllers = [];
+  int currentPlayingTextIndex = 0;
+  late List<GlobalKey> listViewKeys = [];
+  late Map<int, List<GlobalKey>> _keys = {};
 
   final animationsMap = <String, AnimationInfo>{};
   final _pageManager = getIt<PageManager>();
@@ -61,6 +67,75 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     );
   }
 
+  void onCurrentAudioTimeChanged() {
+    _model.currentAudioTime =
+        _pageManager.currentProgressNotifier.value.inSeconds;
+    safeSetState(() {});
+    if (_pageManager.playButtonNotifier.value != ButtonState.playing ||
+        _model.displayAudioPage) {
+      return;
+    }
+
+    if (_scrollControllers.isNotEmpty) {
+      var visibleTextIndex = _model.currentSection?.texts.indexWhere(
+          (element) =>
+              element.startTime <= _model.currentAudioTime &&
+              element.endTime > _model.currentAudioTime);
+      if (visibleTextIndex == null || visibleTextIndex == -1) {
+        return;
+      }
+      if (currentPlayingTextIndex == visibleTextIndex) {
+        return;
+      }
+      var controller = _scrollControllers[valueOrDefault<int>(
+        _model.pageViewCurrentIndex,
+        0,
+      )];
+
+      if (controller.hasClients) {
+        currentPlayingTextIndex = visibleTextIndex;
+
+        var text = _model.currentSection!.texts[currentPlayingTextIndex];
+
+        var currentTextScrollExtent =
+            (_model.currentAudioTime - text.startTime) /
+                _model.currentAudioDuration *
+                controller.position.maxScrollExtent;
+
+        var additionalOffset = 0.0;
+
+        var desiredScrollPosition = _model.currentAudioTime /
+            _model.currentAudioDuration *
+            controller.position.maxScrollExtent;
+
+        if (currentTextScrollExtent > 500) {
+          additionalOffset = currentTextScrollExtent;
+        }
+
+        var textContext = _keys[_model.pageViewCurrentIndex]
+                ?[currentPlayingTextIndex]
+            .currentContext;
+        var listViewContext =
+            listViewKeys[_model.pageViewCurrentIndex].currentContext;
+        if (textContext != null && listViewContext != null) {
+          final renderBox = textContext.findRenderObject() as RenderBox;
+          final position = renderBox.localToGlobal(Offset.zero);
+
+          final listViewRenderBox =
+              listViewContext.findRenderObject() as RenderBox;
+          final listViewPosition = listViewRenderBox.localToGlobal(Offset.zero);
+
+          desiredScrollPosition = position.dy - listViewPosition.dy;
+        }
+
+        controller.animateTo(desiredScrollPosition + 60 + additionalOffset,
+            duration: const Duration(milliseconds: 300), curve: Curves.ease);
+      }
+    }
+
+    safeSetState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -74,6 +149,10 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
           .flattenSectionsList(widget.sections!.toList())!
           .toList()
           .cast<PrayerSectionStruct>();
+      _scrollControllers = List.generate(
+        _model.flattenedSections.length,
+        (index) => ScrollController(),
+      );
       _model.currentAudioTime = widget.initialAudioTime;
       safeSetState(() {});
       if ((_model.flattenedSections
@@ -97,6 +176,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
           0,
         ));
         _model.isLoading = false;
+
         safeSetState(() {});
       } else {
         _model.prayerSectionInitialDataResult =
@@ -119,6 +199,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
           safeSetState(() {});
         }
       }
+      listViewKeys =
+          List.generate(_model.flattenedSections.length, (_) => GlobalKey());
     });
 
     animationsMap.addAll({
@@ -183,7 +265,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                 ),
                                 prayerSection.length - 1))),
                     onPageChanged: (_) async {
-                      _model.currentAudioTime = 0.0;
+                      _model.currentAudioTime = 0;
                       _model.isLoading = true;
                       safeSetState(() {});
                       if ((_model.flattenedSections
@@ -255,6 +337,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                       safeSetState(() {});
                                     },
                                     child: SingleChildScrollView(
+                                      controller: _scrollControllers[
+                                          prayerSectionIndex],
+                                      scrollDirection: Axis.vertical,
                                       physics:
                                           const AlwaysScrollableScrollPhysics(),
                                       child: Column(
@@ -345,8 +430,22 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                     ),
                                                   );
                                                 }
-
+                                                if (!_keys.containsKey(
+                                                        prayerSectionIndex) ||
+                                                    _keys[prayerSectionIndex]!
+                                                        .isEmpty) {
+                                                  _keys[prayerSectionIndex] =
+                                                      List.generate(
+                                                          _model
+                                                                  .currentSection
+                                                                  ?.texts
+                                                                  .length ??
+                                                              0,
+                                                          (_) => GlobalKey());
+                                                }
                                                 return ListView.builder(
+                                                  key: listViewKeys[
+                                                      prayerSectionIndex],
                                                   padding: EdgeInsets.zero,
                                                   primary: false,
                                                   shrinkWrap: true,
@@ -358,6 +457,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                     final textsItem =
                                                         texts[textsIndex];
                                                     return Column(
+                                                      key: _keys[
+                                                              prayerSectionIndex]![
+                                                          textsIndex],
                                                       mainAxisSize:
                                                           MainAxisSize.max,
                                                       crossAxisAlignment:
@@ -381,7 +483,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                             onTap: () async {
                                                               _model.currentAudioTime =
                                                                   textsItem
-                                                                      .startTime;
+                                                                      .startTime
+                                                                      .floor();
                                                               safeSetState(
                                                                   () {});
                                                             },
@@ -399,11 +502,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                 if ((textsItem
                                                                             .startTime <=
                                                                         _model
-                                                                            .currentAudioTime!) &&
+                                                                            .currentAudioTime) &&
                                                                     (textsItem
                                                                             .endTime >
                                                                         _model
-                                                                            .currentAudioTime!))
+                                                                            .currentAudioTime))
                                                                   Icon(
                                                                     Icons
                                                                         .chevron_right,
@@ -421,9 +524,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                         Builder(
                                                                       builder:
                                                                           (context) {
-                                                                        if ((textsItem.startTime <= _model.currentAudioTime!) &&
+                                                                        if ((textsItem.startTime <= _model.currentAudioTime) &&
                                                                             (textsItem.endTime >
-                                                                                _model.currentAudioTime!)) {
+                                                                                _model.currentAudioTime)) {
                                                                           return AutoSizeText(
                                                                             '${textsItem.repetition != 1 ? textsItem.repetition.toString() : ''}${textsItem.repetition != 1 ? ' ' : ''}${textsItem.title}',
                                                                             textAlign:
@@ -474,11 +577,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                 if ((textsItem
                                                                             .startTime <=
                                                                         _model
-                                                                            .currentAudioTime!) &&
+                                                                            .currentAudioTime) &&
                                                                     (textsItem
                                                                             .endTime >
                                                                         _model
-                                                                            .currentAudioTime!))
+                                                                            .currentAudioTime))
                                                                   Icon(
                                                                     Icons
                                                                         .chevron_left,
@@ -565,26 +668,25 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                       textInput:
                                                                           textElementItem
                                                                               .text,
-                                                                      isHighlighted: (functions.sum(textsItem.startTime, functions.multiply(textElementItem.startTime, textsItem.intervalFactor)) <=
+                                                                      isHighlighted: (textsItem.startTime + textElementItem.startTime * textsItem.intervalFactor <=
                                                                               _model
-                                                                                  .currentAudioTime!) &&
-                                                                          (functions.sum(textsItem.startTime, functions.multiply(textElementItem.endTime, textsItem.intervalFactor)) >
-                                                                              _model.currentAudioTime!),
+                                                                                  .currentAudioTime) &&
+                                                                          (textsItem.startTime + textElementItem.endTime * textsItem.intervalFactor >
+                                                                              _model.currentAudioTime),
                                                                       onTextPressed:
                                                                           () async {
-                                                                        final newAudioTime = functions.sum(
-                                                                            textsItem.startTime,
-                                                                            functions.multiply(
-                                                                                textElementItem.startTime,
+                                                                        final newAudioTime = textsItem.startTime +
+                                                                            textElementItem.startTime *
                                                                                 valueOrDefault<double>(
                                                                                   textsItem.intervalFactor,
                                                                                   1.0,
-                                                                                )));
+                                                                                );
+
                                                                         getIt<PageManager>().seek(Duration(
                                                                             seconds:
                                                                                 newAudioTime.toInt()));
                                                                         _model.currentAudioTime =
-                                                                            newAudioTime;
+                                                                            newAudioTime.floor();
                                                                         safeSetState(
                                                                             () {});
                                                                       },
@@ -648,7 +750,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                         getIt<PageManager>().seek(Duration(
                                             seconds: selectedAudioTime));
                                         _model.currentAudioTime =
-                                            selectedAudioTime.toDouble();
+                                            selectedAudioTime;
                                         safeSetState(() {});
                                       },
                                     ),
@@ -705,7 +807,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                   width: double.infinity,
                   height: double.infinity,
                   initialAudioTime: valueOrDefault<int>(
-                    functions.doubleToInt(_model.currentAudioTime),
+                    _model.currentAudioTime,
                     0,
                   ),
                   playlist:

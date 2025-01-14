@@ -10,8 +10,8 @@ class TextElementStruct extends FFFirebaseStruct {
   TextElementStruct({
     String? text,
     int? sequence,
-    double? startTime,
-    double? endTime,
+    int? startTime,
+    int? endTime,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _text = text,
         _sequence = sequence,
@@ -36,20 +36,20 @@ class TextElementStruct extends FFFirebaseStruct {
   bool hasSequence() => _sequence != null;
 
   // "start_time" field.
-  double? _startTime;
-  double get startTime => _startTime ?? 0.0;
-  set startTime(double? val) => _startTime = val;
+  int? _startTime;
+  int get startTime => _startTime ?? 0;
+  set startTime(int? val) => _startTime = val;
 
-  void incrementStartTime(double amount) => startTime = startTime + amount;
+  void incrementStartTime(int amount) => startTime = startTime + amount;
 
   bool hasStartTime() => _startTime != null;
 
   // "end_time" field.
-  double? _endTime;
-  double get endTime => _endTime ?? 0.0;
-  set endTime(double? val) => _endTime = val;
+  int? _endTime;
+  int get endTime => _endTime ?? 0;
+  set endTime(int? val) => _endTime = val;
 
-  void incrementEndTime(double amount) => endTime = endTime + amount;
+  void incrementEndTime(int amount) => endTime = endTime + amount;
 
   bool hasEndTime() => _endTime != null;
 
@@ -57,8 +57,8 @@ class TextElementStruct extends FFFirebaseStruct {
       TextElementStruct(
         text: data['text'] as String?,
         sequence: castToType<int>(data['sequence']),
-        startTime: castToType<double>(data['start_time']),
-        endTime: castToType<double>(data['end_time']),
+        startTime: castToType<int>(data['start_time']),
+        endTime: castToType<int>(data['end_time']),
       );
 
   static TextElementStruct? maybeFromMap(dynamic data) => data is Map
@@ -84,11 +84,11 @@ class TextElementStruct extends FFFirebaseStruct {
         ),
         'start_time': serializeParam(
           _startTime,
-          ParamType.double,
+          ParamType.int,
         ),
         'end_time': serializeParam(
           _endTime,
-          ParamType.double,
+          ParamType.int,
         ),
       }.withoutNulls;
 
@@ -106,12 +106,12 @@ class TextElementStruct extends FFFirebaseStruct {
         ),
         startTime: deserializeParam(
           data['start_time'],
-          ParamType.double,
+          ParamType.int,
           false,
         ),
         endTime: deserializeParam(
           data['end_time'],
-          ParamType.double,
+          ParamType.int,
           false,
         ),
       );
@@ -136,8 +136,8 @@ class TextElementStruct extends FFFirebaseStruct {
 TextElementStruct createTextElementStruct({
   String? text,
   int? sequence,
-  double? startTime,
-  double? endTime,
+  int? startTime,
+  int? endTime,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
   bool create = false,
