@@ -87,20 +87,23 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: Image.network(
-                        widget.imageUrl!,
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Image.asset(
-                          'assets/images/error_image.jpg',
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
+                    child: Hero(
+                      tag: 'sectionImageHero',
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: widget.imageUrl?.isNotEmpty == true
+                            ? Image.network(
+                                widget.imageUrl!,
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.asset(
+                                'assets/images/error_image.jpg',
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
                       ),
                     ),
                   ),

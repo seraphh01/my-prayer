@@ -425,17 +425,20 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                       .spaceBetween,
                                               mainAxisSize: MainAxisSize.max,
                                               children: [
-                                                ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          12.0),
-                                                  child: Image.network(
-                                                    mediaItem.artUri
-                                                            .toString() ??
-                                                        '',
-                                                    width: 64,
-                                                    height: 64,
-                                                    fit: BoxFit.cover,
+                                                Hero(
+                                                  tag: 'sectionImageHero',
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.0),
+                                                    child: Image.network(
+                                                      mediaItem.artUri
+                                                              .toString() ??
+                                                          '',
+                                                      width: 64,
+                                                      height: 64,
+                                                      fit: BoxFit.cover,
+                                                    ),
                                                   ),
                                                 ),
                                                 Column(
