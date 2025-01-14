@@ -1,3 +1,6 @@
+import 'package:my_prayer/custom_code/audio/page_manager.dart';
+import 'package:my_prayer/custom_code/audio/services/service_locator.dart';
+
 import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -10,23 +13,14 @@ export 'audio_page_model.dart';
 class AudioPageWidget extends StatefulWidget {
   const AudioPageWidget({
     super.key,
-    int? currentAudioTime,
-    int? totalAudioTime,
-    double? bufferedAudioTime,
     String? title,
     String? subtitle,
     required this.onAudioTimeChanged,
     required this.imageUrl,
     this.texts,
-  })  : currentAudioTime = currentAudioTime ?? 0,
-        bufferedAudioTime = bufferedAudioTime ?? 0,
-        totalAudioTime = totalAudioTime ?? 0,
-        title = title ?? 'Titlu',
+  })  : title = title ?? 'Titlu',
         subtitle = subtitle ?? 'Subtitlu';
 
-  final int currentAudioTime;
-  final double bufferedAudioTime;
-  final int totalAudioTime;
   final String title;
   final String subtitle;
   final Future Function(int selectedAudioTime)? onAudioTimeChanged;
@@ -39,6 +33,7 @@ class AudioPageWidget extends StatefulWidget {
 
 class _AudioPageWidgetState extends State<AudioPageWidget> {
   late AudioPageModel _model;
+  final _pageManager = getIt<PageManager>();
 
   @override
   void setState(VoidCallback callback) {
@@ -50,13 +45,41 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => AudioPageModel());
+    _model.totalDuration = _pageManager.totalDurationNotifier.value.inSeconds;
+    _model.currentAudioTime =
+        _pageManager.currentProgressNotifier.value.inSeconds;
+    _model.bufferedTime = _pageManager.bufferedTimeNotifier.value.inSeconds;
+    _pageManager.totalDurationNotifier.addListener(onTotalDurationChanged);
+    _pageManager.currentProgressNotifier.addListener(onCurrentProgressChanged);
+    _pageManager.bufferedTimeNotifier.addListener(onBufferedTimeChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
+  }
+
+  void onCurrentProgressChanged() {
+    _model.currentAudioTime =
+        _pageManager.currentProgressNotifier.value.inSeconds;
+    safeSetState(() {});
+  }
+
+  void onBufferedTimeChanged() {
+    _model.bufferedTime = _pageManager.bufferedTimeNotifier.value.inSeconds;
+    safeSetState(() {});
+  }
+
+  void onTotalDurationChanged() {
+    _model.totalDuration = _pageManager.totalDurationNotifier.value.inSeconds;
+    safeSetState(() {});
   }
 
   @override
   void dispose() {
     _model.maybeDispose();
+
+    _pageManager.currentProgressNotifier
+        .removeListener(onCurrentProgressChanged);
+    _pageManager.bufferedTimeNotifier.removeListener(onBufferedTimeChanged);
+    _pageManager.totalDurationNotifier.removeListener(onTotalDurationChanged);
 
     super.dispose();
   }
@@ -186,13 +209,13 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                                                   _model.isSliding) ||
                                               ((e.startTime <=
                                                       valueOrDefault<double>(
-                                                        widget.currentAudioTime
+                                                        _model.currentAudioTime
                                                             .toDouble(),
                                                         0.0,
                                                       )) &&
                                                   (e.endTime >=
                                                       valueOrDefault<double>(
-                                                        widget.currentAudioTime
+                                                        _model.currentAudioTime
                                                             .toDouble(),
                                                         0.0,
                                                       )) &&
@@ -239,10 +262,10 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                             child: custom_widgets.CustomSlider(
                               width: double.infinity,
                               height: 32.0,
-                              sliderValue: widget.currentAudioTime.toDouble(),
-                              bufferValue: widget.bufferedAudioTime,
+                              sliderValue: _model.currentAudioTime.toDouble(),
+                              bufferValue: _model.bufferedTime,
                               minValue: 0,
-                              maxValue: widget.totalAudioTime,
+                              maxValue: _model.totalDuration,
                               onValueChange: (newValue) async {
                                 _model.isSliding = true;
                                 _model.slideAudioTime =
@@ -274,7 +297,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                           valueOrDefault<String>(
                             (int audioTime) {
                               return "${audioTime >= 3600 ? ("${audioTime ~/ 3600}:") : ""}${((audioTime % 3600) ~/ 60).toString().padLeft(2, '0')}:${(audioTime % 60).toString().padLeft(2, '0')}";
-                            }(widget.currentAudioTime),
+                            }(_model.currentAudioTime),
                             '00:00',
                           ),
                           style: FlutterFlowTheme.of(context)
@@ -290,7 +313,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                           valueOrDefault<String>(
                             (int totalTime) {
                               return "${totalTime >= 3600 ? ("${totalTime ~/ 3600}:") : ""}${((totalTime % 3600) ~/ 60).toString().padLeft(2, '0')}:${(totalTime % 60).toString().padLeft(2, '0')}";
-                            }(widget.totalAudioTime),
+                            }(_model.totalDuration),
                             '07:00',
                           ),
                           style: FlutterFlowTheme.of(context)

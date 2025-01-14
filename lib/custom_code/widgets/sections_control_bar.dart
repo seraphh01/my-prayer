@@ -51,12 +51,6 @@ class SectionsControlBar extends StatefulWidget {
   final List<String> playlist;
   final double? width;
   final double? height;
-  final Future Function(int currentAudioTime)? onAudioPositionChanged;
-  final Future Function(int currentAudioDuration)? onAudioDurationChanged;
-  final Future Function(double currentBufferTime)? onBufferTimeChanged;
-  final Future Function()? onAudioFinished;
-  final Future Function()? nextPage;
-  final Future Function(int pageIndex)? goToPage;
   final Future Function()? switchContent;
   final bool? showingTextContent;
   final bool? continueAudio;
@@ -70,13 +64,7 @@ class SectionsControlBar extends StatefulWidget {
       this.initialTrackIndex,
       required this.playlist,
       this.showingTextContent,
-      this.onAudioPositionChanged,
-      this.onAudioFinished,
-      this.nextPage,
-      this.goToPage,
       this.switchContent,
-      this.onAudioDurationChanged,
-      this.onBufferTimeChanged,
       this.continueAudio,
       required this.flattenedSections,
       required this.sections});
@@ -93,17 +81,11 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     super.initState();
 
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _pageManager.currentProgressNotifier
-          .addListener(onCurrentProgressChanged);
-      _pageManager.bufferedTimeNotifier.addListener(onBufferTimeChanged);
-      _pageManager.totalDurationNotifier.addListener(onTotalDurationChanged);
-
-      _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
       if (!(widget.continueAudio ?? false)) {
         _pageManager.clearQueue();
 
-        final mediaItems =
-            await Future.wait(widget.sections.map((section) async {
+        final mediaItems = await Future.wait(
+            flattenSectionsList(widget.sections)!.map((section) async {
           final artUri = section.imageUrl.isNotEmpty
               ? Uri.parse(section.imageUrl)
               : Uri.parse(
@@ -135,31 +117,7 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
 
   @override
   void dispose() {
-    _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
-    _pageManager.currentProgressNotifier
-        .removeListener(onCurrentProgressChanged);
-    _pageManager.bufferedTimeNotifier.removeListener(onBufferTimeChanged);
-    _pageManager.totalDurationNotifier.removeListener(onTotalDurationChanged);
     super.dispose();
-  }
-
-  void onCurrentProgressChanged() {
-    final progress = _pageManager.currentProgressNotifier.value;
-    widget.onAudioPositionChanged?.call(progress.inSeconds);
-  }
-
-  void onBufferTimeChanged() {
-    final progress = _pageManager.bufferedTimeNotifier.value;
-    widget.onBufferTimeChanged?.call(progress.inSeconds.toDouble());
-  }
-
-  void onTotalDurationChanged() {
-    final progress = _pageManager.totalDurationNotifier.value;
-    widget.onAudioDurationChanged?.call(progress.inSeconds);
-  }
-
-  void onTrackIndexChanged() {
-    widget.goToPage?.call(_pageManager.trackIndexNotifier.value);
   }
 
   Future<void> _chooseChapter(BuildContext content) async {
@@ -176,6 +134,7 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     if (index == null) {
       return;
     }
+    print(index);
 
     await _pageManager.skipToIndex(index);
   }

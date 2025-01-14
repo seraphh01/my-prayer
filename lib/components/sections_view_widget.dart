@@ -45,6 +45,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
   late SectionsViewModel _model;
 
   final animationsMap = <String, AnimationInfo>{};
+  final _pageManager = getIt<PageManager>();
 
   @override
   void setState(VoidCallback callback) {
@@ -52,10 +53,20 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     _model.onUpdate();
   }
 
+  void onTrackIndexChanged() async {
+    await _model.pageViewController?.animateToPage(
+      _pageManager.trackIndexNotifier.value,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.ease,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => SectionsViewModel());
+
+    _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
 
     // On component load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -64,8 +75,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
           .toList()
           .cast<PrayerSectionStruct>();
       _model.currentAudioTime = widget.initialAudioTime;
-      _model.currentAudioDuration =
-          functions.doubleToInt(widget.initialAudioTime);
       safeSetState(() {});
       if ((_model.flattenedSections
                       .elementAtOrNull(valueOrDefault<int>(
@@ -131,7 +140,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
   @override
   void dispose() {
     _model.maybeDispose();
-
+    _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
     super.dispose();
   }
 
@@ -627,17 +636,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                       key: Key(
                                         'Keyvha_${prayerSectionItem.id}',
                                       ),
-                                      currentAudioTime: valueOrDefault<int>(
-                                        functions.doubleToInt(
-                                            _model.currentAudioTime),
-                                        0,
-                                      ),
-                                      bufferedAudioTime: valueOrDefault<double>(
-                                          _model.bufferedAudioTime, 0.0),
-                                      totalAudioTime: valueOrDefault<int>(
-                                        _model.currentAudioDuration,
-                                        0,
-                                      ),
                                       title: valueOrDefault<String>(
                                         prayerSectionItem.title,
                                         'Titlu',
@@ -724,44 +722,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                     FFAppState().audioSpeed,
                     1.0,
                   ),
-                  onAudioPositionChanged: (currentAudioTime) async {
-                    _model.currentAudioTime = currentAudioTime.toDouble();
-                    safeSetState(() {});
-                  },
-                  onAudioFinished: () async {
-                    if (FFAppState().autoPlayNext == true) {
-                      await _model.pageViewController?.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.ease,
-                      );
-                      _model.currentAudioTime = 0.0;
-                      safeSetState(() {});
-                    }
-                  },
-                  nextPage: () async {
-                    await _model.pageViewController?.nextPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.ease,
-                    );
-                  },
-                  goToPage: (pageIndex) async {
-                    safeSetState(() {});
-                    await _model.pageViewController?.animateToPage(
-                      pageIndex,
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.ease,
-                    );
-                  },
                   switchContent: () async {
                     _model.displayAudioPage = !_model.displayAudioPage;
-                    safeSetState(() {});
-                  },
-                  onAudioDurationChanged: (currentAudioDuration) async {
-                    _model.currentAudioDuration = currentAudioDuration;
-                    safeSetState(() {});
-                  },
-                  onBufferTimeChanged: (currentBufferTime) async {
-                    _model.bufferedAudioTime = currentBufferTime;
                     safeSetState(() {});
                   },
                 ),
