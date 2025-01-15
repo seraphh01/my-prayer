@@ -106,6 +106,12 @@ class FFAppState extends ChangeNotifier {
     _isPlaying = value;
   }
 
+  bool? _isFirstTime = null;
+  bool? get isFirstTime => _isFirstTime;
+  set isFirstTime(bool? value) {
+    _isFirstTime = value;
+  }
+
   double _audioSpeed = 1.0;
   double get audioSpeed => _audioSpeed;
   set audioSpeed(double value) {

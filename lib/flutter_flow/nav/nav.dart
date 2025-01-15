@@ -66,12 +66,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: 'HomePage',
           path: '/homePage',
-          builder: (context, params) => HomePageWidget(
-            hasNavigatedHere: params.getParam(
-              'hasNavigatedHere',
-              ParamType.bool,
-            ),
-          ),
+          builder: (context, params) => const HomePageWidget(),
         ),
         FFRoute(
           name: 'SettingsPage',
@@ -102,7 +97,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
             ),
             initialAudioTime: params.getParam(
               'initialAudioTime',
-              ParamType.double,
+              ParamType.int,
             ),
             continueAudio: params.getParam(
               'continueAudio',
