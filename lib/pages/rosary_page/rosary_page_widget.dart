@@ -26,18 +26,18 @@ class RosaryPageWidget extends StatefulWidget {
     int? page,
     this.downloadedPrayer,
     bool? clearSavedPrayer,
-    double? initialAudioTime,
+    int? initialAudioTime,
     bool? continueAudio,
   })  : page = page ?? 0,
         continueAudio = continueAudio ?? false,
         clearSavedPrayer = clearSavedPrayer ?? false,
-        initialAudioTime = initialAudioTime ?? 0.0;
+        initialAudioTime = initialAudioTime ?? 0;
 
   final String? prayerId;
   final int page;
   final PrayerStruct? downloadedPrayer;
   final bool clearSavedPrayer;
-  final double initialAudioTime;
+  final int initialAudioTime;
   final bool continueAudio;
 
   @override
@@ -535,9 +535,9 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                         child: SectionsViewWidget(
                           sections: _model.currentPrayer?.sections,
                           initialPage: widget.page,
-                          initialAudioTime: valueOrDefault<double>(
+                          initialAudioTime: valueOrDefault<int>(
                             widget.initialAudioTime,
-                            0.0,
+                            0,
                           ),
                           continueAudio: widget.continueAudio,
                         ),

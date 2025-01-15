@@ -16,27 +16,20 @@ import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 
 Future<String?> retrieveAudioFile(String url) async {
-  // Add your function code here!
   try {
-    // Extract file name from the URL
     final fileName = extractFileName(url);
 
-    // Get the application's document directory
     final dir = await getApplicationDocumentsDirectory();
 
-    // Create the file path
     final filePath = '${dir.path}/$fileName';
 
-    // Check if the file exists
     final file = File(filePath);
     if (await file.exists()) {
       return file.path;
     } else {
-      print('File does not exist at path: $filePath');
       return null;
     }
   } catch (e) {
-    print('Error retrieving file: $e');
     return null;
   }
 }

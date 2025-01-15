@@ -13,10 +13,10 @@ class SectionTextStruct extends FFFirebaseStruct {
     int? sequence,
     int? repetition,
     List<TextElementStruct>? textElements,
-    double? startTime,
-    double? endTime,
+    int? startTime,
+    int? endTime,
     double? intervalFactor,
-    double? audioTime,
+    int? audioTime,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _title = title,
         _sequence = sequence,
@@ -65,20 +65,20 @@ class SectionTextStruct extends FFFirebaseStruct {
   bool hasTextElements() => _textElements != null;
 
   // "start_time" field.
-  double? _startTime;
-  double get startTime => _startTime ?? 0.0;
-  set startTime(double? val) => _startTime = val;
+  int? _startTime;
+  int get startTime => _startTime ?? 0;
+  set startTime(int? val) => _startTime = val;
 
-  void incrementStartTime(double amount) => startTime = startTime + amount;
+  void incrementStartTime(int amount) => startTime = startTime + amount;
 
   bool hasStartTime() => _startTime != null;
 
   // "end_time" field.
-  double? _endTime;
-  double get endTime => _endTime ?? 0.0;
-  set endTime(double? val) => _endTime = val;
+  int? _endTime;
+  int get endTime => _endTime ?? 0;
+  set endTime(int? val) => _endTime = val;
 
-  void incrementEndTime(double amount) => endTime = endTime + amount;
+  void incrementEndTime(int amount) => endTime = endTime + amount;
 
   bool hasEndTime() => _endTime != null;
 
@@ -93,11 +93,11 @@ class SectionTextStruct extends FFFirebaseStruct {
   bool hasIntervalFactor() => _intervalFactor != null;
 
   // "audio_time" field.
-  double? _audioTime;
-  double get audioTime => _audioTime ?? 0.0;
-  set audioTime(double? val) => _audioTime = val;
+  int? _audioTime;
+  int get audioTime => _audioTime ?? 0;
+  set audioTime(int? val) => _audioTime = val;
 
-  void incrementAudioTime(double amount) => audioTime = audioTime + amount;
+  void incrementAudioTime(int amount) => audioTime = audioTime + amount;
 
   bool hasAudioTime() => _audioTime != null;
 
@@ -110,10 +110,10 @@ class SectionTextStruct extends FFFirebaseStruct {
           data['text_elements'],
           TextElementStruct.fromMap,
         ),
-        startTime: castToType<double>(data['start_time']),
-        endTime: castToType<double>(data['end_time']),
+        startTime: castToType<int>(data['start_time']),
+        endTime: castToType<int>(data['end_time']),
         intervalFactor: castToType<double>(data['interval_factor']),
-        audioTime: castToType<double>(data['audio_time']),
+        audioTime: castToType<int>(data['audio_time']),
       );
 
   static SectionTextStruct? maybeFromMap(dynamic data) => data is Map
@@ -152,11 +152,11 @@ class SectionTextStruct extends FFFirebaseStruct {
         ),
         'start_time': serializeParam(
           _startTime,
-          ParamType.double,
+          ParamType.int,
         ),
         'end_time': serializeParam(
           _endTime,
-          ParamType.double,
+          ParamType.int,
         ),
         'interval_factor': serializeParam(
           _intervalFactor,
@@ -164,7 +164,7 @@ class SectionTextStruct extends FFFirebaseStruct {
         ),
         'audio_time': serializeParam(
           _audioTime,
-          ParamType.double,
+          ParamType.int,
         ),
       }.withoutNulls;
 
@@ -193,12 +193,12 @@ class SectionTextStruct extends FFFirebaseStruct {
         ),
         startTime: deserializeParam(
           data['start_time'],
-          ParamType.double,
+          ParamType.int,
           false,
         ),
         endTime: deserializeParam(
           data['end_time'],
-          ParamType.double,
+          ParamType.int,
           false,
         ),
         intervalFactor: deserializeParam(
@@ -208,7 +208,7 @@ class SectionTextStruct extends FFFirebaseStruct {
         ),
         audioTime: deserializeParam(
           data['audio_time'],
-          ParamType.double,
+          ParamType.int,
           false,
         ),
       );
@@ -247,10 +247,10 @@ SectionTextStruct createSectionTextStruct({
   String? title,
   int? sequence,
   int? repetition,
-  double? startTime,
-  double? endTime,
+  int? startTime,
+  int? endTime,
   double? intervalFactor,
-  double? audioTime,
+  int? audioTime,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
   bool create = false,

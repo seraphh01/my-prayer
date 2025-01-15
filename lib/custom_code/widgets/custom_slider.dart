@@ -13,23 +13,23 @@ import 'package:flutter/material.dart';
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
 class CustomSlider extends StatefulWidget {
-  const CustomSlider(
+  CustomSlider(
       {super.key,
       this.width,
       this.height,
-      this.minValue,
-      this.maxValue,
-      this.sliderValue,
-      this.bufferValue,
+      required this.minValue,
+      required this.maxValue,
+      required this.sliderValue,
+      required this.bufferValue,
       this.onValueChange,
       this.onValueChangeEnd});
 
   final double? width;
   final double? height;
-  final double? sliderValue;
-  final int? minValue;
-  final int? maxValue;
-  final double? bufferValue;
+  final double sliderValue;
+  final int minValue;
+  final int maxValue;
+  final int bufferValue;
   final Future Function(double newValue)? onValueChange;
   final Future Function(double newValue)? onValueChangeEnd;
 
@@ -57,7 +57,7 @@ class _CustomSliderState extends State<CustomSlider> {
             widget.maxValue?.toDouble(),
             300.0,
           ),
-          secondaryTrackValue: widget.bufferValue ?? 0,
+          secondaryTrackValue: widget.bufferValue.toDouble() ?? 0,
           secondaryActiveColor: FlutterFlowTheme.of(context).secondary,
           value: _sliding ? _sliderValue : widget.sliderValue ?? 0,
           divisions: 100,
