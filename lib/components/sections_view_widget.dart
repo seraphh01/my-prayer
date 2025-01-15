@@ -71,69 +71,69 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     _model.currentAudioTime =
         _pageManager.currentProgressNotifier.value.inSeconds;
     safeSetState(() {});
-    if (_pageManager.playButtonNotifier.value != ButtonState.playing ||
-        _model.displayAudioPage) {
-      return;
-    }
+    // if (_pageManager.playButtonNotifier.value != ButtonState.playing ||
+    //     _model.displayAudioPage) {
+    //   return;
+    // }
 
-    if (_scrollControllers.isNotEmpty) {
-      var visibleTextIndex = _model.currentSection?.texts.indexWhere(
-          (element) =>
-              element.startTime <= _model.currentAudioTime &&
-              element.endTime > _model.currentAudioTime);
-      if (visibleTextIndex == null || visibleTextIndex == -1) {
-        return;
-      }
-      if (currentPlayingTextIndex == visibleTextIndex) {
-        return;
-      }
-      var controller = _scrollControllers[valueOrDefault<int>(
-        _model.pageViewCurrentIndex,
-        0,
-      )];
+    // if (_scrollControllers.isNotEmpty) {
+    //   var visibleTextIndex = _model.currentSection?.texts.indexWhere(
+    //       (element) =>
+    //           element.startTime <= _model.currentAudioTime &&
+    //           element.endTime > _model.currentAudioTime);
+    //   if (visibleTextIndex == null || visibleTextIndex == -1) {
+    //     return;
+    //   }
+    //   if (currentPlayingTextIndex == visibleTextIndex) {
+    //     return;
+    //   }
+    //   var controller = _scrollControllers[valueOrDefault<int>(
+    //     _model.pageViewCurrentIndex,
+    //     0,
+    //   )];
 
-      if (controller.hasClients) {
-        currentPlayingTextIndex = visibleTextIndex;
+    //   if (controller.hasClients) {
+    //     currentPlayingTextIndex = visibleTextIndex;
 
-        var text = _model.currentSection!.texts[currentPlayingTextIndex];
+    //     var text = _model.currentSection!.texts[currentPlayingTextIndex];
 
-        var currentTextScrollExtent =
-            (_model.currentAudioTime - text.startTime) /
-                _model.currentAudioDuration *
-                controller.position.maxScrollExtent;
+    //     var currentTextScrollExtent =
+    //         (_model.currentAudioTime - text.startTime) /
+    //             _model.currentAudioDuration *
+    //             controller.position.maxScrollExtent;
 
-        var additionalOffset = 0.0;
+    //     var additionalOffset = 0.0;
 
-        var desiredScrollPosition = _model.currentAudioTime /
-            _model.currentAudioDuration *
-            controller.position.maxScrollExtent;
+    //     var desiredScrollPosition = _model.currentAudioTime /
+    //         _model.currentAudioDuration *
+    //         controller.position.maxScrollExtent;
 
-        if (currentTextScrollExtent > 500) {
-          additionalOffset = currentTextScrollExtent;
-        }
+    //     if (currentTextScrollExtent > 500) {
+    //       additionalOffset = currentTextScrollExtent;
+    //     }
 
-        var textContext = _keys[_model.pageViewCurrentIndex]
-                ?[currentPlayingTextIndex]
-            .currentContext;
-        var listViewContext =
-            listViewKeys[_model.pageViewCurrentIndex].currentContext;
-        if (textContext != null && listViewContext != null) {
-          final renderBox = textContext.findRenderObject() as RenderBox;
-          final position = renderBox.localToGlobal(Offset.zero);
+    //     var textContext = _keys[_model.pageViewCurrentIndex]
+    //             ?[currentPlayingTextIndex]
+    //         .currentContext;
+    //     var listViewContext =
+    //         listViewKeys[_model.pageViewCurrentIndex].currentContext;
+    //     if (textContext != null && listViewContext != null) {
+    //       final renderBox = textContext.findRenderObject() as RenderBox;
+    //       final position = renderBox.localToGlobal(Offset.zero);
 
-          final listViewRenderBox =
-              listViewContext.findRenderObject() as RenderBox;
-          final listViewPosition = listViewRenderBox.localToGlobal(Offset.zero);
+    //       final listViewRenderBox =
+    //           listViewContext.findRenderObject() as RenderBox;
+    //       final listViewPosition = listViewRenderBox.localToGlobal(Offset.zero);
 
-          desiredScrollPosition = position.dy - listViewPosition.dy;
-        }
+    //       desiredScrollPosition = position.dy - listViewPosition.dy;
+    //     }
 
-        controller.animateTo(desiredScrollPosition + 60 + additionalOffset,
-            duration: const Duration(milliseconds: 300), curve: Curves.ease);
-      }
-    }
+    //     controller.animateTo(desiredScrollPosition + 60 + additionalOffset,
+    //         duration: const Duration(milliseconds: 300), curve: Curves.ease);
+    //   }
+    // }
 
-    safeSetState(() {});
+    // safeSetState(() {});
   }
 
   @override
@@ -142,6 +142,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     _model = createModel(context, () => SectionsViewModel());
 
     _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
+    _pageManager.currentProgressNotifier.addListener(onCurrentAudioTimeChanged);
 
     // On component load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -223,6 +224,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
   void dispose() {
     _model.maybeDispose();
     _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
+    _pageManager.currentProgressNotifier
+        .removeListener(onCurrentAudioTimeChanged);
     super.dispose();
   }
 
