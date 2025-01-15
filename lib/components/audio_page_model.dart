@@ -9,6 +9,12 @@ class AudioPageModel extends FlutterFlowModel<AudioPageWidget> {
 
   bool isSliding = false;
 
+  int currentAudioTime = 0;
+
+  int bufferedTime = 0;
+
+  int totalDuration = 0;
+
   @override
   void initState(BuildContext context) {}
 

@@ -12,7 +12,9 @@ class SectionsViewModel extends FlutterFlowModel<SectionsViewWidget> {
 
   bool playingAudio = false;
 
-  double? currentAudioTime = 0.0;
+  int currentAudioTime = 0;
+
+  int currentAudioDuration = 0;
 
   List<PrayerSectionStruct> flattenedSections = [];
   void addToFlattenedSections(PrayerSectionStruct item) =>
@@ -30,10 +32,6 @@ class SectionsViewModel extends FlutterFlowModel<SectionsViewWidget> {
   bool displayAudioPage = true;
 
   int? currentSectionIndex = 0;
-
-  int? currentAudioDuration = 0;
-
-  double? bufferedAudioTime = 0.0;
 
   PrayerSectionStruct? currentSection;
   void updateCurrentSectionStruct(Function(PrayerSectionStruct) updateFn) {
