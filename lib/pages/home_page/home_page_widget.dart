@@ -21,10 +21,7 @@ export 'home_page_model.dart';
 class HomePageWidget extends StatefulWidget {
   const HomePageWidget({
     super.key,
-    bool? hasNavigatedHere,
-  }) : hasNavigatedHere = hasNavigatedHere ?? false;
-
-  final bool hasNavigatedHere;
+  });
 
   @override
   State<HomePageWidget> createState() => _HomePageWidgetState();
@@ -41,7 +38,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => HomePageModel());
-
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
@@ -244,14 +240,14 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                 ),
                 Visibility(
                   visible: valueOrDefault<bool>(
-                    !widget.hasNavigatedHere &&
-                        (FFAppState().savedPrayer.prayer != null) &&
-                        (FFAppState().savedPrayer.prayer?.id != ''),
+                    (FFAppState().savedPrayer.prayer != null) &&
+                        (FFAppState().savedPrayer.prayer?.id != '') &&
+                        (FFAppState().currentPrayerId.isEmpty),
                     false,
                   ),
                   child: Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
-                        8.0, 0.0, 8.0, 0.0),
+                        16.0, 0.0, 16.0, 0.0),
                     child: InkWell(
                       splashColor: Colors.transparent,
                       focusColor: Colors.transparent,
@@ -311,7 +307,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                 audioTime,
                                 0.0,
                               ),
-                              ParamType.double,
+                              ParamType.int,
                             ),
                           }.withoutNulls,
                           extra: <String, dynamic>{
@@ -398,7 +394,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                               .value.inSeconds
                                               .toDouble(),
                                           0.0),
-                                      ParamType.double,
+                                      ParamType.int,
                                     ),
                                   }.withoutNulls),
                               child: Container(

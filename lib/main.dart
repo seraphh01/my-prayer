@@ -27,6 +27,7 @@ void main() async {
   final appState = FFAppState(); // Initialize FFAppState
   await appState.initializePersistedState();
 
+  appState.isFirstTime = null;
   // Start final custom actions code
   await actions.checkInternetConnection();
   //await actions.initializeAudioHandler();
