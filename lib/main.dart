@@ -1,4 +1,5 @@
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
+import 'package:my_prayer/service_locator.dart';
 
 import '/custom_code/actions/index.dart' as actions;
 import 'package:provider/provider.dart';
@@ -9,7 +10,6 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import '/backend/supabase/supabase.dart';
 import 'backend/firebase/firebase_config.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
-import 'custom_code/audio/services/service_locator.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'flutter_flow/internationalization.dart';
 

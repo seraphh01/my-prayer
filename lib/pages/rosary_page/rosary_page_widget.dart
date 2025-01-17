@@ -1,3 +1,7 @@
+import 'package:my_prayer/components/download_progress_indicator.dart';
+import 'package:my_prayer/custom_code/download/download_manager.dart';
+import 'package:my_prayer/service_locator.dart';
+
 import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
@@ -6,14 +10,12 @@ import '/components/sections_view_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/custom_code/actions/index.dart' as actions;
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:aligned_tooltip/aligned_tooltip.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'rosary_page_model.dart';
@@ -46,7 +48,7 @@ class RosaryPageWidget extends StatefulWidget {
 
 class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   late RosaryPageModel _model;
-
+  final _downloadManager = getIt<DownloadManager>();
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -121,7 +123,6 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -277,73 +278,11 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                   () => _model.pressedButton = value));
 
                               if (_model.pressedButton == 'download') {
-                                _model.isLoadingDownload = true;
                                 safeSetState(() {});
-                                await actions.downloadPrayer(
-                                  context,
-                                  _model.currentPrayer!,
-                                  (downloadedSize, totalSize) async {
-                                    _model.downloadProgress =
-                                        downloadedSize / (totalSize!);
-                                    _model.downloadedSize = downloadedSize;
-                                    _model.totalSize = totalSize;
-                                    safeSetState(() {});
-                                  },
-                                  () async {
-                                    _model.isDownloading = true;
-                                    _model.isLoadingDownload = false;
-                                    safeSetState(() {});
-                                  },
-                                  () async {
-                                    _model.downloadProgress = 0.0;
-                                    _model.isLoadingDownload = false;
-                                    _model.isDownloading = false;
-                                    safeSetState(() {});
-                                    await showDialog(
-                                      context: context,
-                                      builder: (alertDialogContext) {
-                                        return AlertDialog(
-                                          title: const Text(
-                                              'Descărcarea a fost finalizată!'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(
-                                                  alertDialogContext),
-                                              child: const Text('Ok'),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  },
-                                  () async {
-                                    _model.downloadProgress = 0.0;
-                                    _model.isLoadingDownload = false;
-                                    _model.isDownloading = false;
-                                    safeSetState(() {});
-                                    await showDialog(
-                                      context: context,
-                                      builder: (alertDialogContext) {
-                                        return AlertDialog(
-                                          title: const Text(
-                                              'Descărcarea nu a putut fi finalizată!'),
-                                          content: const Text(
-                                              'Ne pare rău, a intervenit o eroare. Încearcă mai târziu.'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(
-                                                  alertDialogContext),
-                                              child: const Text('Ok'),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  },
+                                await _downloadManager.downloadPrayer(
+                                  context: context,
+                                  prayer: _model.currentPrayer!,
                                 );
-                                _model.isDownloading = false;
-                                _model.isLoadingDownload = false;
-                                safeSetState(() {});
                               } else if (_model.pressedButton == 'share') {
                                 if (!isWeb) {
                                   await Share.share(
@@ -403,107 +342,9 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                             },
                           ),
                         ),
-                        if (_model.isDownloading || _model.isLoadingDownload)
-                          Builder(
-                            builder: (context) {
-                              if (_model.isLoadingDownload) {
-                                return Container(
-                                  width: 48.0,
-                                  height: 48.0,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context).primary,
-                                  ),
-                                  child: Align(
-                                    alignment:
-                                        const AlignmentDirectional(0.0, 0.0),
-                                    child: SizedBox(
-                                      width: 20.0,
-                                      height: 20.0,
-                                      child: custom_widgets
-                                          .CustomCircularProgressIndicator(
-                                        width: 20.0,
-                                        height: 20.0,
-                                        color: FlutterFlowTheme.of(context)
-                                            .alternate,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              } else if (_model.isDownloading) {
-                                return Container(
-                                  width: 48.0,
-                                  height: 48.0,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context).primary,
-                                  ),
-                                  child: AlignedTooltip(
-                                    content: Padding(
-                                      padding: const EdgeInsets.all(4.0),
-                                      child: Text(
-                                        valueOrDefault<String>(
-                                          (int current, int total) {
-                                            return "${(current / (1024 * 1024)).toStringAsFixed(2)} / ${(total / (1024 * 1024)).toStringAsFixed(2)} MB";
-                                          }(_model.downloadedSize!,
-                                              _model.totalSize!),
-                                          '0/0 MB',
-                                        ),
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodySmall
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              letterSpacing: 0.0,
-                                            ),
-                                      ),
-                                    ),
-                                    offset: 4.0,
-                                    preferredDirection: AxisDirection.down,
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    backgroundColor:
-                                        FlutterFlowTheme.of(context)
-                                            .secondaryBackground,
-                                    elevation: 4.0,
-                                    tailBaseWidth: 24.0,
-                                    tailLength: 12.0,
-                                    waitDuration:
-                                        const Duration(milliseconds: 100),
-                                    showDuration:
-                                        const Duration(milliseconds: 1000),
-                                    triggerMode: TooltipTriggerMode.tap,
-                                    child: Align(
-                                      alignment:
-                                          const AlignmentDirectional(0.0, 0.0),
-                                      child: Padding(
-                                        padding: const EdgeInsetsDirectional
-                                            .fromSTEB(0.0, 4.0, 0.0, 0.0),
-                                        child: CircularPercentIndicator(
-                                          percent: _model.downloadProgress,
-                                          radius: 12.0,
-                                          lineWidth: 4.0,
-                                          animation: true,
-                                          animateFromLastPercent: true,
-                                          progressColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .alternate,
-                                          backgroundColor:
-                                              const Color(0xFF676767),
-                                          startAngle: 0.0,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                return Container(
-                                  width: 0.0,
-                                  height: 0.0,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                  ),
-                                );
-                              }
-                            },
-                          ),
+                        const Hero(
+                            tag: "downloadIndicator",
+                            child: DownloadProgressIndicator())
                       ],
                     ),
                   ),

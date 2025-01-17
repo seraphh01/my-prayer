@@ -1,5 +1,5 @@
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
-import 'package:my_prayer/custom_code/audio/services/service_locator.dart';
+import 'package:my_prayer/service_locator.dart';
 
 import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';

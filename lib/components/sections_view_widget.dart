@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
-import 'package:my_prayer/custom_code/audio/services/service_locator.dart';
+import 'package:my_prayer/service_locator.dart';
 
 import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
@@ -60,6 +60,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
   }
 
   void onTrackIndexChanged() async {
+    if (_model.pageViewCurrentIndex == _pageManager.trackIndexNotifier.value) {
+      return;
+    }
     await _model.pageViewController?.animateToPage(
       _pageManager.trackIndexNotifier.value,
       duration: const Duration(milliseconds: 500),
@@ -257,7 +260,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                   width: double.infinity,
                   height: double.infinity,
                   child: PageView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
+                    physics: const AlwaysScrollableScrollPhysics(),
                     controller: _model.pageViewController ??= PageController(
                         initialPage: max(
                             0,
@@ -267,9 +270,12 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                   0,
                                 ),
                                 prayerSection.length - 1))),
-                    onPageChanged: (_) async {
+                    onPageChanged: (pageIndex) async {
                       _model.currentAudioTime = 0;
                       _model.isLoading = true;
+
+                      await _pageManager.skipToIndex(pageIndex);
+
                       safeSetState(() {});
                       if ((_model.flattenedSections
                                       .elementAtOrNull(valueOrDefault<int>(
@@ -333,396 +339,391 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                 return Container(
                                   height: double.infinity,
                                   decoration: const BoxDecoration(),
-                                  child: RefreshIndicator(
-                                    key: const Key('RefreshIndicator_zatxzwlf'),
-                                    color: FlutterFlowTheme.of(context).primary,
-                                    onRefresh: () async {
-                                      safeSetState(() {});
-                                    },
-                                    child: SingleChildScrollView(
-                                      controller: _scrollControllers[
-                                          prayerSectionIndex],
-                                      scrollDirection: Axis.vertical,
-                                      physics:
-                                          const AlwaysScrollableScrollPhysics(),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Column(
-                                            mainAxisSize: MainAxisSize.max,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
+                                  child: SingleChildScrollView(
+                                    controller:
+                                        _scrollControllers[prayerSectionIndex],
+                                    scrollDirection: Axis.vertical,
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Column(
+                                          mainAxisSize: MainAxisSize.max,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            AutoSizeText(
+                                              valueOrDefault<String>(
+                                                _model.currentSection?.title,
+                                                'Titlu sectiune',
+                                              ),
+                                              textAlign: TextAlign.center,
+                                              maxLines: 1,
+                                              minFontSize: 24.0,
+                                              style:
+                                                  FlutterFlowTheme.of(context)
+                                                      .titleMedium
+                                                      .override(
+                                                        fontFamily:
+                                                            'Merriweather',
+                                                        fontSize: 24.0,
+                                                        letterSpacing: 0.0,
+                                                      ),
+                                            ),
+                                            if (prayerSectionItem.subtitle !=
+                                                '')
                                               AutoSizeText(
                                                 valueOrDefault<String>(
-                                                  _model.currentSection?.title,
-                                                  'Titlu sectiune',
+                                                  _model
+                                                      .currentSection?.subtitle,
+                                                  'Subtitlu sectiune',
                                                 ),
                                                 textAlign: TextAlign.center,
                                                 maxLines: 1,
-                                                minFontSize: 24.0,
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .titleMedium
-                                                        .override(
-                                                          fontFamily:
-                                                              'Merriweather',
-                                                          fontSize: 24.0,
-                                                          letterSpacing: 0.0,
-                                                        ),
-                                              ),
-                                              if (prayerSectionItem.subtitle !=
-                                                  '')
-                                                AutoSizeText(
-                                                  valueOrDefault<String>(
-                                                    _model.currentSection
-                                                        ?.subtitle,
-                                                    'Subtitlu sectiune',
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                  maxLines: 1,
-                                                  minFontSize: 14.0,
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .labelMedium
-                                                      .override(
-                                                        fontFamily: 'Inter',
-                                                        fontSize:
-                                                            valueOrDefault<
-                                                                double>(
-                                                          valueOrDefault<
-                                                                  double>(
-                                                                FFAppState()
-                                                                    .fontSizeMultiplier,
-                                                                1.0,
-                                                              ) *
-                                                              14,
-                                                          32.0,
-                                                        ),
-                                                        letterSpacing: 0.0,
-                                                        fontStyle:
-                                                            FontStyle.italic,
+                                                minFontSize: 14.0,
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .labelMedium
+                                                    .override(
+                                                      fontFamily: 'Inter',
+                                                      fontSize: valueOrDefault<
+                                                          double>(
+                                                        valueOrDefault<double>(
+                                                              FFAppState()
+                                                                  .fontSizeMultiplier,
+                                                              1.0,
+                                                            ) *
+                                                            14,
+                                                        32.0,
                                                       ),
-                                                ),
-                                            ].divide(
-                                                const SizedBox(height: 4.0)),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsetsDirectional
-                                                .fromSTEB(16.0, 0.0, 16.0, 0.0),
-                                            child: Builder(
-                                              builder: (context) {
-                                                final texts = _model
-                                                        .currentSection?.texts
-                                                        .toList() ??
-                                                    [];
-                                                if (texts.isEmpty) {
-                                                  return const Center(
-                                                    child: SizedBox(
-                                                      width: double.infinity,
-                                                      height: 300.0,
-                                                      child:
-                                                          EmptyListComponentWidget(
-                                                        title:
-                                                            'Textul nu a putut fi încărcat!',
-                                                        subtitle:
-                                                            'Vă rugăm încercați mai târziu.',
-                                                      ),
+                                                      letterSpacing: 0.0,
+                                                      fontStyle:
+                                                          FontStyle.italic,
                                                     ),
-                                                  );
-                                                }
-                                                if (!_keys.containsKey(
-                                                        prayerSectionIndex) ||
-                                                    _keys[prayerSectionIndex]!
-                                                        .isEmpty) {
-                                                  _keys[prayerSectionIndex] =
-                                                      List.generate(
-                                                          _model
-                                                                  .currentSection
-                                                                  ?.texts
-                                                                  .length ??
-                                                              0,
-                                                          (_) => GlobalKey());
-                                                }
-                                                return ListView.builder(
-                                                  key: listViewKeys[
-                                                      prayerSectionIndex],
-                                                  padding: EdgeInsets.zero,
-                                                  primary: false,
-                                                  shrinkWrap: true,
-                                                  scrollDirection:
-                                                      Axis.vertical,
-                                                  itemCount: texts.length,
-                                                  itemBuilder:
-                                                      (context, textsIndex) {
-                                                    final textsItem =
-                                                        texts[textsIndex];
-                                                    return Column(
-                                                      key: _keys[
-                                                              prayerSectionIndex]![
-                                                          textsIndex],
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Align(
-                                                          alignment:
-                                                              const AlignmentDirectional(
-                                                                  0.0, 0.0),
-                                                          child: InkWell(
-                                                            splashColor: Colors
-                                                                .transparent,
-                                                            focusColor: Colors
-                                                                .transparent,
-                                                            hoverColor: Colors
-                                                                .transparent,
-                                                            highlightColor:
-                                                                Colors
-                                                                    .transparent,
-                                                            onTap: () async {
-                                                              _model.currentAudioTime =
-                                                                  textsItem
-                                                                      .startTime
-                                                                      .floor();
-                                                              safeSetState(
-                                                                  () {});
-                                                            },
-                                                            child: Row(
+                                              ),
+                                          ].divide(const SizedBox(height: 4.0)),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsetsDirectional
+                                              .fromSTEB(16.0, 0.0, 16.0, 0.0),
+                                          child: Builder(
+                                            builder: (context) {
+                                              final texts = _model
+                                                      .currentSection?.texts
+                                                      .toList() ??
+                                                  [];
+                                              if (texts.isEmpty) {
+                                                return const Center(
+                                                  child: SizedBox(
+                                                    width: double.infinity,
+                                                    height: 300.0,
+                                                    child:
+                                                        EmptyListComponentWidget(
+                                                      title:
+                                                          'Textul nu a putut fi încărcat!',
+                                                      subtitle:
+                                                          'Vă rugăm încercați mai târziu.',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                              if (!_keys.containsKey(
+                                                      prayerSectionIndex) ||
+                                                  _keys[prayerSectionIndex]!
+                                                      .isEmpty) {
+                                                _keys[prayerSectionIndex] =
+                                                    List.generate(
+                                                        _model
+                                                                .currentSection
+                                                                ?.texts
+                                                                .length ??
+                                                            0,
+                                                        (_) => GlobalKey());
+                                              }
+                                              return ListView.builder(
+                                                key: listViewKeys[
+                                                    prayerSectionIndex],
+                                                padding: EdgeInsets.zero,
+                                                primary: false,
+                                                shrinkWrap: true,
+                                                scrollDirection: Axis.vertical,
+                                                itemCount: texts.length,
+                                                itemBuilder:
+                                                    (context, textsIndex) {
+                                                  final textsItem =
+                                                      texts[textsIndex];
+                                                  return Column(
+                                                    key: _keys[
+                                                            prayerSectionIndex]![
+                                                        textsIndex],
+                                                    mainAxisSize:
+                                                        MainAxisSize.max,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Align(
+                                                        alignment:
+                                                            const AlignmentDirectional(
+                                                                0.0, 0.0),
+                                                        child: InkWell(
+                                                          splashColor: Colors
+                                                              .transparent,
+                                                          focusColor: Colors
+                                                              .transparent,
+                                                          hoverColor: Colors
+                                                              .transparent,
+                                                          highlightColor: Colors
+                                                              .transparent,
+                                                          onTap: () async {
+                                                            await _pageManager
+                                                                .seek(Duration(
+                                                                    seconds:
+                                                                        textsItem
+                                                                            .startTime));
+                                                          },
+                                                          child: Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .max,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .center,
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            children: [
+                                                              if ((textsItem
+                                                                          .startTime <=
+                                                                      _model
+                                                                          .currentAudioTime) &&
+                                                                  (textsItem
+                                                                          .endTime >
+                                                                      _model
+                                                                          .currentAudioTime))
+                                                                Icon(
+                                                                  Icons
+                                                                      .chevron_right,
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .secondary,
+                                                                  size: 16.0,
+                                                                ),
+                                                              Flexible(
+                                                                child:
+                                                                    Container(
+                                                                  decoration:
+                                                                      const BoxDecoration(),
+                                                                  child:
+                                                                      Builder(
+                                                                    builder:
+                                                                        (context) {
+                                                                      if ((textsItem.startTime <=
+                                                                              _model
+                                                                                  .currentAudioTime) &&
+                                                                          (textsItem.endTime >
+                                                                              _model.currentAudioTime)) {
+                                                                        return AutoSizeText(
+                                                                          '${textsItem.repetition != 1 ? textsItem.repetition.toString() : ''}${textsItem.repetition != 1 ? ' ' : ''}${textsItem.title}',
+                                                                          textAlign:
+                                                                              TextAlign.center,
+                                                                          maxLines:
+                                                                              1,
+                                                                          minFontSize:
+                                                                              16.0,
+                                                                          style: FlutterFlowTheme.of(context)
+                                                                              .titleSmall
+                                                                              .override(
+                                                                            fontFamily:
+                                                                                'Merriweather',
+                                                                            fontSize:
+                                                                                FFAppState().fontSizeMultiplier * 16,
+                                                                            letterSpacing:
+                                                                                0.0,
+                                                                            shadows: [
+                                                                              Shadow(
+                                                                                color: FlutterFlowTheme.of(context).primaryText,
+                                                                                offset: const Offset(0.0, 0.0),
+                                                                                blurRadius: 0.5,
+                                                                              )
+                                                                            ],
+                                                                          ),
+                                                                        );
+                                                                      } else {
+                                                                        return Text(
+                                                                          '${textsItem.repetition > 1 ? textsItem.repetition.toString() : ''}${textsItem.repetition > 1 ? ' ' : ''}${textsItem.title}',
+                                                                          textAlign:
+                                                                              TextAlign.center,
+                                                                          style: FlutterFlowTheme.of(context)
+                                                                              .titleMedium
+                                                                              .override(
+                                                                                fontFamily: 'Merriweather',
+                                                                                color: FlutterFlowTheme.of(context).secondaryText,
+                                                                                fontSize: valueOrDefault<double>(
+                                                                                  valueOrDefault<double>(
+                                                                                        FFAppState().fontSizeMultiplier,
+                                                                                        1.0,
+                                                                                      ) *
+                                                                                      16,
+                                                                                  32.0,
+                                                                                ),
+                                                                                letterSpacing: 0.0,
+                                                                                fontWeight: FontWeight.w500,
+                                                                              ),
+                                                                        );
+                                                                      }
+                                                                    },
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              if ((textsItem
+                                                                          .startTime <=
+                                                                      _model
+                                                                          .currentAudioTime) &&
+                                                                  (textsItem
+                                                                          .endTime >
+                                                                      _model
+                                                                          .currentAudioTime))
+                                                                Icon(
+                                                                  Icons
+                                                                      .chevron_left,
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .secondary,
+                                                                  size: 16.0,
+                                                                ),
+                                                            ].divide(
+                                                                const SizedBox(
+                                                                    width:
+                                                                        8.0)),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      if ((textsItem
+                                                              .textElements
+                                                              .isNotEmpty) ==
+                                                          false)
+                                                        Text(
+                                                          'Textul va fi adăugat curând.',
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .bodyMedium
+                                                              .override(
+                                                                fontFamily:
+                                                                    'Inter',
+                                                                letterSpacing:
+                                                                    0.0,
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic,
+                                                              ),
+                                                        ),
+                                                      if ((textsItem
+                                                              .textElements
+                                                              .isNotEmpty) ==
+                                                          true)
+                                                        Builder(
+                                                          builder: (context) {
+                                                            final textElement =
+                                                                textsItem
+                                                                    .textElements
+                                                                    .toList();
+
+                                                            return Column(
                                                               mainAxisSize:
                                                                   MainAxisSize
                                                                       .max,
                                                               mainAxisAlignment:
                                                                   MainAxisAlignment
-                                                                      .center,
+                                                                      .start,
                                                               crossAxisAlignment:
                                                                   CrossAxisAlignment
-                                                                      .center,
-                                                              children: [
-                                                                if ((textsItem
-                                                                            .startTime <=
-                                                                        _model
-                                                                            .currentAudioTime) &&
-                                                                    (textsItem
-                                                                            .endTime >
-                                                                        _model
-                                                                            .currentAudioTime))
-                                                                  Icon(
-                                                                    Icons
-                                                                        .chevron_right,
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .secondary,
-                                                                    size: 16.0,
+                                                                      .stretch,
+                                                              children: List.generate(
+                                                                  textElement
+                                                                      .length,
+                                                                  (textElementIndex) {
+                                                                final textElementItem =
+                                                                    textElement[
+                                                                        textElementIndex];
+                                                                return wrapWithModel(
+                                                                  model: _model
+                                                                      .prayerTextModels
+                                                                      .getModel(
+                                                                    textElementItem
+                                                                        .text,
+                                                                    textElementIndex,
                                                                   ),
-                                                                Flexible(
+                                                                  updateCallback: () =>
+                                                                      safeSetState(
+                                                                          () {}),
                                                                   child:
-                                                                      Container(
-                                                                    decoration:
-                                                                        const BoxDecoration(),
-                                                                    child:
-                                                                        Builder(
-                                                                      builder:
-                                                                          (context) {
-                                                                        if ((textsItem.startTime <= _model.currentAudioTime) &&
-                                                                            (textsItem.endTime >
-                                                                                _model.currentAudioTime)) {
-                                                                          return AutoSizeText(
-                                                                            '${textsItem.repetition != 1 ? textsItem.repetition.toString() : ''}${textsItem.repetition != 1 ? ' ' : ''}${textsItem.title}',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            maxLines:
-                                                                                1,
-                                                                            minFontSize:
-                                                                                16.0,
-                                                                            style:
-                                                                                FlutterFlowTheme.of(context).titleSmall.override(
-                                                                              fontFamily: 'Merriweather',
-                                                                              fontSize: FFAppState().fontSizeMultiplier * 16,
-                                                                              letterSpacing: 0.0,
-                                                                              shadows: [
-                                                                                Shadow(
-                                                                                  color: FlutterFlowTheme.of(context).primaryText,
-                                                                                  offset: const Offset(0.0, 0.0),
-                                                                                  blurRadius: 0.5,
-                                                                                )
-                                                                              ],
-                                                                            ),
-                                                                          );
-                                                                        } else {
-                                                                          return Text(
-                                                                            '${textsItem.repetition > 1 ? textsItem.repetition.toString() : ''}${textsItem.repetition > 1 ? ' ' : ''}${textsItem.title}',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style: FlutterFlowTheme.of(context).titleMedium.override(
-                                                                                  fontFamily: 'Merriweather',
-                                                                                  color: FlutterFlowTheme.of(context).secondaryText,
-                                                                                  fontSize: valueOrDefault<double>(
-                                                                                    valueOrDefault<double>(
-                                                                                          FFAppState().fontSizeMultiplier,
-                                                                                          1.0,
-                                                                                        ) *
-                                                                                        16,
-                                                                                    32.0,
-                                                                                  ),
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.w500,
-                                                                                ),
-                                                                          );
-                                                                        }
-                                                                      },
+                                                                      PrayerTextWidget(
+                                                                    key: Key(
+                                                                      'Keywwi_${textElementItem.text}',
                                                                     ),
+                                                                    isFirstInList:
+                                                                        textElementIndex ==
+                                                                            0,
+                                                                    textInput:
+                                                                        textElementItem
+                                                                            .text,
+                                                                    isHighlighted: (textsItem.startTime + textElementItem.startTime * textsItem.intervalFactor <=
+                                                                            _model
+                                                                                .currentAudioTime) &&
+                                                                        (textsItem.startTime +
+                                                                                textElementItem.endTime * textsItem.intervalFactor >
+                                                                            _model.currentAudioTime),
+                                                                    onTextPressed:
+                                                                        () async {
+                                                                      final newAudioTime = textsItem
+                                                                              .startTime +
+                                                                          textElementItem.startTime *
+                                                                              valueOrDefault<double>(
+                                                                                textsItem.intervalFactor,
+                                                                                1.0,
+                                                                              );
+
+                                                                      getIt<PageManager>().seek(Duration(
+                                                                          seconds:
+                                                                              newAudioTime.toInt()));
+                                                                      _model.currentAudioTime =
+                                                                          newAudioTime
+                                                                              .floor();
+                                                                      safeSetState(
+                                                                          () {});
+                                                                    },
                                                                   ),
-                                                                ),
-                                                                if ((textsItem
-                                                                            .startTime <=
-                                                                        _model
-                                                                            .currentAudioTime) &&
-                                                                    (textsItem
-                                                                            .endTime >
-                                                                        _model
-                                                                            .currentAudioTime))
-                                                                  Icon(
-                                                                    Icons
-                                                                        .chevron_left,
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .secondary,
-                                                                    size: 16.0,
-                                                                  ),
-                                                              ].divide(
+                                                                );
+                                                              }).divide(
                                                                   const SizedBox(
-                                                                      width:
-                                                                          8.0)),
-                                                            ),
-                                                          ),
+                                                                      height:
+                                                                          4.0)),
+                                                            );
+                                                          },
                                                         ),
-                                                        if ((textsItem
-                                                                .textElements
-                                                                .isNotEmpty) ==
-                                                            false)
-                                                          Text(
-                                                            'Textul va fi adăugat curând.',
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .bodyMedium
-                                                                .override(
-                                                                  fontFamily:
-                                                                      'Inter',
-                                                                  letterSpacing:
-                                                                      0.0,
-                                                                  fontStyle:
-                                                                      FontStyle
-                                                                          .italic,
-                                                                ),
-                                                          ),
-                                                        if ((textsItem
-                                                                .textElements
-                                                                .isNotEmpty) ==
-                                                            true)
-                                                          Builder(
-                                                            builder: (context) {
-                                                              final textElement =
-                                                                  textsItem
-                                                                      .textElements
-                                                                      .toList();
-
-                                                              return Column(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .start,
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .stretch,
-                                                                children: List.generate(
-                                                                    textElement
-                                                                        .length,
-                                                                    (textElementIndex) {
-                                                                  final textElementItem =
-                                                                      textElement[
-                                                                          textElementIndex];
-                                                                  return wrapWithModel(
-                                                                    model: _model
-                                                                        .prayerTextModels
-                                                                        .getModel(
-                                                                      textElementItem
-                                                                          .text,
-                                                                      textElementIndex,
-                                                                    ),
-                                                                    updateCallback: () =>
-                                                                        safeSetState(
-                                                                            () {}),
-                                                                    child:
-                                                                        PrayerTextWidget(
-                                                                      key: Key(
-                                                                        'Keywwi_${textElementItem.text}',
-                                                                      ),
-                                                                      isFirstInList:
-                                                                          textElementIndex ==
-                                                                              0,
-                                                                      textInput:
-                                                                          textElementItem
-                                                                              .text,
-                                                                      isHighlighted: (textsItem.startTime + textElementItem.startTime * textsItem.intervalFactor <=
-                                                                              _model
-                                                                                  .currentAudioTime) &&
-                                                                          (textsItem.startTime + textElementItem.endTime * textsItem.intervalFactor >
-                                                                              _model.currentAudioTime),
-                                                                      onTextPressed:
-                                                                          () async {
-                                                                        final newAudioTime = textsItem.startTime +
-                                                                            textElementItem.startTime *
-                                                                                valueOrDefault<double>(
-                                                                                  textsItem.intervalFactor,
-                                                                                  1.0,
-                                                                                );
-
-                                                                        getIt<PageManager>().seek(Duration(
-                                                                            seconds:
-                                                                                newAudioTime.toInt()));
-                                                                        _model.currentAudioTime =
-                                                                            newAudioTime.floor();
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      },
-                                                                    ),
-                                                                  );
-                                                                }).divide(
-                                                                    const SizedBox(
-                                                                        height:
-                                                                            4.0)),
-                                                              );
-                                                            },
-                                                          ),
-                                                      ]
-                                                          .divide(
-                                                              const SizedBox(
-                                                                  height: 8.0))
-                                                          .around(
-                                                              const SizedBox(
-                                                                  height: 8.0)),
-                                                    );
-                                                  },
-                                                );
-                                              },
-                                            ),
+                                                    ]
+                                                        .divide(const SizedBox(
+                                                            height: 8.0))
+                                                        .around(const SizedBox(
+                                                            height: 8.0)),
+                                                  );
+                                                },
+                                              );
+                                            },
                                           ),
-                                        ]
-                                            .divide(
-                                                const SizedBox(height: 16.0))
-                                            .addToStart(
-                                                const SizedBox(height: 16.0))
-                                            .addToEnd(
-                                                const SizedBox(height: 16.0)),
-                                      ),
+                                        ),
+                                      ]
+                                          .divide(const SizedBox(height: 16.0))
+                                          .addToStart(
+                                              const SizedBox(height: 16.0))
+                                          .addToEnd(
+                                              const SizedBox(height: 16.0)),
                                     ),
                                   ),
                                 );
