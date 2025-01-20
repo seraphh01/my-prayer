@@ -1,8 +1,9 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:my_prayer/components/download_progress_indicator.dart';
 import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
-import 'package:my_prayer/custom_code/audio/services/service_locator.dart';
+import 'package:my_prayer/service_locator.dart';
 
 import '/backend/api_requests/api_calls.dart';
 import '/components/sub_types_view_widget.dart';
@@ -10,7 +11,6 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/backend/schema/structs/index.dart';
-import '/custom_code/actions/index.dart' as actions;
 import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -173,6 +173,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             centerTitle: true,
             toolbarHeight: 48.0,
             elevation: 0.0,
+            automaticallyImplyLeading: false,
+            leading: const Hero(
+                tag: "downloadIndicator", child: DownloadProgressIndicator()),
           ),
         ),
         body: SafeArea(

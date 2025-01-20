@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'notifiers/play_button_notifier.dart';
 import 'notifiers/progress_notifier.dart';
 import 'package:audio_service/audio_service.dart';
-import 'services/service_locator.dart';
+import 'package:my_prayer/service_locator.dart';
 
 class PageManager {
   // Listeners: Updates going to the UI
