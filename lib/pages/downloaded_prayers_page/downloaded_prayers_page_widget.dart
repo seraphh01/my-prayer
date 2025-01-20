@@ -150,10 +150,6 @@ class _DownloadedPrayersPageWidgetState
                                       downloadedPrayerItem.id,
                                       ParamType.String,
                                     ),
-                                    'downloadedPrayer': serializeParam(
-                                      downloadedPrayerItem,
-                                      ParamType.DataStruct,
-                                    ),
                                   }.withoutNulls,
                                 );
                               },

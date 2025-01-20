@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:my_prayer/components/download_progress_indicator.dart';
 import 'package:my_prayer/custom_code/download/download_manager.dart';
 import 'package:my_prayer/service_locator.dart';
@@ -26,7 +27,6 @@ class RosaryPageWidget extends StatefulWidget {
     super.key,
     required this.prayerId,
     int? page,
-    this.downloadedPrayer,
     bool? clearSavedPrayer,
     int? initialAudioTime,
     bool? continueAudio,
@@ -37,7 +37,6 @@ class RosaryPageWidget extends StatefulWidget {
 
   final String? prayerId;
   final int page;
-  final PrayerStruct? downloadedPrayer;
   final bool clearSavedPrayer;
   final int initialAudioTime;
   final bool continueAudio;
@@ -65,43 +64,18 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
 
         safeSetState(() {});
       }
-      _model.weekDay = valueOrDefault<int>(
-        DateTime.fromMillisecondsSinceEpoch(
-                getCurrentTimestamp.millisecondsSinceEpoch)
-            .weekday,
-        1,
-      );
-      _model.rosaryTabIndex = valueOrDefault<int>(
-        () {
-          if ((_model.weekDay == 1) || (_model.weekDay == 6)) {
-            return 0;
-          } else if (_model.weekDay == 4) {
-            return 1;
-          } else if ((_model.weekDay == 2) || (_model.weekDay == 5)) {
-            return 2;
-          } else {
-            return 3;
-          }
-        }(),
-        0,
-      );
-      if (widget.downloadedPrayer != null) {
-        _model.currentPrayer = widget.downloadedPrayer;
-        safeSetState(() {});
-      } else if (FFAppState()
+
+      if (FFAppState()
           .downloadedPrayers
           .map((e) => e.id)
-          .toList()
           .toList()
           .contains((widget.prayerId!))) {
         _model.currentPrayer = FFAppState()
             .downloadedPrayers
-            .where((e) => valueOrDefault<bool>(
+            .firstWhereOrNull((e) => valueOrDefault<bool>(
                   e.id == widget.prayerId,
                   false,
-                ))
-            .toList()
-            .firstOrNull;
+                ));
         safeSetState(() {});
       } else {
         _model.prayerResponse =
@@ -173,12 +147,11 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                           padding: const EdgeInsets.all(4.0),
                           child: Text(
                             valueOrDefault<bool>(
-                              (widget.downloadedPrayer != null) ||
-                                  (FFAppState()
-                                      .downloadedPrayers
-                                      .map((e) => e.id)
-                                      .toList()
-                                      .contains((widget.prayerId!))),
+                              FFAppState()
+                                  .downloadedPrayers
+                                  .map((e) => e.id)
+                                  .toList()
+                                  .contains((widget.prayerId!)),
                               false,
                             )
                                 ? 'Disponibilă în mod offline.'
@@ -206,12 +179,11 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                         child: Builder(
                           builder: (context) {
                             if (valueOrDefault<bool>(
-                              (widget.downloadedPrayer != null) ||
-                                  (FFAppState()
-                                      .downloadedPrayers
-                                      .map((e) => e.id)
-                                      .toList()
-                                      .contains((widget.prayerId!))),
+                              FFAppState()
+                                  .downloadedPrayers
+                                  .map((e) => e.id)
+                                  .toList()
+                                  .contains((widget.prayerId!)),
                               false,
                             )) {
                               return Icon(
@@ -266,7 +238,13 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                         prayer: _model.currentPrayer!,
                                         enableDownloadButton: FFAppState()
                                                 .isDeviceOnline &&
-                                            (widget.downloadedPrayer == null),
+                                            (!valueOrDefault<bool>(
+                                              FFAppState()
+                                                  .downloadedPrayers
+                                                  .map((e) => e.id)
+                                                  .contains((widget.prayerId!)),
+                                              false,
+                                            )),
                                         currentPageIndex: _model
                                             .sectionsViewModel
                                             .pageViewCurrentIndex,

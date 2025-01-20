@@ -85,12 +85,6 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               'page',
               ParamType.int,
             ),
-            downloadedPrayer: params.getParam(
-              'downloadedPrayer',
-              ParamType.DataStruct,
-              isList: false,
-              structBuilder: PrayerStruct.fromSerializableMap,
-            ),
             clearSavedPrayer: params.getParam(
               'clearSavedPrayer',
               ParamType.bool,

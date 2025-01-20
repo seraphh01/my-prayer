@@ -9,11 +9,6 @@ import 'package:flutter/material.dart';
 
 class RosaryPageModel extends FlutterFlowModel<RosaryPageWidget> {
   ///  Local state fields for this page.
-
-  int? weekDay = 1;
-
-  int? rosaryTabIndex = 0;
-
   bool playingAudio = false;
 
   double? currentAudioTime;

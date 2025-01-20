@@ -36,7 +36,7 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 import 'package:audio_service/audio_service.dart';
-import '../audio/services/service_locator.dart';
+import 'package:my_prayer/service_locator.dart';
 import '../audio/page_manager.dart';
 import '../audio/notifiers/play_button_notifier.dart';
 import 'dart:convert'; // For base64 encoding
@@ -210,6 +210,9 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
                       ),
                       onPressed: _pageManager.pause,
                     );
+
+                  default:
+                    return Container();
                 }
               }),
           FlutterFlowIconButton(

@@ -753,8 +753,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                           (selectedAudioTime) async {
                                         getIt<PageManager>().seek(Duration(
                                             seconds: selectedAudioTime));
-                                        _model.currentAudioTime =
-                                            selectedAudioTime;
                                         safeSetState(() {});
                                       },
                                     ),
