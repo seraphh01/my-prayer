@@ -67,190 +67,203 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
           );
         }
 
-        return ListView.builder(
-          padding: EdgeInsets.zero,
-          primary: false,
-          shrinkWrap: true,
-          scrollDirection: Axis.vertical,
-          itemCount: subTypes.length,
-          itemBuilder: (context, subTypesIndex) {
-            final subTypesItem = subTypes[subTypesIndex];
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Column(
-                  mainAxisSize: MainAxisSize.max,
+        return Column(
+          children: [
+            Divider(
+              height: 1.0,
+              thickness: 1.0,
+              color: FlutterFlowTheme.of(context).secondary,
+            ),
+            ListView.builder(
+              padding: EdgeInsets.zero,
+              primary: false,
+              shrinkWrap: true,
+              scrollDirection: Axis.vertical,
+              itemCount: subTypes.length,
+              itemBuilder: (context, subTypesIndex) {
+                final subTypesItem = subTypes[subTypesIndex];
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(
-                          0.0, 0.0, 1.0, 2.0),
-                      child: InkWell(
-                        splashColor: Colors.transparent,
-                        focusColor: Colors.transparent,
-                        hoverColor: Colors.transparent,
-                        highlightColor: Colors.transparent,
-                        onTap: () async {
-                          if (subTypesItem.prayers.length == 1) {
-                            _model.currentExpandedType = null;
-                            safeSetState(() {});
-                            await widget.onSelectPrayer?.call(
-                              subTypesItem.prayers.firstOrNull!.id,
-                            );
-                          } else {
-                            if (_model.currentExpandedType == subTypesItem.id) {
-                              _model.currentExpandedType = null;
-                              safeSetState(() {});
-                            } else {
-                              _model.currentExpandedType = subTypesItem.id;
-                              safeSetState(() {});
-                            }
-                          }
-                        },
-                        child: Material(
-                          color: Colors.transparent,
-                          child: ListTile(
-                            title: Text(
-                              subTypesItem.type.maybeHandleOverflow(
-                                maxChars: 40,
-                              ),
-                              style: FlutterFlowTheme.of(context)
-                                  .titleMedium
-                                  .override(
-                                    fontFamily: 'Merriweather',
-                                    color:
-                                        FlutterFlowTheme.of(context).alternate,
-                                    letterSpacing: 0.0,
+                    Column(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(
+                              0.0, 0.0, 1.0, 2.0),
+                          child: InkWell(
+                            splashColor: Colors.transparent,
+                            focusColor: Colors.transparent,
+                            hoverColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            onTap: () async {
+                              if (subTypesItem.prayers.length == 1) {
+                                _model.currentExpandedType = null;
+                                safeSetState(() {});
+                                await widget.onSelectPrayer?.call(
+                                  subTypesItem.prayers.firstOrNull!.id,
+                                );
+                              } else {
+                                if (_model.currentExpandedType ==
+                                    subTypesItem.id) {
+                                  _model.currentExpandedType = null;
+                                  safeSetState(() {});
+                                } else {
+                                  _model.currentExpandedType = subTypesItem.id;
+                                  safeSetState(() {});
+                                }
+                              }
+                            },
+                            child: Material(
+                              color: Colors.transparent,
+                              child: ListTile(
+                                title: Text(
+                                  subTypesItem.type.maybeHandleOverflow(
+                                    maxChars: 40,
                                   ),
-                            ),
-                            trailing: Icon(
-                              Icons.keyboard_arrow_right_rounded,
-                              color: FlutterFlowTheme.of(context).alternate,
-                              size: 24.0,
-                            ),
-                            dense: true,
-                            contentPadding:
-                                const EdgeInsetsDirectional.fromSTEB(
-                                    12.0, 0.0, 12.0, 0.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(0.0),
+                                  style: FlutterFlowTheme.of(context)
+                                      .titleMedium
+                                      .override(
+                                        fontFamily: 'Merriweather',
+                                        color: FlutterFlowTheme.of(context)
+                                            .alternate,
+                                        letterSpacing: 0.0,
+                                      ),
+                                ),
+                                trailing: Icon(
+                                  Icons.keyboard_arrow_right_rounded,
+                                  color: FlutterFlowTheme.of(context).alternate,
+                                  size: 24.0,
+                                ),
+                                dense: true,
+                                contentPadding:
+                                    const EdgeInsetsDirectional.fromSTEB(
+                                        12.0, 0.0, 12.0, 0.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(0.0),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                        Divider(
+                          height: 1.0,
+                          thickness: 1.0,
+                          color: FlutterFlowTheme.of(context).secondary,
+                        ),
+                      ],
                     ),
-                    Divider(
-                      height: 1.0,
-                      thickness: 1.0,
-                      color: FlutterFlowTheme.of(context).secondary,
-                    ),
-                  ],
-                ),
-                if (subTypesItem.id == _model.currentExpandedType)
-                  Column(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      if (subTypesItem.prayers.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              8.0, 0.0, 0.0, 0.0),
-                          child: Builder(
-                            builder: (context) {
-                              final prayers = subTypesItem.prayers
-                                  .sortedList(
-                                      keyOf: (e) => e.sequence, desc: false)
-                                  .toList();
+                    if (subTypesItem.id == _model.currentExpandedType)
+                      Column(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          if (subTypesItem.prayers.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                  8.0, 0.0, 0.0, 0.0),
+                              child: Builder(
+                                builder: (context) {
+                                  final prayers = subTypesItem.prayers
+                                      .sortedList(
+                                          keyOf: (e) => e.sequence, desc: false)
+                                      .toList();
 
-                              return ListView.builder(
-                                padding: EdgeInsets.zero,
-                                primary: false,
-                                shrinkWrap: true,
-                                scrollDirection: Axis.vertical,
-                                itemCount: prayers.length,
-                                itemBuilder: (context, prayersIndex) {
-                                  final prayersItem = prayers[prayersIndex];
-                                  return Padding(
-                                    padding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                            0.0, 0.0, 1.0, 2.0),
-                                    child: InkWell(
-                                      splashColor: Colors.transparent,
-                                      focusColor: Colors.transparent,
-                                      hoverColor: Colors.transparent,
-                                      highlightColor: Colors.transparent,
-                                      onTap: () async {
-                                        _model.currentExpandedType = null;
-                                        safeSetState(() {});
-                                        await widget.onSelectPrayer?.call(
-                                          prayersItem.id,
-                                        );
-                                      },
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: ListTile(
-                                          title: Text(
-                                            prayersItem.subtitle,
-                                            style: FlutterFlowTheme.of(context)
-                                                .titleSmall
-                                                .override(
-                                                  fontFamily: 'Merriweather',
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .alternate,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                          ),
-                                          trailing: Icon(
-                                            Icons.keyboard_arrow_right_rounded,
-                                            color: FlutterFlowTheme.of(context)
-                                                .alternate,
-                                            size: 24.0,
-                                          ),
-                                          dense: true,
-                                          contentPadding:
-                                              const EdgeInsetsDirectional
-                                                  .fromSTEB(
-                                                  12.0, 0.0, 12.0, 0.0),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(0.0),
+                                  return ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    primary: false,
+                                    shrinkWrap: true,
+                                    scrollDirection: Axis.vertical,
+                                    itemCount: prayers.length,
+                                    itemBuilder: (context, prayersIndex) {
+                                      final prayersItem = prayers[prayersIndex];
+                                      return Padding(
+                                        padding: const EdgeInsetsDirectional
+                                            .fromSTEB(0.0, 0.0, 1.0, 2.0),
+                                        child: InkWell(
+                                          splashColor: Colors.transparent,
+                                          focusColor: Colors.transparent,
+                                          hoverColor: Colors.transparent,
+                                          highlightColor: Colors.transparent,
+                                          onTap: () async {
+                                            _model.currentExpandedType = null;
+                                            safeSetState(() {});
+                                            await widget.onSelectPrayer?.call(
+                                              prayersItem.id,
+                                            );
+                                          },
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: ListTile(
+                                              title: Text(
+                                                prayersItem.subtitle,
+                                                style:
+                                                    FlutterFlowTheme.of(context)
+                                                        .titleSmall
+                                                        .override(
+                                                          fontFamily:
+                                                              'Merriweather',
+                                                          color: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .alternate,
+                                                          letterSpacing: 0.0,
+                                                        ),
+                                              ),
+                                              trailing: Icon(
+                                                Icons
+                                                    .keyboard_arrow_right_rounded,
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .alternate,
+                                                size: 24.0,
+                                              ),
+                                              dense: true,
+                                              contentPadding:
+                                                  const EdgeInsetsDirectional
+                                                      .fromSTEB(
+                                                      12.0, 0.0, 12.0, 0.0),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(0.0),
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ),
+                                      );
+                                    },
                                   );
                                 },
-                              );
-                            },
-                          ),
-                        ),
-                      if (subTypesItem.subtypes.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                              8.0, 0.0, 0.0, 0.0),
-                          child: wrapWithModel(
-                            model: _model.subTypesViewModels.getModel(
-                              subTypesItem.id.toString(),
-                              subTypesIndex,
-                            ),
-                            updateCallback: () => safeSetState(() {}),
-                            child: SubTypesViewWidget(
-                              key: Key(
-                                'Keyf0l_${subTypesItem.id.toString()}',
                               ),
-                              prayerTypes: subTypesItem.subtypes,
-                              onSelectPrayer: (prayerId) async {
-                                await widget.onSelectPrayer?.call(
-                                  prayerId,
-                                );
-                              },
                             ),
-                          ),
-                        ),
-                    ],
-                  ),
-              ],
-            );
-          },
+                          if (subTypesItem.subtypes.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                  8.0, 0.0, 0.0, 0.0),
+                              child: wrapWithModel(
+                                model: _model.subTypesViewModels.getModel(
+                                  subTypesItem.id.toString(),
+                                  subTypesIndex,
+                                ),
+                                updateCallback: () => safeSetState(() {}),
+                                child: SubTypesViewWidget(
+                                  key: Key(
+                                    'Keyf0l_${subTypesItem.id.toString()}',
+                                  ),
+                                  prayerTypes: subTypesItem.subtypes,
+                                  onSelectPrayer: (prayerId) async {
+                                    await widget.onSelectPrayer?.call(
+                                      prayerId,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
         );
       },
     );

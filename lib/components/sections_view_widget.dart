@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:audio_service/audio_service.dart';
 import 'package:collection/collection.dart';
+import 'package:my_prayer/custom_code/actions/retrieve_audio_file.dart';
 import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/service_locator.dart';
@@ -47,16 +51,112 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
   late SectionsViewModel _model;
   late List<ScrollController> _scrollControllers = [];
   int currentPlayingTextIndex = 0;
-  late List<GlobalKey> listViewKeys = [];
-  late Map<int, List<GlobalKey>> _keys = {};
+
+  final Map<int, List<GlobalKey>> _keys = {};
 
   final animationsMap = <String, AnimationInfo>{};
   final _pageManager = getIt<PageManager>();
+
+  Timer? _debounce;
 
   @override
   void setState(VoidCallback callback) {
     super.setState(callback);
     _model.onUpdate();
+  }
+
+  void setTextKeys(int sectionIndex) {
+    if (!_keys.containsKey(sectionIndex) || _keys[sectionIndex]!.isEmpty) {
+      _keys[sectionIndex] = List.generate(
+        _model.flattenedSections[sectionIndex].texts.length,
+        (_) => GlobalKey(),
+      );
+    }
+  }
+
+  Future<void> setCurrentSection(int sectionIndex) async {
+    if ((_model.flattenedSections.elementAtOrNull(sectionIndex)?.texts !=
+                null &&
+            (_model.flattenedSections.elementAtOrNull(sectionIndex)?.texts)!
+                .isNotEmpty) ==
+        true) {
+      _model.currentSection =
+          _model.flattenedSections.elementAtOrNull(valueOrDefault<int>(
+        _model.pageViewCurrentIndex,
+        0,
+      ));
+      _model.isLoading = false;
+    } else {
+      _model.prayerSectionDataResult = await PrayerSectionContentCall.call(
+        prayerSectionId:
+            _model.flattenedSections.elementAtOrNull(sectionIndex)?.sectionId,
+      );
+
+      if ((_model.prayerSectionDataResult?.succeeded ?? true)) {
+        _model.currentSection = PrayerSectionStruct.maybeFromMap(
+            (_model.prayerSectionDataResult?.jsonBody ?? ''));
+        _model.flattenedSections.elementAtOrNull(sectionIndex)!.texts =
+            _model.currentSection?.texts;
+        _model.isLoading = false;
+      } else {
+        _model.isLoading = false;
+      }
+    }
+  }
+
+  GlobalKey getTextKey(int sectionIndex, int textIndex) {
+    if (sectionIndex >= _model.flattenedSections.length) {
+      return GlobalKey();
+    }
+
+    if (textIndex >= _model.flattenedSections[sectionIndex].texts.length) {
+      return GlobalKey();
+    }
+
+    if (!_keys.containsKey(sectionIndex) || _keys[sectionIndex]!.isEmpty) {
+      _keys[sectionIndex] = List.generate(
+        _model.flattenedSections[sectionIndex].texts.length,
+        (_) => GlobalKey(),
+      );
+    }
+
+    return _keys[sectionIndex]![textIndex];
+  }
+
+  Future<void> setInitialMediaItems() async {
+    if (_model.flattenedSections.isEmpty) {
+      return;
+    }
+
+    if (!(widget.continueAudio)) {
+      _pageManager.clearQueue();
+
+      final mediaItems =
+          await Future.wait(_model.flattenedSections.map((section) async {
+        final artUri = section.imageUrl.isNotEmpty
+            ? Uri.parse(section.imageUrl)
+            : Uri.parse(
+                'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo.jpg');
+
+        final filePath = await retrieveAudioFile(section.audioUrl);
+
+        return MediaItem(
+          id: section.id,
+          album: section.subtitle,
+          title: section.title,
+          artUri: artUri,
+          extras: {
+            'url': section.audioUrl,
+            'isDownloaded': filePath != null,
+            'filePath': filePath,
+          },
+        );
+      }).toList());
+
+      await _pageManager.setQueue(mediaItems);
+      await _pageManager.skipToIndex(widget.initialPage);
+      await _pageManager.seek(Duration(seconds: widget.initialAudioTime));
+    }
   }
 
   void onTrackIndexChanged() async {
@@ -70,73 +170,90 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     );
   }
 
+  void onCurrentAudioDurationChanged() {
+    _model.currentAudioDuration =
+        _pageManager.totalDurationNotifier.value.inSeconds;
+    safeSetState(() {});
+  }
+
   void onCurrentAudioTimeChanged() {
     _model.currentAudioTime =
         _pageManager.currentProgressNotifier.value.inSeconds;
-    safeSetState(() {});
-    // if (_pageManager.playButtonNotifier.value != ButtonState.playing ||
-    //     _model.displayAudioPage) {
-    //   return;
-    // }
+    if (_debounce == null || !_debounce!.isActive) {
+      _debounce = Timer(const Duration(milliseconds: 500), () {
+        safeSetState(() {});
+      });
+    } else {
+      return;
+    }
 
-    // if (_scrollControllers.isNotEmpty) {
-    //   var visibleTextIndex = _model.currentSection?.texts.indexWhere(
-    //       (element) =>
-    //           element.startTime <= _model.currentAudioTime &&
-    //           element.endTime > _model.currentAudioTime);
-    //   if (visibleTextIndex == null || visibleTextIndex == -1) {
-    //     return;
-    //   }
-    //   if (currentPlayingTextIndex == visibleTextIndex) {
-    //     return;
-    //   }
-    //   var controller = _scrollControllers[valueOrDefault<int>(
-    //     _model.pageViewCurrentIndex,
-    //     0,
-    //   )];
+    if (_pageManager.playButtonNotifier.value != ButtonState.playing ||
+        _model.displayAudioPage) {
+      return;
+    }
 
-    //   if (controller.hasClients) {
-    //     currentPlayingTextIndex = visibleTextIndex;
+    if (_keys.isEmpty ||
+        _keys[_model.pageViewCurrentIndex] == null ||
+        _keys[_model.pageViewCurrentIndex]!.isEmpty) {
+      return;
+    }
 
-    //     var text = _model.currentSection!.texts[currentPlayingTextIndex];
+    if (_scrollControllers.isNotEmpty) {
+      var visibleTextIndex = _model.currentSection?.texts.indexWhere(
+          (element) =>
+              element.startTime <= _model.currentAudioTime &&
+              element.endTime > _model.currentAudioTime);
+      if (visibleTextIndex == null || visibleTextIndex == -1) {
+        return;
+      }
+      if (currentPlayingTextIndex == visibleTextIndex) {
+        return;
+      }
+      var controller = _scrollControllers[valueOrDefault<int>(
+        _model.pageViewCurrentIndex,
+        0,
+      )];
 
-    //     var currentTextScrollExtent =
-    //         (_model.currentAudioTime - text.startTime) /
-    //             _model.currentAudioDuration *
-    //             controller.position.maxScrollExtent;
+      if (controller.hasClients) {
+        currentPlayingTextIndex = visibleTextIndex;
 
-    //     var additionalOffset = 0.0;
+        if (_keys[_model.pageViewCurrentIndex]!.length <=
+            currentPlayingTextIndex) {
+          return;
+        }
 
-    //     var desiredScrollPosition = _model.currentAudioTime /
-    //         _model.currentAudioDuration *
-    //         controller.position.maxScrollExtent;
+        var text = _model.currentSection!.texts[currentPlayingTextIndex];
 
-    //     if (currentTextScrollExtent > 500) {
-    //       additionalOffset = currentTextScrollExtent;
-    //     }
+        var currentTextScrollExtent =
+            (_model.currentAudioTime - text.startTime) /
+                _model.currentAudioDuration *
+                controller.position.maxScrollExtent;
 
-    //     var textContext = _keys[_model.pageViewCurrentIndex]
-    //             ?[currentPlayingTextIndex]
-    //         .currentContext;
-    //     var listViewContext =
-    //         listViewKeys[_model.pageViewCurrentIndex].currentContext;
-    //     if (textContext != null && listViewContext != null) {
-    //       final renderBox = textContext.findRenderObject() as RenderBox;
-    //       final position = renderBox.localToGlobal(Offset.zero);
+        var additionalOffset = 0.0;
 
-    //       final listViewRenderBox =
-    //           listViewContext.findRenderObject() as RenderBox;
-    //       final listViewPosition = listViewRenderBox.localToGlobal(Offset.zero);
+        var desiredScrollPosition = 0.0;
 
-    //       desiredScrollPosition = position.dy - listViewPosition.dy;
-    //     }
+        if (currentTextScrollExtent > 200) {
+          additionalOffset = currentTextScrollExtent;
+        }
 
-    //     controller.animateTo(desiredScrollPosition + 60 + additionalOffset,
-    //         duration: const Duration(milliseconds: 300), curve: Curves.ease);
-    //   }
-    // }
+        var textContext = _keys[_model.pageViewCurrentIndex]
+                ?[currentPlayingTextIndex]
+            .currentContext;
+        if (textContext != null) {
+          final renderBox = textContext.findRenderObject() as RenderBox;
+          final position = renderBox.localToGlobal(Offset.zero);
 
-    // safeSetState(() {});
+          desiredScrollPosition = position.dy - 96;
+        }
+        var totalScrollPosition = desiredScrollPosition + additionalOffset;
+        if (totalScrollPosition.isInfinite || totalScrollPosition.isNaN) {
+          return;
+        }
+        controller.animateTo(desiredScrollPosition + additionalOffset,
+            duration: const Duration(milliseconds: 300), curve: Curves.ease);
+      }
+    }
   }
 
   @override
@@ -146,6 +263,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
 
     _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
     _pageManager.currentProgressNotifier.addListener(onCurrentAudioTimeChanged);
+    _pageManager.totalDurationNotifier
+        .addListener(onCurrentAudioDurationChanged);
 
     // On component load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -158,53 +277,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
         (index) => ScrollController(),
       );
       _model.currentAudioTime = widget.initialAudioTime;
+      await setCurrentSection(widget.initialPage);
+      await setInitialMediaItems();
+      setTextKeys(valueOrDefault<int>(widget.initialPage, 0));
+
       safeSetState(() {});
-      if ((_model.flattenedSections
-                      .elementAtOrNull(valueOrDefault<int>(
-                        widget.initialPage,
-                        0,
-                      ))
-                      ?.texts !=
-                  null &&
-              (_model.flattenedSections
-                      .elementAtOrNull(valueOrDefault<int>(
-                        widget.initialPage,
-                        0,
-                      ))
-                      ?.texts)!
-                  .isNotEmpty) ==
-          true) {
-        _model.currentSection =
-            _model.flattenedSections.elementAtOrNull(valueOrDefault<int>(
-          widget.initialPage,
-          0,
-        ));
-        _model.isLoading = false;
-
-        safeSetState(() {});
-      } else {
-        _model.prayerSectionInitialDataResult =
-            await PrayerSectionContentCall.call(
-          prayerSectionId: _model.flattenedSections
-              .elementAtOrNull(valueOrDefault<int>(
-                widget.initialPage,
-                0,
-              ))
-              ?.sectionId,
-        );
-
-        if ((_model.prayerSectionInitialDataResult?.succeeded ?? false)) {
-          _model.currentSection = PrayerSectionStruct.maybeFromMap(
-              (_model.prayerSectionInitialDataResult?.jsonBody ?? ''));
-          _model.isLoading = false;
-          safeSetState(() {});
-        } else {
-          _model.isLoading = false;
-          safeSetState(() {});
-        }
-      }
-      listViewKeys =
-          List.generate(_model.flattenedSections.length, (_) => GlobalKey());
     });
 
     animationsMap.addAll({
@@ -229,6 +306,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
     _pageManager.currentProgressNotifier
         .removeListener(onCurrentAudioTimeChanged);
+    _pageManager.totalDurationNotifier
+        .removeListener(onCurrentAudioDurationChanged);
     super.dispose();
   }
 
@@ -260,7 +339,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                   width: double.infinity,
                   height: double.infinity,
                   child: PageView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     controller: _model.pageViewController ??= PageController(
                         initialPage: max(
                             0,
@@ -273,64 +352,16 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                     onPageChanged: (pageIndex) async {
                       _model.currentAudioTime = 0;
                       _model.isLoading = true;
-
-                      await _pageManager.skipToIndex(pageIndex);
-
                       safeSetState(() {});
-                      if ((_model.flattenedSections
-                                      .elementAtOrNull(valueOrDefault<int>(
-                                        _model.pageViewCurrentIndex,
-                                        0,
-                                      ))
-                                      ?.texts !=
-                                  null &&
-                              (_model.flattenedSections
-                                      .elementAtOrNull(valueOrDefault<int>(
-                                        _model.pageViewCurrentIndex,
-                                        0,
-                                      ))
-                                      ?.texts)!
-                                  .isNotEmpty) ==
-                          true) {
-                        _model.currentSection = _model.flattenedSections
-                            .elementAtOrNull(valueOrDefault<int>(
-                          _model.pageViewCurrentIndex,
-                          0,
-                        ));
-                        _model.isLoading = false;
-                        safeSetState(() {});
-                      } else {
-                        _model.prayerSectionDataResult =
-                            await PrayerSectionContentCall.call(
-                          prayerSectionId: _model.flattenedSections
-                              .elementAtOrNull(valueOrDefault<int>(
-                                _model.pageViewCurrentIndex,
-                                0,
-                              ))
-                              ?.sectionId,
-                        );
-
-                        if ((_model.prayerSectionDataResult?.succeeded ??
-                            true)) {
-                          _model.currentSection =
-                              PrayerSectionStruct.maybeFromMap(
-                                  (_model.prayerSectionDataResult?.jsonBody ??
-                                      ''));
-                          _model.isLoading = false;
-                          safeSetState(() {});
-                        } else {
-                          _model.isLoading = false;
-                          safeSetState(() {});
-                        }
-                      }
-
+                      await setCurrentSection(pageIndex);
+                      setTextKeys(pageIndex);
+                      await _pageManager.skipToIndex(pageIndex);
                       safeSetState(() {});
                     },
                     scrollDirection: Axis.horizontal,
                     itemCount: prayerSection.length,
-                    itemBuilder: (context, prayerSectionIndex) {
-                      final prayerSectionItem =
-                          prayerSection[prayerSectionIndex];
+                    itemBuilder: (context, sectionIndex) {
+                      final prayerSectionItem = prayerSection[sectionIndex];
                       return Stack(
                         children: [
                           Builder(
@@ -341,7 +372,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                   decoration: const BoxDecoration(),
                                   child: SingleChildScrollView(
                                     controller:
-                                        _scrollControllers[prayerSectionIndex],
+                                        _scrollControllers[sectionIndex],
                                     scrollDirection: Axis.vertical,
                                     physics:
                                         const AlwaysScrollableScrollPhysics(),
@@ -384,25 +415,16 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                 textAlign: TextAlign.center,
                                                 maxLines: 1,
                                                 minFontSize: 14.0,
-                                                style: FlutterFlowTheme.of(
-                                                        context)
-                                                    .labelMedium
-                                                    .override(
-                                                      fontFamily: 'Inter',
-                                                      fontSize: valueOrDefault<
-                                                          double>(
-                                                        valueOrDefault<double>(
-                                                              FFAppState()
-                                                                  .fontSizeMultiplier,
-                                                              1.0,
-                                                            ) *
-                                                            14,
-                                                        32.0,
-                                                      ),
-                                                      letterSpacing: 0.0,
-                                                      fontStyle:
-                                                          FontStyle.italic,
-                                                    ),
+                                                style:
+                                                    FlutterFlowTheme.of(context)
+                                                        .labelMedium
+                                                        .override(
+                                                          fontFamily: 'Inter',
+                                                          fontSize: 20,
+                                                          letterSpacing: 0.0,
+                                                          fontStyle:
+                                                              FontStyle.italic,
+                                                        ),
                                               ),
                                           ].divide(const SizedBox(height: 4.0)),
                                         ),
@@ -430,35 +452,20 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                   ),
                                                 );
                                               }
-                                              if (!_keys.containsKey(
-                                                      prayerSectionIndex) ||
-                                                  _keys[prayerSectionIndex]!
-                                                      .isEmpty) {
-                                                _keys[prayerSectionIndex] =
-                                                    List.generate(
-                                                        _model
-                                                                .currentSection
-                                                                ?.texts
-                                                                .length ??
-                                                            0,
-                                                        (_) => GlobalKey());
-                                              }
                                               return ListView.builder(
-                                                key: listViewKeys[
-                                                    prayerSectionIndex],
                                                 padding: EdgeInsets.zero,
                                                 primary: false,
                                                 shrinkWrap: true,
                                                 scrollDirection: Axis.vertical,
                                                 itemCount: texts.length,
                                                 itemBuilder:
-                                                    (context, textsIndex) {
+                                                    (context, textIndex) {
                                                   final textsItem =
-                                                      texts[textsIndex];
+                                                      texts[textIndex];
+                                                  final textKey = getTextKey(
+                                                      sectionIndex, textIndex);
                                                   return Column(
-                                                    key: _keys[
-                                                            prayerSectionIndex]![
-                                                        textsIndex],
+                                                    key: textKey,
                                                     mainAxisSize:
                                                         MainAxisSize.max,
                                                     crossAxisAlignment:
@@ -659,9 +666,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                         .text,
                                                                     textElementIndex,
                                                                   ),
-                                                                  updateCallback: () =>
-                                                                      safeSetState(
-                                                                          () {}),
+                                                                  updateCallback:
+                                                                      () {},
                                                                   child:
                                                                       PrayerTextWidget(
                                                                     key: Key(
@@ -681,6 +687,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                             _model.currentAudioTime),
                                                                     onTextPressed:
                                                                         () async {
+                                                                      currentPlayingTextIndex =
+                                                                          textIndex;
                                                                       final newAudioTime = textsItem
                                                                               .startTime +
                                                                           textElementItem.startTime *
@@ -734,9 +742,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                   child: wrapWithModel(
                                     model: _model.audioPageModels.getModel(
                                       prayerSectionItem.id,
-                                      prayerSectionIndex,
+                                      sectionIndex,
                                     ),
-                                    updateCallback: () => safeSetState(() {}),
+                                    updateCallback: () {},
                                     updateOnChange: true,
                                     child: AudioPageWidget(
                                       key: Key(
@@ -808,26 +816,17 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                 child: custom_widgets.SectionsControlBar(
                   width: double.infinity,
                   height: double.infinity,
-                  initialAudioTime: valueOrDefault<int>(
-                    _model.currentAudioTime,
-                    0,
-                  ),
                   playlist:
                       _model.flattenedSections.map((e) => e.audioUrl).toList(),
-                  continueAudio: widget.continueAudio,
                   sections: widget.sections!,
-                  flattenedSections: _model.flattenedSections,
                   showingTextContent: !_model.displayAudioPage,
-                  initialTrackIndex: valueOrDefault<int>(
-                    widget.initialPage,
-                    0,
-                  ),
                   playbackRate: valueOrDefault<double>(
                     FFAppState().audioSpeed,
                     1.0,
                   ),
                   switchContent: () async {
                     _model.displayAudioPage = !_model.displayAudioPage;
+                    currentPlayingTextIndex = -1;
                     safeSetState(() {});
                   },
                 ),
