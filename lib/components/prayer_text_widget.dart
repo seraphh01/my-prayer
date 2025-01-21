@@ -8,16 +8,16 @@ export 'prayer_text_model.dart';
 class PrayerTextWidget extends StatefulWidget {
   const PrayerTextWidget({
     super.key,
-    bool? isFirstInList,
-    required this.textInput,
     bool? isHighlighted,
+    required this.textInput,
+    bool? isPlaying,
     required this.onTextPressed,
-  })  : isFirstInList = isFirstInList ?? false,
-        isHighlighted = isHighlighted ?? false;
+  })  : highlight = isHighlighted ?? false,
+        isPlaying = isPlaying ?? false;
 
-  final bool isFirstInList;
+  final bool highlight;
   final String? textInput;
-  final bool isHighlighted;
+  final bool isPlaying;
   final Future Function()? onTextPressed;
 
   @override
@@ -65,13 +65,13 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
         child: Builder(
           builder: (context) {
             if (valueOrDefault<bool>(
-              widget.isFirstInList,
+              widget.highlight,
               false,
             )) {
               return Builder(
                 builder: (context) {
                   if (valueOrDefault<bool>(
-                    widget.isHighlighted,
+                    widget.isPlaying,
                     false,
                   )) {
                     return RichText(
@@ -98,6 +98,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                                   ),
                                   letterSpacing: 0.0,
                                   useGoogleFonts: false,
+                                  lineHeight: 0.5,
                                 ),
                           ),
                           TextSpan(
@@ -114,7 +115,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                                           FFAppState().fontSizeMultiplier,
                                           1.0,
                                         ) *
-                                        16,
+                                        18,
                                     32.0,
                                   ),
                                   letterSpacing: 0.0,
@@ -122,10 +123,6 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                                 ),
                           )
                         ],
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              fontFamily: 'Inter',
-                              letterSpacing: 0.0,
-                            ),
                       ),
                     );
                   } else {
@@ -141,19 +138,20 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .headlineLarge
                                 .override(
-                                  fontFamily: 'PlayBall',
-                                  color: FlutterFlowTheme.of(context).secondary,
-                                  fontSize: valueOrDefault<double>(
-                                    valueOrDefault<double>(
-                                          FFAppState().fontSizeMultiplier,
-                                          1.0,
-                                        ) *
-                                        32,
-                                    32.0,
-                                  ),
-                                  letterSpacing: 0.0,
-                                  useGoogleFonts: false,
-                                ),
+                                    fontFamily: 'PlayBall',
+                                    color:
+                                        FlutterFlowTheme.of(context).secondary,
+                                    fontSize: valueOrDefault<double>(
+                                      valueOrDefault<double>(
+                                            FFAppState().fontSizeMultiplier,
+                                            1.0,
+                                          ) *
+                                          32,
+                                      32.0,
+                                    ),
+                                    letterSpacing: 0.0,
+                                    useGoogleFonts: false,
+                                    lineHeight: 0.5),
                           ),
                           TextSpan(
                             text: valueOrDefault<String>(
@@ -171,18 +169,14 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                                           FFAppState().fontSizeMultiplier,
                                           1.0,
                                         ) *
-                                        16,
+                                        18.0,
                                     32.0,
                                   ),
-                                  letterSpacing: 0.0,
+                                  letterSpacing: 0.2,
                                   fontWeight: FontWeight.w300,
                                 ),
                           )
                         ],
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              fontFamily: 'Inter',
-                              letterSpacing: 0.0,
-                            ),
                       ),
                     );
                   }
@@ -191,15 +185,15 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
             } else {
               return Builder(
                 builder: (context) {
-                  if (widget.isHighlighted) {
-                    return Text(
-                      valueOrDefault<String>(
+                  if (widget.isPlaying) {
+                    return RichText(
+                        text: TextSpan(
+                      text: valueOrDefault<String>(
                         widget.textInput,
                         'text',
                       ),
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
                             fontFamily: 'Inter',
-                            color: FlutterFlowTheme.of(context).primaryText,
                             fontSize: valueOrDefault<double>(
                               valueOrDefault<double>(
                                     FFAppState().fontSizeMultiplier,
@@ -211,10 +205,11 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                             letterSpacing: 0.0,
                             fontWeight: FontWeight.w500,
                           ),
-                    );
+                    ));
                   } else {
-                    return Text(
-                      valueOrDefault<String>(
+                    return RichText(
+                        text: TextSpan(
+                      text: valueOrDefault<String>(
                         widget.textInput,
                         'text',
                       ),
@@ -228,10 +223,10 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                                   16,
                               32.0,
                             ),
-                            letterSpacing: 0.0,
+                            letterSpacing: 0.2,
                             fontWeight: FontWeight.w300,
                           ),
-                    );
+                    ));
                   }
                 },
               );

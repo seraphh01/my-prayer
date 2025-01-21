@@ -673,13 +673,14 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                     key: Key(
                                                                       'Keywwi_${textElementItem.text}',
                                                                     ),
-                                                                    isFirstInList:
+                                                                    isHighlighted: textElementItem
+                                                                            .highlight ||
                                                                         textElementIndex ==
                                                                             0,
                                                                     textInput:
                                                                         textElementItem
                                                                             .text,
-                                                                    isHighlighted: (textsItem.startTime + textElementItem.startTime * textsItem.intervalFactor <=
+                                                                    isPlaying: (textsItem.startTime + textElementItem.startTime * textsItem.intervalFactor <=
                                                                             _model
                                                                                 .currentAudioTime) &&
                                                                         (textsItem.startTime +
@@ -711,7 +712,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                               }).divide(
                                                                   const SizedBox(
                                                                       height:
-                                                                          4.0)),
+                                                                          8.0)),
                                                             );
                                                           },
                                                         ),
