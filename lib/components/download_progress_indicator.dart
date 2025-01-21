@@ -42,6 +42,7 @@ class _DownloadProgressIndicatorState extends State<DownloadProgressIndicator> {
   }
 
   Future<void> onDownloadComplete(BuildContext context) async {
+    if (!context.mounted) return;
     await showDialog(
       context: context,
       builder: (alertDialogContext) {
@@ -59,6 +60,7 @@ class _DownloadProgressIndicatorState extends State<DownloadProgressIndicator> {
   }
 
   Future<void> onDownloadError(BuildContext context) async {
+    if (!context.mounted) return;
     await showDialog(
       context: context,
       builder: (alertDialogContext) {

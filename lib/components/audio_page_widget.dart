@@ -113,7 +113,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                       child: Hero(
                         tag: 'sectionImageHero',
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8.0),
+                          borderRadius: BorderRadius.circular(80.0),
                           child: widget.imageUrl?.isNotEmpty == true
                               ? Image.network(
                                   widget.imageUrl!,

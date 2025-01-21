@@ -227,19 +227,28 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       ),
                     ),
                     Text(
-                      '- ${dateTimeFormat(
+                      dateTimeFormat(
                         "yMMMMEEEEd",
                         DateTime.fromMillisecondsSinceEpoch(
                             getCurrentTimestamp.millisecondsSinceEpoch),
                         locale: FFLocalizations.of(context).languageCode,
-                      )} -',
-                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      ),
+                      style: FlutterFlowTheme.of(context).titleSmall.override(
                             fontFamily: 'Inter',
                             color: FlutterFlowTheme.of(context).alternate,
                             letterSpacing: 0.0,
                           ),
                     ),
                   ],
+                ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                      MediaQuery.sizeOf(context).height * 0.1),
+                  child: Image.asset(
+                    'assets/images/logo.jpg',
+                    height: MediaQuery.sizeOf(context).height * 0.3,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 Visibility(
                   visible: valueOrDefault<bool>(
@@ -363,6 +372,84 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     ),
                   ),
                 ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0, 0.0, 16.0, 0.0),
+                    child: Container(
+                      decoration: const BoxDecoration(),
+                      child: FutureBuilder<ApiCallResponse>(
+                        future: (_model.apiRequestCompleter ??=
+                                Completer<ApiCallResponse>()
+                                  ..complete(SuapabaseQueriesGroup
+                                      .getPrayerTypesCall
+                                      .call()))
+                            .future,
+                        builder: (context, snapshot) {
+                          // Customize what your widget looks like when it's loading.
+                          if (!snapshot.hasData) {
+                            return Center(
+                              child: SizedBox(
+                                width: 24.0,
+                                height: 24.0,
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    FlutterFlowTheme.of(context).primary,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          final listViewGetPrayerTypesResponse = snapshot.data!;
+
+                          return ListView(
+                            padding: EdgeInsets.zero,
+                            scrollDirection: Axis.vertical,
+                            children: [
+                              if (listViewGetPrayerTypesResponse.succeeded)
+                                wrapWithModel(
+                                  model: _model.subTypesViewModel,
+                                  updateCallback: () => safeSetState(() {}),
+                                  child: SubTypesViewWidget(
+                                    prayerTypes:
+                                        (listViewGetPrayerTypesResponse.jsonBody
+                                                    .toList()
+                                                    .map<PrayerTypeStruct?>(
+                                                        PrayerTypeStruct
+                                                            .maybeFromMap)
+                                                    .toList()
+                                                as Iterable<PrayerTypeStruct?>)
+                                            .withoutNulls,
+                                    onSelectPrayer: (prayerId) async {
+                                      context.pushNamed(
+                                        'RosaryPage',
+                                        queryParameters: {
+                                          'prayerId': serializeParam(
+                                            prayerId,
+                                            ParamType.String,
+                                          ),
+                                        }.withoutNulls,
+                                        extra: <String, dynamic>{
+                                          kTransitionInfoKey:
+                                              const TransitionInfo(
+                                            hasTransition: true,
+                                            transitionType:
+                                                PageTransitionType.fade,
+                                            duration:
+                                                Duration(milliseconds: 250),
+                                          ),
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                            ].divide(const SizedBox(height: 8.0)),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
                 StreamBuilder(
                     stream: _audioHandler.queue,
                     builder: (context, snapshot) {
@@ -372,7 +459,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               FFAppState().currentPrayerId.isNotEmpty,
                           child: Padding(
                             padding: const EdgeInsetsDirectional.fromSTEB(
-                                16.0, 8.0, 16.0, 8.0),
+                                16.0, 0.0, 16.0, 16),
                             child: GestureDetector(
                               onTap: () => context.pushNamed('RosaryPage',
                                   queryParameters: {
@@ -402,10 +489,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                   }.withoutNulls),
                               child: Container(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
-                                    16.0, 8.0, 16.0, 8.0),
+                                    8.0, 8.0, 8.0, 8.0),
                                 decoration: BoxDecoration(
                                   color: FlutterFlowTheme.of(context).alternate,
-                                  borderRadius: BorderRadius.circular(8.0),
+                                  borderRadius: BorderRadius.circular(12.0),
                                 ),
                                 child: StreamBuilder(
                                     stream: _audioHandler.mediaItem,
@@ -577,107 +664,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             ),
                           ));
                     }),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 0.0, 16.0, 0.0),
-                    child: Container(
-                      decoration: const BoxDecoration(),
-                      child: FutureBuilder<ApiCallResponse>(
-                        future: (_model.apiRequestCompleter ??=
-                                Completer<ApiCallResponse>()
-                                  ..complete(SuapabaseQueriesGroup
-                                      .getPrayerTypesCall
-                                      .call()))
-                            .future,
-                        builder: (context, snapshot) {
-                          // Customize what your widget looks like when it's loading.
-                          if (!snapshot.hasData) {
-                            return Center(
-                              child: SizedBox(
-                                width: 24.0,
-                                height: 24.0,
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    FlutterFlowTheme.of(context).primary,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                          final listViewGetPrayerTypesResponse = snapshot.data!;
-
-                          return RefreshIndicator(
-                            color: FlutterFlowTheme.of(context).primary,
-                            onRefresh: () async {
-                              safeSetState(
-                                  () => _model.apiRequestCompleter = null);
-                              await _model.waitForApiRequestCompleted();
-                            },
-                            child: ListView(
-                              padding: EdgeInsets.zero,
-                              scrollDirection: Axis.vertical,
-                              children: [
-                                if (listViewGetPrayerTypesResponse.succeeded)
-                                  wrapWithModel(
-                                    model: _model.subTypesViewModel,
-                                    updateCallback: () => safeSetState(() {}),
-                                    child: SubTypesViewWidget(
-                                      prayerTypes:
-                                          (listViewGetPrayerTypesResponse
-                                                      .jsonBody
-                                                      .toList()
-                                                      .map<PrayerTypeStruct?>(
-                                                          PrayerTypeStruct
-                                                              .maybeFromMap)
-                                                      .toList()
-                                                  as Iterable<
-                                                      PrayerTypeStruct?>)
-                                              .withoutNulls,
-                                      onSelectPrayer: (prayerId) async {
-                                        context.pushNamed(
-                                          'RosaryPage',
-                                          queryParameters: {
-                                            'prayerId': serializeParam(
-                                              prayerId,
-                                              ParamType.String,
-                                            ),
-                                          }.withoutNulls,
-                                          extra: <String, dynamic>{
-                                            kTransitionInfoKey:
-                                                const TransitionInfo(
-                                              hasTransition: true,
-                                              transitionType:
-                                                  PageTransitionType.fade,
-                                              duration:
-                                                  Duration(milliseconds: 250),
-                                            ),
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ),
-                              ].divide(const SizedBox(height: 8.0)),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 16.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: Image.asset(
-                      'assets/images/logo.jpg',
-                      height: MediaQuery.sizeOf(context).height * 0.2,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ].divide(const SizedBox(height: 16.0)),
+              ].divide(const SizedBox(height: 12.0)),
             ),
           ),
         ),

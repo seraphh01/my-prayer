@@ -49,6 +49,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   late RosaryPageModel _model;
   final _downloadManager = getIt<DownloadManager>();
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  List<PrayerSectionStruct> flattenedSectionsList = [];
 
   @override
   void initState() {
@@ -89,6 +90,10 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
           safeSetState(() {});
         }
       }
+
+      flattenedSectionsList = functions.flattenSectionsList(
+              _model.currentPrayer?.sections.toList() ?? []) ??
+          [];
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
@@ -116,12 +121,24 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
           preferredSize: const Size.fromHeight(64.0),
           child: AppBar(
             backgroundColor: FlutterFlowTheme.of(context).primary,
+            automaticallyImplyLeading: false,
+            leading: IconButton(
+              onPressed: () async {
+                Navigator.pop(context);
+              },
+              icon: Icon(
+                Icons.home_rounded,
+                color: FlutterFlowTheme.of(context).alternate,
+                size: 24.0,
+              ),
+              iconSize: 24.0,
+            ),
             iconTheme:
                 IconThemeData(color: FlutterFlowTheme.of(context).alternate),
             title: AutoSizeText(
               valueOrDefault<String>(
                 _model.currentPrayer?.title,
-                'Titlu Rugăciune',
+                '',
               ),
               textAlign: TextAlign.start,
               maxLines: 1,
@@ -281,10 +298,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Semnul de carte către „${valueOrDefault<String>(
-                                        _model.currentPrayer?.title,
-                                        'Titlu Rugăciune',
-                                      )}” - ”${(functions.flattenSectionsList(_model.currentPrayer!.sections.toList())?.elementAtOrNull(_model.sectionsViewModel.pageViewCurrentIndex))?.title}” a fost salvat!',
+                                      'Semnul de carte către ${_model.currentPrayer!.title.isNotEmpty ? '„${_model.currentPrayer!.title}” - ' : ''}„${flattenedSectionsList.elementAtOrNull(_model.sectionsViewModel.pageViewCurrentIndex)?.title}” a fost salvat!',
                                       style: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .override(
