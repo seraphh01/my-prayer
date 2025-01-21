@@ -89,7 +89,7 @@ class FFAppState extends ChangeNotifier {
 
   late FlutterSecureStorage secureStorage;
 
-  bool _autoPlayNext = false;
+  bool _autoPlayNext = true;
   bool get autoPlayNext => _autoPlayNext;
   set autoPlayNext(bool value) {
     _autoPlayNext = value;

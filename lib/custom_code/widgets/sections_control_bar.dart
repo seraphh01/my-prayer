@@ -114,14 +114,13 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     return Container(
       width: widget.width,
       height: widget.height,
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           FlutterFlowIconButton(
-            borderRadius: 32,
-            buttonSize: 64,
+            borderRadius: 24,
+            buttonSize: 48,
             fillColor: FlutterFlowTheme.of(context).primaryBackground,
             icon: Icon(
               Icons.menu_book,
@@ -130,88 +129,84 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
             ),
             onPressed: () => _chooseChapter(context),
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FlutterFlowIconButton(
-                borderRadius: 32,
-                buttonSize: 64,
-                fillColor: FlutterFlowTheme.of(context).primaryBackground,
-                icon: Icon(
-                  Icons.navigate_before_rounded,
-                  color: FlutterFlowTheme.of(context).primary,
-                  size: 32,
-                ),
-                onPressed: () => _pageManager.previous(),
-              ),
-              ValueListenableBuilder(
-                  valueListenable: _pageManager.playButtonNotifier,
-                  builder: (_, value, __) {
-                    switch (value) {
-                      case ButtonState.loading:
-                        return Container(
-                          width: 60,
-                          height: 60,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                              color: FlutterFlowTheme.of(context).primary,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(30))),
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              FlutterFlowTheme.of(context).primaryBackground,
-                            ),
-                          ),
-                        );
-                      case ButtonState.paused:
-                        return FlutterFlowIconButton(
-                          borderRadius: 30,
-                          buttonSize: 60,
-                          fillColor: FlutterFlowTheme.of(context).primary,
-                          icon: Icon(
-                            Icons.play_arrow,
-                            color:
-                                FlutterFlowTheme.of(context).primaryBackground,
-                            size: 32,
-                          ),
-                          onPressed: _pageManager.play,
-                        );
-                      case ButtonState.playing:
-                        return FlutterFlowIconButton(
-                          borderRadius: 30,
-                          buttonSize: 60,
-                          fillColor: FlutterFlowTheme.of(context).primary,
-                          icon: Icon(
-                            Icons.pause,
-                            color:
-                                FlutterFlowTheme.of(context).primaryBackground,
-                            size: 32,
-                          ),
-                          onPressed: _pageManager.pause,
-                        );
+          FlutterFlowIconButton(
+            borderRadius: 32,
+            buttonSize: 64,
+            fillColor: FlutterFlowTheme.of(context).primaryBackground,
+            icon: Icon(
+              Icons.navigate_before_rounded,
+              color: FlutterFlowTheme.of(context).primary,
+              size: 32,
+            ),
+            onPressed: () => _pageManager.previous(),
+          ),
+          SizedBox(
+            width: 8,
+          ),
+          ValueListenableBuilder(
+              valueListenable: _pageManager.playButtonNotifier,
+              builder: (_, value, __) {
+                switch (value) {
+                  case ButtonState.loading:
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).primary,
+                          borderRadius: BorderRadius.all(Radius.circular(30))),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          FlutterFlowTheme.of(context).primaryBackground,
+                        ),
+                      ),
+                    );
+                  case ButtonState.paused:
+                    return FlutterFlowIconButton(
+                      borderRadius: 30,
+                      buttonSize: 60,
+                      fillColor: FlutterFlowTheme.of(context).primary,
+                      icon: Icon(
+                        Icons.play_arrow,
+                        color: FlutterFlowTheme.of(context).primaryBackground,
+                        size: 32,
+                      ),
+                      onPressed: _pageManager.play,
+                    );
+                  case ButtonState.playing:
+                    return FlutterFlowIconButton(
+                      borderRadius: 30,
+                      buttonSize: 60,
+                      fillColor: FlutterFlowTheme.of(context).primary,
+                      icon: Icon(
+                        Icons.pause,
+                        color: FlutterFlowTheme.of(context).primaryBackground,
+                        size: 32,
+                      ),
+                      onPressed: _pageManager.pause,
+                    );
 
-                      default:
-                        return Container();
-                    }
-                  }),
-              FlutterFlowIconButton(
-                borderRadius: 32,
-                buttonSize: 64,
-                fillColor: FlutterFlowTheme.of(context).primaryBackground,
-                icon: Icon(
-                  Icons.navigate_next_rounded,
-                  color: FlutterFlowTheme.of(context).primary,
-                  size: 32,
-                ),
-                onPressed: () => _pageManager.next(),
-              ),
-            ].divide(SizedBox(
-              width: 8,
-            )),
+                  default:
+                    return Container();
+                }
+              }),
+          SizedBox(
+            width: 8,
           ),
           FlutterFlowIconButton(
             borderRadius: 32,
             buttonSize: 64,
+            fillColor: FlutterFlowTheme.of(context).primaryBackground,
+            icon: Icon(
+              Icons.navigate_next_rounded,
+              color: FlutterFlowTheme.of(context).primary,
+              size: 32,
+            ),
+            onPressed: () => _pageManager.next(),
+          ),
+          FlutterFlowIconButton(
+            borderRadius: 24,
+            buttonSize: 48,
             fillColor: FlutterFlowTheme.of(context).primaryBackground,
             icon: Icon(
               widget.showingTextContent!
@@ -222,9 +217,7 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
             ),
             onPressed: widget.switchContent,
           )
-        ].divide(SizedBox(
-          width: 0,
-        )),
+        ],
       ),
     );
   }

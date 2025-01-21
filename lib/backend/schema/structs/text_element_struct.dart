@@ -12,11 +12,13 @@ class TextElementStruct extends FFFirebaseStruct {
     int? sequence,
     int? startTime,
     int? endTime,
+    bool? highlight,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _text = text,
         _sequence = sequence,
         _startTime = startTime,
         _endTime = endTime,
+        _highlight = highlight ?? false,
         super(firestoreUtilData);
 
   // "text" field.
@@ -30,6 +32,10 @@ class TextElementStruct extends FFFirebaseStruct {
   int? _sequence;
   int get sequence => _sequence ?? 0;
   set sequence(int? val) => _sequence = val;
+
+  bool _highlight;
+  bool get highlight => _highlight;
+  set highlight(bool val) => _highlight = val;
 
   void incrementSequence(int amount) => sequence = sequence + amount;
 
@@ -59,6 +65,7 @@ class TextElementStruct extends FFFirebaseStruct {
         sequence: castToType<int>(data['sequence']),
         startTime: castToType<int>(data['start_time']),
         endTime: castToType<int>(data['end_time']),
+        highlight: castToType<bool>(data['highlight']),
       );
 
   static TextElementStruct? maybeFromMap(dynamic data) => data is Map
@@ -90,6 +97,10 @@ class TextElementStruct extends FFFirebaseStruct {
           _endTime,
           ParamType.int,
         ),
+        'highlight': serializeParam(
+          _highlight,
+          ParamType.bool,
+        ),
       }.withoutNulls;
 
   static TextElementStruct fromSerializableMap(Map<String, dynamic> data) =>
@@ -114,6 +125,11 @@ class TextElementStruct extends FFFirebaseStruct {
           ParamType.int,
           false,
         ),
+        highlight: deserializeParam(
+          data['highlight'],
+          ParamType.bool,
+          false,
+        ),
       );
 
   @override
@@ -125,12 +141,13 @@ class TextElementStruct extends FFFirebaseStruct {
         text == other.text &&
         sequence == other.sequence &&
         startTime == other.startTime &&
-        endTime == other.endTime;
+        endTime == other.endTime &&
+        highlight == other.highlight;
   }
 
   @override
-  int get hashCode =>
-      const ListEquality().hash([text, sequence, startTime, endTime]);
+  int get hashCode => const ListEquality()
+      .hash([text, sequence, startTime, endTime, highlight]);
 }
 
 TextElementStruct createTextElementStruct({
@@ -138,6 +155,7 @@ TextElementStruct createTextElementStruct({
   int? sequence,
   int? startTime,
   int? endTime,
+  bool? highlight,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
   bool create = false,
@@ -148,6 +166,7 @@ TextElementStruct createTextElementStruct({
       sequence: sequence,
       startTime: startTime,
       endTime: endTime,
+      highlight: highlight,
       firestoreUtilData: FirestoreUtilData(
         clearUnsetFields: clearUnsetFields,
         create: create,
