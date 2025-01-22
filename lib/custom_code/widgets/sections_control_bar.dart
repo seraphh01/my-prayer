@@ -96,7 +96,6 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     if (index == null) {
       return;
     }
-    print(index);
 
     await _pageManager.skipToIndex(index);
   }

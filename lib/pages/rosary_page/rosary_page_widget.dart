@@ -264,7 +264,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                             )),
                                         currentPageIndex: _model
                                             .sectionsViewModel
-                                            .pageViewCurrentIndex,
+                                            .currentSectionIndex,
                                       ),
                                     ),
                                   );
@@ -291,14 +291,14 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                     SavedPrayerDataStruct(
                                   prayer: _model.currentPrayer,
                                   page: _model
-                                      .sectionsViewModel.pageViewCurrentIndex,
+                                      .sectionsViewModel.currentSectionIndex,
                                   audioTime: _model.currentAudioTime,
                                 );
                                 ScaffoldMessenger.of(context).clearSnackBars();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      'Semnul de carte către ${_model.currentPrayer!.title.isNotEmpty ? '„${_model.currentPrayer!.title}” - ' : ''}„${flattenedSectionsList.elementAtOrNull(_model.sectionsViewModel.pageViewCurrentIndex)?.title}” a fost salvat!',
+                                      'Semnul de carte către ${_model.currentPrayer!.title.isNotEmpty ? '„${_model.currentPrayer!.title}” - ' : ''}„${flattenedSectionsList.elementAtOrNull(_model.sectionsViewModel.currentSectionIndex)?.title}” a fost salvat!',
                                       style: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .override(
