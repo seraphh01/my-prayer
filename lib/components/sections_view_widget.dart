@@ -50,7 +50,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     with TickerProviderStateMixin {
   late SectionsViewModel _model;
   late List<ScrollController> _scrollControllers = [];
-  int currentPlayingTextIndex = 0;
+  int currentPlayingTextIndex = -1;
 
   final Map<int, List<GlobalKey>> _keys = {};
 
@@ -186,7 +186,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     } else {
       return;
     }
-
     if (_pageManager.playButtonNotifier.value != ButtonState.playing ||
         _model.displayAudioPage) {
       return;
@@ -206,6 +205,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
       if (visibleTextIndex == null || visibleTextIndex == -1) {
         return;
       }
+
       if (currentPlayingTextIndex == visibleTextIndex) {
         return;
       }
@@ -246,11 +246,12 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
 
           desiredScrollPosition = position.dy - 96;
         }
-        var totalScrollPosition = desiredScrollPosition + additionalOffset;
-        if (totalScrollPosition.isInfinite || totalScrollPosition.isNaN) {
-          return;
+        var totalScrollPosition = desiredScrollPosition;
+        if (additionalOffset.isFinite && !additionalOffset.isNaN) {
+          totalScrollPosition += additionalOffset;
         }
-        controller.animateTo(desiredScrollPosition + additionalOffset,
+
+        controller.animateTo(totalScrollPosition,
             duration: const Duration(milliseconds: 300), curve: Curves.ease);
       }
     }
@@ -260,6 +261,12 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
   void initState() {
     super.initState();
     _model = createModel(context, () => SectionsViewModel());
+
+    onTrackIndexChanged();
+    onCurrentAudioTimeChanged();
+    onCurrentAudioDurationChanged();
+    currentPlayingTextIndex = -1;
+    _model.displayAudioPage = FFAppState().isDisplayingAudio;
 
     _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
     _pageManager.currentProgressNotifier.addListener(onCurrentAudioTimeChanged);
@@ -486,6 +493,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                           highlightColor: Colors
                                                               .transparent,
                                                           onTap: () async {
+                                                            currentPlayingTextIndex =
+                                                                textIndex;
                                                             await _pageManager
                                                                 .seek(Duration(
                                                                     seconds:
@@ -690,20 +699,19 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                         () async {
                                                                       currentPlayingTextIndex =
                                                                           textIndex;
-                                                                      final newAudioTime = textsItem
-                                                                              .startTime +
-                                                                          textElementItem.startTime *
-                                                                              valueOrDefault<double>(
-                                                                                textsItem.intervalFactor,
-                                                                                1.0,
-                                                                              );
+                                                                      final newAudioTime = (textsItem.startTime +
+                                                                              textElementItem.startTime *
+                                                                                  valueOrDefault<double>(
+                                                                                    textsItem.intervalFactor,
+                                                                                    1.0,
+                                                                                  ))
+                                                                          .toInt();
 
                                                                       getIt<PageManager>().seek(Duration(
                                                                           seconds:
-                                                                              newAudioTime.toInt()));
+                                                                              newAudioTime));
                                                                       _model.currentAudioTime =
-                                                                          newAudioTime
-                                                                              .floor();
+                                                                          newAudioTime;
                                                                       safeSetState(
                                                                           () {});
                                                                     },
@@ -826,8 +834,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                     1.0,
                   ),
                   switchContent: () async {
-                    _model.displayAudioPage = !_model.displayAudioPage;
                     currentPlayingTextIndex = -1;
+                    _model.displayAudioPage = !_model.displayAudioPage;
+                    FFAppState().isDisplayingAudio = _model.displayAudioPage;
                     safeSetState(() {});
                   },
                 ),

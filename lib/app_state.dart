@@ -100,10 +100,10 @@ class FFAppState extends ChangeNotifier {
     secureStorage.delete(key: 'ff_autoPlayNext');
   }
 
-  bool _isPlaying = false;
-  bool get isPlaying => _isPlaying;
-  set isPlaying(bool value) {
-    _isPlaying = value;
+  bool _isDisplayingAudio = false;
+  bool get isDisplayingAudio => _isDisplayingAudio;
+  set isDisplayingAudio(bool value) {
+    _isDisplayingAudio = value;
   }
 
   bool? _isFirstTime = null;
