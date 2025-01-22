@@ -242,11 +242,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                   ],
                 ),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(
-                      MediaQuery.sizeOf(context).height * 0.1),
+                  borderRadius: BorderRadius.circular(80),
                   child: Image.asset(
                     'assets/images/logo.jpg',
-                    height: MediaQuery.sizeOf(context).height * 0.3,
+                    height: 210,
                     fit: BoxFit.cover,
                   ),
                 ),

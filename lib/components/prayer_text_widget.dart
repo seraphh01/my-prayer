@@ -172,7 +172,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                                         18.0,
                                     32.0,
                                   ),
-                                  letterSpacing: 0.2,
+                                  letterSpacing: 0.18,
                                   fontWeight: FontWeight.w300,
                                 ),
                           )
@@ -223,7 +223,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                                   16,
                               32.0,
                             ),
-                            letterSpacing: 0.2,
+                            letterSpacing: 0.18,
                             fontWeight: FontWeight.w300,
                           ),
                     ));

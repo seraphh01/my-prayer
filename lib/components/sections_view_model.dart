@@ -31,7 +31,7 @@ class SectionsViewModel extends FlutterFlowModel<SectionsViewWidget> {
 
   bool displayAudioPage = true;
 
-  int? currentSectionIndex = 0;
+  int currentSectionIndex = 0;
 
   PrayerSectionStruct? currentSection;
   void updateCurrentSectionStruct(Function(PrayerSectionStruct) updateFn) {
@@ -44,14 +44,7 @@ class SectionsViewModel extends FlutterFlowModel<SectionsViewWidget> {
 
   // Stores action output result for [Backend Call - API (PrayerSectionContent)] action in SectionsView widget.
   ApiCallResponse? prayerSectionInitialDataResult;
-  // State field(s) for PageView widget.
-  PageController? pageViewController;
 
-  int get pageViewCurrentIndex => pageViewController != null &&
-          pageViewController!.hasClients &&
-          pageViewController!.page != null
-      ? pageViewController!.page!.round()
-      : 0;
   // Stores action output result for [Backend Call - API (PrayerSectionContent)] action in PageView widget.
   ApiCallResponse? prayerSectionDataResult;
   // Models for PrayerText dynamic component.

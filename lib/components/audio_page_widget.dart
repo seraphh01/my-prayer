@@ -16,6 +16,7 @@ class AudioPageWidget extends StatefulWidget {
     String? title,
     String? subtitle,
     required this.onAudioTimeChanged,
+    required this.imageUrls,
     required this.imageUrl,
     this.texts,
   })  : title = title ?? 'Titlu',
@@ -25,6 +26,7 @@ class AudioPageWidget extends StatefulWidget {
   final String subtitle;
   final Future Function(int selectedAudioTime)? onAudioTimeChanged;
   final String? imageUrl;
+  final List<String> imageUrls;
   final List<SectionTextStruct>? texts;
 
   @override
@@ -34,6 +36,8 @@ class AudioPageWidget extends StatefulWidget {
 class _AudioPageWidgetState extends State<AudioPageWidget> {
   late AudioPageModel _model;
   final _pageManager = getIt<PageManager>();
+  int currentSection = 0;
+  PageController? pageViewController;
 
   @override
   void setState(VoidCallback callback) {
@@ -49,9 +53,13 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
     _model.currentAudioTime =
         _pageManager.currentProgressNotifier.value.inSeconds;
     _model.bufferedTime = _pageManager.bufferedTimeNotifier.value.inSeconds;
+    pageViewController =
+        PageController(initialPage: _pageManager.trackIndexNotifier.value);
+
     _pageManager.totalDurationNotifier.addListener(onTotalDurationChanged);
     _pageManager.currentProgressNotifier.addListener(onCurrentProgressChanged);
     _pageManager.bufferedTimeNotifier.addListener(onBufferedTimeChanged);
+    _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
@@ -72,6 +80,28 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
     safeSetState(() {});
   }
 
+  void onTrackIndexChanged() {
+    if (currentSection == _pageManager.trackIndexNotifier.value) {
+      return;
+    }
+    currentSection = _pageManager.trackIndexNotifier.value;
+    var currentPageIndex = pageViewController?.page?.toInt() ?? 0;
+
+    var indexDifference = (currentSection - currentPageIndex).abs();
+
+    if (indexDifference > 5) {
+      pageViewController?.jumpToPage(currentSection);
+    } else {
+      pageViewController?.animateToPage(
+        currentSection,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.ease,
+      );
+    }
+
+    safeSetState(() {});
+  }
+
   @override
   void dispose() {
     _model.maybeDispose();
@@ -80,6 +110,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
         .removeListener(onCurrentProgressChanged);
     _pageManager.bufferedTimeNotifier.removeListener(onBufferedTimeChanged);
     _pageManager.totalDurationNotifier.removeListener(onTotalDurationChanged);
+    _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
 
     super.dispose();
   }
@@ -94,40 +125,49 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
           color: FlutterFlowTheme.of(context).primaryBackground,
         ),
         child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Column(
-                mainAxisSize: MainAxisSize.max,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        32.0, 0.0, 32.0, 0.0),
-                    child: Container(
-                      width: 280.0,
-                      height: 280.0,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Hero(
-                        tag: 'sectionImageHero',
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(80.0),
-                          child: widget.imageUrl?.isNotEmpty == true
-                              ? Image.network(
-                                  widget.imageUrl!,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  fit: BoxFit.cover,
-                                )
-                              : Image.asset(
-                                  'assets/images/error_image.jpg',
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                        ),
+                  Hero(
+                    tag: 'sectionImageHero',
+                    child: SizedBox(
+                      height: 260,
+                      child: PageView.builder(
+                        controller: pageViewController ??= PageController(),
+                        onPageChanged: (pageIndex) async {
+                          currentSection = pageIndex;
+                          await _pageManager.skipToIndex(pageIndex);
+                        },
+                        itemCount: widget.imageUrls.length,
+                        itemBuilder: (context, index) {
+                          final imageUrl = widget.imageUrls[index];
+                          return Center(
+                            child: Container(
+                              width: 260,
+                              height: 260,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(80.0),
+                                child: imageUrl.isNotEmpty
+                                    ? Image.network(
+                                        imageUrl,
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.asset(
+                                        'assets/images/error_image.jpg',
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -321,7 +361,9 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                   ],
                 ),
               ),
-            ]),
+            ].divide(SizedBox(
+              width: 16,
+            ))),
       ),
     );
   }
