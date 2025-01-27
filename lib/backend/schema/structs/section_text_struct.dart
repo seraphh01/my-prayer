@@ -15,7 +15,6 @@ class SectionTextStruct extends FFFirebaseStruct {
     List<TextElementStruct>? textElements,
     int? startTime,
     int? endTime,
-    double? intervalFactor,
     int? audioTime,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _title = title,
@@ -24,7 +23,6 @@ class SectionTextStruct extends FFFirebaseStruct {
         _textElements = textElements,
         _startTime = startTime,
         _endTime = endTime,
-        _intervalFactor = intervalFactor,
         _audioTime = audioTime,
         super(firestoreUtilData);
 
@@ -82,16 +80,6 @@ class SectionTextStruct extends FFFirebaseStruct {
 
   bool hasEndTime() => _endTime != null;
 
-  // "interval_factor" field.
-  double? _intervalFactor;
-  double get intervalFactor => _intervalFactor ?? 0.0;
-  set intervalFactor(double? val) => _intervalFactor = val;
-
-  void incrementIntervalFactor(double amount) =>
-      intervalFactor = intervalFactor + amount;
-
-  bool hasIntervalFactor() => _intervalFactor != null;
-
   // "audio_time" field.
   int? _audioTime;
   int get audioTime => _audioTime ?? 0;
@@ -112,7 +100,6 @@ class SectionTextStruct extends FFFirebaseStruct {
         ),
         startTime: castToType<int>(data['start_time']),
         endTime: castToType<int>(data['end_time']),
-        intervalFactor: castToType<double>(data['interval_factor']),
         audioTime: castToType<int>(data['audio_time']),
       );
 
@@ -127,7 +114,6 @@ class SectionTextStruct extends FFFirebaseStruct {
         'text_elements': _textElements?.map((e) => e.toMap()).toList(),
         'start_time': _startTime,
         'end_time': _endTime,
-        'interval_factor': _intervalFactor,
         'audio_time': _audioTime,
       }.withoutNulls;
 
@@ -157,10 +143,6 @@ class SectionTextStruct extends FFFirebaseStruct {
         'end_time': serializeParam(
           _endTime,
           ParamType.int,
-        ),
-        'interval_factor': serializeParam(
-          _intervalFactor,
-          ParamType.double,
         ),
         'audio_time': serializeParam(
           _audioTime,
@@ -201,11 +183,6 @@ class SectionTextStruct extends FFFirebaseStruct {
           ParamType.int,
           false,
         ),
-        intervalFactor: deserializeParam(
-          data['interval_factor'],
-          ParamType.double,
-          false,
-        ),
         audioTime: deserializeParam(
           data['audio_time'],
           ParamType.int,
@@ -226,7 +203,6 @@ class SectionTextStruct extends FFFirebaseStruct {
         listEquality.equals(textElements, other.textElements) &&
         startTime == other.startTime &&
         endTime == other.endTime &&
-        intervalFactor == other.intervalFactor &&
         audioTime == other.audioTime;
   }
 
@@ -238,7 +214,6 @@ class SectionTextStruct extends FFFirebaseStruct {
         textElements,
         startTime,
         endTime,
-        intervalFactor,
         audioTime
       ]);
 }
@@ -249,7 +224,6 @@ SectionTextStruct createSectionTextStruct({
   int? repetition,
   int? startTime,
   int? endTime,
-  double? intervalFactor,
   int? audioTime,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
@@ -262,7 +236,6 @@ SectionTextStruct createSectionTextStruct({
       repetition: repetition,
       startTime: startTime,
       endTime: endTime,
-      intervalFactor: intervalFactor,
       audioTime: audioTime,
       firestoreUtilData: FirestoreUtilData(
         clearUnsetFields: clearUnsetFields,

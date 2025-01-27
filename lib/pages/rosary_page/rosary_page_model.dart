@@ -11,8 +11,6 @@ class RosaryPageModel extends FlutterFlowModel<RosaryPageWidget> {
   ///  Local state fields for this page.
   bool playingAudio = false;
 
-  double? currentAudioTime;
-
   String? currentAudioUrl;
 
   PrayerStruct? currentPrayer;

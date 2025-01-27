@@ -116,7 +116,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                                           1.0,
                                         ) *
                                         18,
-                                    32.0,
+                                    18,
                                   ),
                                   letterSpacing: 0.0,
                                   fontWeight: FontWeight.w500,
@@ -170,9 +170,9 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                                           1.0,
                                         ) *
                                         18.0,
-                                    32.0,
+                                    18,
                                   ),
-                                  letterSpacing: 0.18,
+                                  letterSpacing: 0.17,
                                   fontWeight: FontWeight.w300,
                                 ),
                           )
@@ -187,46 +187,50 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                 builder: (context) {
                   if (widget.isPlaying) {
                     return RichText(
+                        textScaler: MediaQuery.of(context).textScaler,
                         text: TextSpan(
-                      text: valueOrDefault<String>(
-                        widget.textInput,
-                        'text',
-                      ),
-                      style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            fontFamily: 'Inter',
-                            fontSize: valueOrDefault<double>(
-                              valueOrDefault<double>(
-                                    FFAppState().fontSizeMultiplier,
-                                    1.0,
-                                  ) *
-                                  16,
-                              32.0,
-                            ),
-                            letterSpacing: 0.0,
-                            fontWeight: FontWeight.w500,
+                          text: valueOrDefault<String>(
+                            widget.textInput,
+                            'text',
                           ),
-                    ));
+                          style:
+                              FlutterFlowTheme.of(context).bodyMedium.override(
+                                    fontFamily: 'Inter',
+                                    fontSize: valueOrDefault<double>(
+                                      valueOrDefault<double>(
+                                            FFAppState().fontSizeMultiplier,
+                                            1.0,
+                                          ) *
+                                          18,
+                                      18,
+                                    ),
+                                    letterSpacing: 0.0,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ));
                   } else {
                     return RichText(
+                        textScaler: MediaQuery.of(context).textScaler,
                         text: TextSpan(
-                      text: valueOrDefault<String>(
-                        widget.textInput,
-                        'text',
-                      ),
-                      style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            fontFamily: 'Inter',
-                            fontSize: valueOrDefault<double>(
-                              valueOrDefault<double>(
-                                    FFAppState().fontSizeMultiplier,
-                                    1.0,
-                                  ) *
-                                  16,
-                              32.0,
-                            ),
-                            letterSpacing: 0.18,
-                            fontWeight: FontWeight.w300,
+                          text: valueOrDefault<String>(
+                            widget.textInput,
+                            'text',
                           ),
-                    ));
+                          style:
+                              FlutterFlowTheme.of(context).bodyMedium.override(
+                                    fontFamily: 'Inter',
+                                    fontSize: valueOrDefault<double>(
+                                      valueOrDefault<double>(
+                                            FFAppState().fontSizeMultiplier,
+                                            1.0,
+                                          ) *
+                                          18,
+                                      18,
+                                    ),
+                                    letterSpacing: 0.17,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                        ));
                   }
                 },
               );

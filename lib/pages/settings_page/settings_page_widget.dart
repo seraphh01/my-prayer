@@ -656,7 +656,18 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                   hoverColor: Colors.transparent,
                   highlightColor: Colors.transparent,
                   onTap: isWeb
-                      ? null
+                      ? () {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            backgroundColor:
+                                FlutterFlowTheme.of(context).primaryBackground,
+                            content: Text(
+                              'Aplicația este actualizată la ultima versiune.',
+                              style: TextStyle(
+                                color: FlutterFlowTheme.of(context).alternate,
+                              ),
+                            ),
+                          ));
+                        }
                       : () async {
                           await launchURL(
                               'https://play.google.com/store/apps/details?id=com.sserafim.socaciu.wings');
@@ -695,7 +706,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                       ),
                                 ),
                                 Text(
-                                  'Versiunea curentă: 1.0.34',
+                                  'Versiunea curentă: 1.0.35',
                                   style: FlutterFlowTheme.of(context)
                                       .bodySmall
                                       .override(

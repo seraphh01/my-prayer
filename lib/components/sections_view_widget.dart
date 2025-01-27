@@ -30,17 +30,9 @@ class SectionsViewWidget extends StatefulWidget {
   const SectionsViewWidget({
     super.key,
     this.sections,
-    int? initialPage,
-    int? initialAudioTime,
-    bool? continueAudio,
-  })  : initialPage = initialPage ?? 0,
-        continueAudio = continueAudio ?? false,
-        initialAudioTime = initialAudioTime ?? 0;
+  });
 
   final List<PrayerSectionStruct>? sections;
-  final int initialPage;
-  final int initialAudioTime;
-  final bool continueAudio;
 
   @override
   State<SectionsViewWidget> createState() => _SectionsViewWidgetState();
@@ -50,7 +42,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     with TickerProviderStateMixin {
   late SectionsViewModel _model;
   late List<ScrollController> _scrollControllers = [];
-  int currentPlayingTextIndex = -1;
+  int currentPlayingTextIndex = 0;
   int currentSectionIndex = 0;
   final GlobalKey pageKey = GlobalKey();
   final Map<int, List<GlobalKey>> _keys = {};
@@ -123,44 +115,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     return _keys[sectionIndex]![textIndex];
   }
 
-  Future<void> setInitialMediaItems() async {
-    if (_model.flattenedSections.isEmpty) {
-      return;
-    }
-
-    if (!(widget.continueAudio)) {
-      _pageManager.trackIndexNotifier.value = 0;
-      _pageManager.skipToIndex(0);
-      _pageManager.clearQueue();
-
-      final mediaItems =
-          await Future.wait(_model.flattenedSections.map((section) async {
-        final artUri = section.imageUrl.isNotEmpty
-            ? Uri.parse(section.imageUrl)
-            : Uri.parse(
-                'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo.jpg');
-
-        final filePath = await retrieveAudioFile(section.audioUrl);
-
-        return MediaItem(
-          id: section.id,
-          album: section.subtitle,
-          title: section.title,
-          artUri: artUri,
-          extras: {
-            'url': section.audioUrl,
-            'isDownloaded': filePath != null,
-            'filePath': filePath,
-          },
-        );
-      }).toList());
-
-      await _pageManager.setQueue(mediaItems);
-      await _pageManager.skipToIndex(widget.initialPage);
-      await _pageManager.seek(Duration(seconds: widget.initialAudioTime));
-    }
-  }
-
   void onTrackIndexChanged() async {
     if (currentSectionIndex == _pageManager.trackIndexNotifier.value) {
       return;
@@ -173,7 +127,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
       }
     }
 
-    setCurrentSection(_pageManager.trackIndexNotifier.value);
+    await setCurrentSection(_pageManager.trackIndexNotifier.value);
     currentPlayingTextIndex = 0;
     safeSetState(() {});
   }
@@ -255,7 +209,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     }
 
     controller.animateTo(absoluteTextPosition,
-        duration: const Duration(milliseconds: 300), curve: Curves.ease);
+        duration: const Duration(milliseconds: 500), curve: Curves.ease);
   }
 
   void onCurrentAudioTimeChanged() {
@@ -277,34 +231,27 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     super.initState();
     _model = createModel(context, () => SectionsViewModel());
 
+    _model.flattenedSections = functions
+        .flattenSectionsList(widget.sections!.toList())!
+        .toList()
+        .cast<PrayerSectionStruct>();
+    setCurrentSection(_pageManager.trackIndexNotifier.value);
+    _scrollControllers = List.generate(
+      _model.flattenedSections.length,
+      (index) => ScrollController(),
+    );
+    setTextKeys(valueOrDefault<int>(0, 0));
+
     onTrackIndexChanged();
     onCurrentAudioTimeChanged();
     onCurrentAudioDurationChanged();
-    currentPlayingTextIndex = -1;
+
     _model.displayAudioPage = FFAppState().isDisplayingAudio;
 
     _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
     _pageManager.currentProgressNotifier.addListener(onCurrentAudioTimeChanged);
     _pageManager.totalDurationNotifier
         .addListener(onCurrentAudioDurationChanged);
-
-    // On component load action.
-    SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _model.flattenedSections = functions
-          .flattenSectionsList(widget.sections!.toList())!
-          .toList()
-          .cast<PrayerSectionStruct>();
-      _scrollControllers = List.generate(
-        _model.flattenedSections.length,
-        (index) => ScrollController(),
-      );
-      _model.currentAudioTime = widget.initialAudioTime;
-      await setCurrentSection(widget.initialPage);
-      await setInitialMediaItems();
-      setTextKeys(valueOrDefault<int>(widget.initialPage, 0));
-
-      safeSetState(() {});
-    });
 
     animationsMap.addAll({
       'pageViewOnPageLoadAnimation': AnimationInfo(
@@ -354,7 +301,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                   return const SizedBox(
                     width: double.infinity,
                     height: double.infinity,
-                    child: EmptyListComponentWidget(),
+                    child: CircularProgressIndicator(),
                   );
                 }
 
@@ -365,6 +312,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                           children: [
                             Builder(
                               builder: (context) {
+                                if (_model.currentSection == null) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
                                 if (!_model.displayAudioPage) {
                                   return Container(
                                     height: double.infinity,
@@ -388,7 +340,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                               AutoSizeText(
                                                 valueOrDefault<String>(
                                                   _model.currentSection?.title,
-                                                  'Titlu sectiune',
+                                                  '',
                                                 ),
                                                 textAlign: TextAlign.center,
                                                 maxLines: 1,
@@ -410,7 +362,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                   valueOrDefault<String>(
                                                     _model.currentSection
                                                         ?.subtitle,
-                                                    'Subtitlu sectiune',
+                                                    '',
                                                   ),
                                                   textAlign: TextAlign.center,
                                                   maxLines: 1,
@@ -678,22 +630,18 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                       textInput:
                                                                           textElementItem
                                                                               .text,
-                                                                      isPlaying: (textsItem.startTime + textElementItem.startTime * textsItem.intervalFactor <=
+                                                                      isPlaying: (textsItem.startTime + textElementItem.startTime <=
                                                                               _model
                                                                                   .currentAudioTime) &&
-                                                                          (textsItem.startTime + textElementItem.endTime * textsItem.intervalFactor >
+                                                                          (textsItem.startTime + textElementItem.endTime >
                                                                               _model.currentAudioTime),
                                                                       onTextPressed:
                                                                           () async {
                                                                         currentPlayingTextIndex =
                                                                             textIndex;
-                                                                        final newAudioTime = (textsItem.startTime +
-                                                                                textElementItem.startTime *
-                                                                                    valueOrDefault<double>(
-                                                                                      textsItem.intervalFactor,
-                                                                                      1.0,
-                                                                                    ))
-                                                                            .toInt();
+                                                                        final newAudioTime =
+                                                                            (textsItem.startTime +
+                                                                                textElementItem.startTime);
 
                                                                         getIt<PageManager>().seek(Duration(
                                                                             seconds:
@@ -741,7 +689,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                     decoration: const BoxDecoration(),
                                     child: wrapWithModel(
                                       model: _model.audioPageModels.getModel(
-                                        _model.currentSection!.id,
+                                        _model.currentSection?.id ?? '',
                                         currentSectionIndex,
                                       ),
                                       updateCallback: () {

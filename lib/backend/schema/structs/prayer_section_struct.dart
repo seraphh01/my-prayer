@@ -27,7 +27,6 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         _subtitle = subtitle,
         _subsections = subsections,
         _sectionId = sectionId,
-        _duration = duration,
         _imageUrl = imageUrl,
         _texts = texts,
         super(firestoreUtilData);
@@ -87,15 +86,6 @@ class PrayerSectionStruct extends FFFirebaseStruct {
 
   bool hasSectionId() => _sectionId != null;
 
-  // "duration" field.
-  int? _duration;
-  int get duration => _duration ?? 0;
-  set duration(int? val) => _duration = val;
-
-  void incrementDuration(int amount) => duration = duration + amount;
-
-  bool hasDuration() => _duration != null;
-
   // "image_url" field.
   String? _imageUrl;
   String get imageUrl => _imageUrl ?? '';
@@ -146,7 +136,6 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         'subtitle': _subtitle,
         'subsections': _subsections?.map((e) => e.toMap()).toList(),
         'section_id': _sectionId,
-        'duration': _duration,
         'image_url': _imageUrl,
         'texts': _texts?.map((e) => e.toMap()).toList(),
       }.withoutNulls;
@@ -181,10 +170,6 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         'section_id': serializeParam(
           _sectionId,
           ParamType.String,
-        ),
-        'duration': serializeParam(
-          _duration,
-          ParamType.int,
         ),
         'image_url': serializeParam(
           _imageUrl,
@@ -267,7 +252,6 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         subtitle == other.subtitle &&
         listEquality.equals(subsections, other.subsections) &&
         sectionId == other.sectionId &&
-        duration == other.duration &&
         imageUrl == other.imageUrl &&
         listEquality.equals(texts, other.texts);
   }
@@ -281,7 +265,6 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         subtitle,
         subsections,
         sectionId,
-        duration,
         imageUrl,
         texts
       ]);

@@ -11,7 +11,7 @@ class SavedPrayerDataStruct extends FFFirebaseStruct {
   SavedPrayerDataStruct({
     PrayerStruct? prayer,
     int? page,
-    double? audioTime,
+    int? audioTime,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _prayer = prayer,
         _page = page,
@@ -39,11 +39,11 @@ class SavedPrayerDataStruct extends FFFirebaseStruct {
   bool hasPage() => _page != null;
 
   // "audioTime" field.
-  double? _audioTime;
-  double get audioTime => _audioTime ?? 0.0;
-  set audioTime(double? val) => _audioTime = val;
+  int? _audioTime;
+  int get audioTime => _audioTime ?? 0;
+  set audioTime(int? val) => _audioTime = val;
 
-  void incrementAudioTime(double amount) => audioTime = audioTime + amount;
+  void incrementAudioTime(int amount) => audioTime = audioTime + amount;
 
   bool hasAudioTime() => _audioTime != null;
 
@@ -53,7 +53,7 @@ class SavedPrayerDataStruct extends FFFirebaseStruct {
             ? data['prayer']
             : PrayerStruct.maybeFromMap(data['prayer']),
         page: castToType<int>(data['page']),
-        audioTime: castToType<double>(data['audioTime']),
+        audioTime: castToType<int>(data['audioTime']),
       );
 
   static SavedPrayerDataStruct? maybeFromMap(dynamic data) => data is Map
@@ -78,7 +78,7 @@ class SavedPrayerDataStruct extends FFFirebaseStruct {
         ),
         'audioTime': serializeParam(
           _audioTime,
-          ParamType.double,
+          ParamType.int,
         ),
       }.withoutNulls;
 
@@ -97,7 +97,7 @@ class SavedPrayerDataStruct extends FFFirebaseStruct {
         ),
         audioTime: deserializeParam(
           data['audioTime'],
-          ParamType.double,
+          ParamType.int,
           false,
         ),
       );
@@ -120,7 +120,7 @@ class SavedPrayerDataStruct extends FFFirebaseStruct {
 SavedPrayerDataStruct createSavedPrayerDataStruct({
   PrayerStruct? prayer,
   int? page,
-  double? audioTime,
+  int? audioTime,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
   bool create = false,
