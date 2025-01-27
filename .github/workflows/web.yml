@@ -5,6 +5,7 @@ on:
     tags:
       - 'web-v[0-9]{1,}.[0-9]{1,}.[0-9]{1,}'
 
+
 jobs:
   build:
     runs-on: ubuntu-latest

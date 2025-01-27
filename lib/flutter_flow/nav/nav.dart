@@ -85,18 +85,6 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               'page',
               ParamType.int,
             ),
-            clearSavedPrayer: params.getParam(
-              'clearSavedPrayer',
-              ParamType.bool,
-            ),
-            initialAudioTime: params.getParam(
-              'initialAudioTime',
-              ParamType.int,
-            ),
-            continueAudio: params.getParam(
-              'continueAudio',
-              ParamType.bool,
-            ),
           ),
         ),
         FFRoute(

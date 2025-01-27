@@ -31,8 +31,6 @@ class SectionsViewModel extends FlutterFlowModel<SectionsViewWidget> {
 
   bool displayAudioPage = true;
 
-  int currentSectionIndex = 0;
-
   PrayerSectionStruct? currentSection;
   void updateCurrentSectionStruct(Function(PrayerSectionStruct) updateFn) {
     updateFn(currentSection ??= PrayerSectionStruct());

@@ -249,128 +249,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     fit: BoxFit.cover,
                   ),
                 ),
-                Visibility(
-                  visible: valueOrDefault<bool>(
-                    (FFAppState().savedPrayer.prayer != null) &&
-                        (FFAppState().savedPrayer.prayer?.id != '') &&
-                        (FFAppState().currentPrayerId.isEmpty),
-                    false,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(
-                        16.0, 0.0, 16.0, 0.0),
-                    child: InkWell(
-                      splashColor: Colors.transparent,
-                      focusColor: Colors.transparent,
-                      hoverColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      onTap: () async {
-                        var prayerId = FFAppState().savedPrayer.prayer?.id;
-                        var page = FFAppState().savedPrayer.page;
-                        var audioTime = FFAppState().savedPrayer.audioTime;
-
-                        FFAppState().deleteSavedPrayer();
-                        FFAppState().savedPrayer = SavedPrayerDataStruct();
-
-                        safeSetState(() {});
-
-                        if (prayerId == null || prayerId.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor:
-                                  FlutterFlowTheme.of(context).alternate,
-                              content: Text(
-                                'Rugăciunea salvată nu este validă. Vă rugăm să salvați o rugăciune din nou.',
-                                style: FlutterFlowTheme.of(context)
-                                    .labelMedium
-                                    .override(
-                                      fontFamily: 'Inter',
-                                      color:
-                                          FlutterFlowTheme.of(context).primary,
-                                      letterSpacing: 0.0,
-                                    ),
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-
-                        context.pushNamed(
-                          'RosaryPage',
-                          queryParameters: {
-                            'prayerId': serializeParam(
-                              prayerId,
-                              ParamType.String,
-                            ),
-                            'page': serializeParam(
-                              valueOrDefault<int>(
-                                page,
-                                0,
-                              ),
-                              ParamType.int,
-                            ),
-                            'clearSavedPrayer': serializeParam(
-                              true,
-                              ParamType.bool,
-                            ),
-                            'initialAudioTime': serializeParam(
-                              valueOrDefault<double>(
-                                audioTime,
-                                0.0,
-                              ),
-                              ParamType.int,
-                            ),
-                          }.withoutNulls,
-                          extra: <String, dynamic>{
-                            kTransitionInfoKey: const TransitionInfo(
-                              hasTransition: true,
-                              transitionType: PageTransitionType.fade,
-                              duration: Duration(milliseconds: 250),
-                            ),
-                          },
-                        );
-                      },
-                      child: Material(
-                        color: Colors.transparent,
-                        child: ListTile(
-                          title: Text(
-                            'Continuă rugăciunea salvată',
-                            style: FlutterFlowTheme.of(context)
-                                .titleMedium
-                                .override(
-                                  fontFamily: 'Merriweather',
-                                  color: FlutterFlowTheme.of(context).primary,
-                                  letterSpacing: 0.0,
-                                ),
-                          ),
-                          subtitle: Text(
-                            '${FFAppState().savedPrayer.prayer?.title} - ${FFAppState().savedPrayer.prayer?.subtitle}',
-                            textAlign: TextAlign.start,
-                            style: FlutterFlowTheme.of(context)
-                                .labelMedium
-                                .override(
-                                  fontFamily: 'Inter',
-                                  color: FlutterFlowTheme.of(context).primary,
-                                  letterSpacing: 0.0,
-                                ),
-                          ),
-                          trailing: Icon(
-                            Icons.arrow_forward_ios_sharp,
-                            color: FlutterFlowTheme.of(context).primary,
-                            size: 16.0,
-                          ),
-                          tileColor: FlutterFlowTheme.of(context).alternate,
-                          dense: true,
-                          contentPadding: const EdgeInsetsDirectional.fromSTEB(
-                              12.0, 0.0, 12.0, 0.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -663,6 +541,116 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             ),
                           ));
                     }),
+                Visibility(
+                  visible: valueOrDefault<bool>(
+                    (FFAppState().savedPrayer.prayer != null) &&
+                        (FFAppState().savedPrayer.prayer?.id != '') &&
+                        (FFAppState().currentPrayerId.isEmpty),
+                    false,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0, 0.0, 16.0, 16.0),
+                    child: InkWell(
+                      splashColor: Colors.transparent,
+                      focusColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                      onTap: () async {
+                        var prayerId = FFAppState().savedPrayer.prayer?.id;
+                        var page = FFAppState().savedPrayer.page;
+
+                        FFAppState().deleteSavedPrayer();
+                        FFAppState().savedPrayer = SavedPrayerDataStruct();
+
+                        safeSetState(() {});
+
+                        if (prayerId == null || prayerId.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor:
+                                  FlutterFlowTheme.of(context).alternate,
+                              content: Text(
+                                'Rugăciunea salvată nu este validă. Vă rugăm să salvați o rugăciune din nou.',
+                                style: FlutterFlowTheme.of(context)
+                                    .labelMedium
+                                    .override(
+                                      fontFamily: 'Inter',
+                                      color:
+                                          FlutterFlowTheme.of(context).primary,
+                                      letterSpacing: 0.0,
+                                    ),
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        context.pushNamed(
+                          'RosaryPage',
+                          queryParameters: {
+                            'prayerId': serializeParam(
+                              prayerId,
+                              ParamType.String,
+                            ),
+                            'page': serializeParam(
+                              valueOrDefault<int>(
+                                page,
+                                0,
+                              ),
+                              ParamType.int,
+                            ),
+                          }.withoutNulls,
+                          extra: <String, dynamic>{
+                            kTransitionInfoKey: const TransitionInfo(
+                              hasTransition: true,
+                              transitionType: PageTransitionType.fade,
+                              duration: Duration(milliseconds: 250),
+                            ),
+                          },
+                        );
+                      },
+                      child: Material(
+                        color: Colors.transparent,
+                        child: ListTile(
+                          title: Text(
+                            'Continuă rugăciunea salvată',
+                            style: FlutterFlowTheme.of(context)
+                                .titleMedium
+                                .override(
+                                  fontFamily: 'Merriweather',
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  letterSpacing: 0.0,
+                                ),
+                          ),
+                          subtitle: Text(
+                            '${FFAppState().savedPrayer.prayer?.title} - ${FFAppState().savedPrayer.prayer?.subtitle}',
+                            textAlign: TextAlign.start,
+                            style: FlutterFlowTheme.of(context)
+                                .labelMedium
+                                .override(
+                                  fontFamily: 'Inter',
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  letterSpacing: 0.0,
+                                ),
+                          ),
+                          trailing: Icon(
+                            Icons.arrow_forward_ios_sharp,
+                            color: FlutterFlowTheme.of(context).primary,
+                            size: 16.0,
+                          ),
+                          tileColor: FlutterFlowTheme.of(context).alternate,
+                          dense: true,
+                          contentPadding: const EdgeInsetsDirectional.fromSTEB(
+                              12.0, 0.0, 12.0, 0.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ].divide(const SizedBox(height: 12.0)),
             ),
           ),
