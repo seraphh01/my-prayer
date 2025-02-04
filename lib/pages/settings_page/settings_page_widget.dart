@@ -706,7 +706,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                       ),
                                 ),
                                 Text(
-                                  'Versiunea curentă: 1.0.35',
+                                  'Versiunea curentă: 1.0.36',
                                   style: FlutterFlowTheme.of(context)
                                       .bodySmall
                                       .override(
