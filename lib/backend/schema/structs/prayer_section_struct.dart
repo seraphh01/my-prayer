@@ -19,6 +19,8 @@ class PrayerSectionStruct extends FFFirebaseStruct {
     int? duration,
     String? imageUrl,
     List<SectionTextStruct>? texts,
+    bool? showTitle,
+    bool? showSubtitle,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _id = id,
         _title = title,
@@ -29,6 +31,8 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         _sectionId = sectionId,
         _imageUrl = imageUrl,
         _texts = texts,
+        _showTitle = showTitle,
+        _showSubtitle = showSubtitle,
         super(firestoreUtilData);
 
   // "id" field.
@@ -44,6 +48,16 @@ class PrayerSectionStruct extends FFFirebaseStruct {
   set title(String? val) => _title = val;
 
   bool hasTitle() => _title != null;
+
+  // "showTitle" field.
+  bool? _showTitle;
+  bool get showTitle => _showTitle ?? false;
+  set showTitle(bool? val) => _showTitle = val;
+
+  // "showSubtitle" field.
+  bool? _showSubtitle;
+  bool get showSubtitle => _showSubtitle ?? false;
+  set showSubtitle(bool? val) => _showSubtitle = val;
 
   // "sequence" field.
   int? _sequence;
@@ -122,6 +136,8 @@ class PrayerSectionStruct extends FFFirebaseStruct {
           data['texts'],
           SectionTextStruct.fromMap,
         ),
+        showTitle: castToType<bool>(data['show_title']),
+        showSubtitle: castToType<bool>(data['show_subtitle']),
       );
 
   static PrayerSectionStruct? maybeFromMap(dynamic data) => data is Map
@@ -138,6 +154,8 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         'section_id': _sectionId,
         'image_url': _imageUrl,
         'texts': _texts?.map((e) => e.toMap()).toList(),
+        'show_title': _showTitle,
+        'show_subtitle': _showSubtitle,
       }.withoutNulls;
 
   @override
@@ -179,6 +197,14 @@ class PrayerSectionStruct extends FFFirebaseStruct {
           _texts,
           ParamType.DataStruct,
           isList: true,
+        ),
+        'show_title': serializeParam(
+          _showTitle,
+          ParamType.bool,
+        ),
+        'show_subtitle': serializeParam(
+          _showSubtitle,
+          ParamType.bool,
         ),
       }.withoutNulls;
 
@@ -236,6 +262,16 @@ class PrayerSectionStruct extends FFFirebaseStruct {
           true,
           structBuilder: SectionTextStruct.fromSerializableMap,
         ),
+        showTitle: deserializeParam(
+          data['show_title'],
+          ParamType.bool,
+          false,
+        ),
+        showSubtitle: deserializeParam(
+          data['show_subtitle'],
+          ParamType.bool,
+          false,
+        ),
       );
 
   @override
@@ -253,6 +289,8 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         listEquality.equals(subsections, other.subsections) &&
         sectionId == other.sectionId &&
         imageUrl == other.imageUrl &&
+        showTitle == other.showTitle &&
+        showSubtitle == other.showSubtitle &&
         listEquality.equals(texts, other.texts);
   }
 
@@ -266,13 +304,17 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         subsections,
         sectionId,
         imageUrl,
-        texts
+        texts,
+        showTitle,
+        showSubtitle,
       ]);
 }
 
 PrayerSectionStruct createPrayerSectionStruct({
   String? id,
   String? title,
+  bool? showTitle,
+  bool? showSubtitle,
   int? sequence,
   String? audioUrl,
   String? subtitle,
@@ -293,6 +335,8 @@ PrayerSectionStruct createPrayerSectionStruct({
       sectionId: sectionId,
       duration: duration,
       imageUrl: imageUrl,
+      showSubtitle: showSubtitle,
+      showTitle: showTitle,
       firestoreUtilData: FirestoreUtilData(
         clearUnsetFields: clearUnsetFields,
         create: create,

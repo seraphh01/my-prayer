@@ -337,27 +337,43 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
                                             children: [
-                                              AutoSizeText(
-                                                valueOrDefault<String>(
-                                                  _model.currentSection?.title,
-                                                  '',
+                                              if (_model.currentSection
+                                                          ?.showTitle ==
+                                                      true ||
+                                                  _model.currentSection
+                                                          ?.showSubtitle ==
+                                                      true)
+                                                SizedBox(
+                                                  height: 16,
                                                 ),
-                                                textAlign: TextAlign.center,
-                                                maxLines: 1,
-                                                minFontSize: 24.0,
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .titleMedium
-                                                        .override(
-                                                          fontFamily:
-                                                              'Merriweather',
-                                                          fontSize: 24.0,
-                                                          letterSpacing: 0.0,
-                                                        ),
-                                              ),
-                                              if (_model.currentSection!
-                                                      .subtitle !=
-                                                  '')
+                                              if (_model.currentSection
+                                                      ?.showTitle ==
+                                                  true)
+                                                AutoSizeText(
+                                                  valueOrDefault<String>(
+                                                    _model
+                                                        .currentSection?.title,
+                                                    '',
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                  maxLines: 1,
+                                                  minFontSize: 24.0,
+                                                  style: FlutterFlowTheme.of(
+                                                          context)
+                                                      .titleMedium
+                                                      .override(
+                                                        fontFamily:
+                                                            'Merriweather',
+                                                        fontSize: 24.0,
+                                                        letterSpacing: 0.0,
+                                                      ),
+                                                ),
+                                              if (_model.currentSection
+                                                          ?.showSubtitle ==
+                                                      true &&
+                                                  _model.currentSection!
+                                                          .subtitle !=
+                                                      '')
                                                 AutoSizeText(
                                                   valueOrDefault<String>(
                                                     _model.currentSection
@@ -494,17 +510,19 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                             textAlign:
                                                                                 TextAlign.center,
                                                                             maxLines:
-                                                                                1,
+                                                                                2,
                                                                             minFontSize:
                                                                                 16.0,
                                                                             style:
                                                                                 FlutterFlowTheme.of(context).titleSmall.override(
                                                                               fontFamily: 'Merriweather',
+                                                                              fontStyle: textsItem.italic ? FontStyle.italic : FontStyle.normal,
+                                                                              color: FlutterFlowTheme.of(context).secondary,
                                                                               fontSize: FFAppState().fontSizeMultiplier * 16,
                                                                               letterSpacing: 0.0,
                                                                               shadows: [
                                                                                 Shadow(
-                                                                                  color: FlutterFlowTheme.of(context).primaryText,
+                                                                                  color: FlutterFlowTheme.of(context).secondary,
                                                                                   offset: const Offset(0.0, 0.0),
                                                                                   blurRadius: 0.5,
                                                                                 )
@@ -518,7 +536,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                                 TextAlign.center,
                                                                             style: FlutterFlowTheme.of(context).titleMedium.override(
                                                                                   fontFamily: 'Merriweather',
-                                                                                  color: FlutterFlowTheme.of(context).secondaryText,
+                                                                                  fontStyle: textsItem.italic ? FontStyle.italic : FontStyle.normal,
+                                                                                  color: FlutterFlowTheme.of(context).secondary,
                                                                                   fontSize: valueOrDefault<double>(
                                                                                     valueOrDefault<double>(
                                                                                           FFAppState().fontSizeMultiplier,
@@ -555,7 +574,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                               ].divide(
                                                                   const SizedBox(
                                                                       width:
-                                                                          8.0)),
+                                                                          0.0)),
                                                             ),
                                                           ),
                                                         ),
@@ -664,9 +683,10 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                           .divide(
                                                               const SizedBox(
                                                                   height: 8.0))
-                                                          .around(
+                                                          .addToStart(
                                                               const SizedBox(
-                                                                  height: 8.0)),
+                                                            height: 8,
+                                                          )),
                                                     );
                                                   },
                                                 );
@@ -675,8 +695,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                           ),
                                         ]
                                             .divide(
-                                                const SizedBox(height: 16.0))
-                                            .addToStart(
                                                 const SizedBox(height: 16.0))
                                             .addToEnd(
                                                 const SizedBox(height: 16.0)),

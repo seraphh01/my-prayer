@@ -16,6 +16,7 @@ class SectionTextStruct extends FFFirebaseStruct {
     int? startTime,
     int? endTime,
     int? audioTime,
+    bool? italic,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _title = title,
         _sequence = sequence,
@@ -24,6 +25,7 @@ class SectionTextStruct extends FFFirebaseStruct {
         _startTime = startTime,
         _endTime = endTime,
         _audioTime = audioTime,
+        _italic = italic,
         super(firestoreUtilData);
 
   // "title" field.
@@ -37,6 +39,10 @@ class SectionTextStruct extends FFFirebaseStruct {
   int? _sequence;
   int get sequence => _sequence ?? 0;
   set sequence(int? val) => _sequence = val;
+
+  bool? _italic;
+  bool get italic => _italic ?? false;
+  set italic(bool? val) => _italic = val;
 
   void incrementSequence(int amount) => sequence = sequence + amount;
 
@@ -101,6 +107,7 @@ class SectionTextStruct extends FFFirebaseStruct {
         startTime: castToType<int>(data['start_time']),
         endTime: castToType<int>(data['end_time']),
         audioTime: castToType<int>(data['audio_time']),
+        italic: castToType<bool>(data['italic']),
       );
 
   static SectionTextStruct? maybeFromMap(dynamic data) => data is Map
@@ -115,6 +122,7 @@ class SectionTextStruct extends FFFirebaseStruct {
         'start_time': _startTime,
         'end_time': _endTime,
         'audio_time': _audioTime,
+        'italic': _italic,
       }.withoutNulls;
 
   @override
@@ -147,6 +155,10 @@ class SectionTextStruct extends FFFirebaseStruct {
         'audio_time': serializeParam(
           _audioTime,
           ParamType.int,
+        ),
+        'italic': serializeParam(
+          _italic,
+          ParamType.bool,
         ),
       }.withoutNulls;
 
@@ -188,6 +200,11 @@ class SectionTextStruct extends FFFirebaseStruct {
           ParamType.int,
           false,
         ),
+        italic: deserializeParam(
+          data['italic'],
+          ParamType.bool,
+          false,
+        ),
       );
 
   @override
@@ -203,6 +220,7 @@ class SectionTextStruct extends FFFirebaseStruct {
         listEquality.equals(textElements, other.textElements) &&
         startTime == other.startTime &&
         endTime == other.endTime &&
+        italic == other.italic &&
         audioTime == other.audioTime;
   }
 
@@ -214,7 +232,8 @@ class SectionTextStruct extends FFFirebaseStruct {
         textElements,
         startTime,
         endTime,
-        audioTime
+        audioTime,
+        italic
       ]);
 }
 
@@ -225,6 +244,7 @@ SectionTextStruct createSectionTextStruct({
   int? startTime,
   int? endTime,
   int? audioTime,
+  bool? italic,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
   bool create = false,
@@ -237,6 +257,7 @@ SectionTextStruct createSectionTextStruct({
       startTime: startTime,
       endTime: endTime,
       audioTime: audioTime,
+      italic: italic,
       firestoreUtilData: FirestoreUtilData(
         clearUnsetFields: clearUnsetFields,
         create: create,

@@ -87,7 +87,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                                 .headlineLarge
                                 .override(
                                   fontFamily: 'PlayBall',
-                                  color: FlutterFlowTheme.of(context).primary,
+                                  color: FlutterFlowTheme.of(context).secondary,
                                   fontSize: valueOrDefault<double>(
                                     valueOrDefault<double>(
                                           FFAppState().fontSizeMultiplier,
