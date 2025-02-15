@@ -2,8 +2,8 @@ name: Gh-Pages
 
 on:
   push:
-    tags:
-      - 'web-v[0-9]{1,}.[0-9]{1,}.[0-9]{1,}'
+    branches:
+      - web
 
 
 jobs:
