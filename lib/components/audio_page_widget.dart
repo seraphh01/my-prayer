@@ -117,6 +117,15 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
 
   @override
   Widget build(BuildContext context) {
+    var currentText = widget.texts
+        ?.where((e) =>
+            ((e.startTime <= _model.slideAudioTime!) &&
+                (e.endTime >= _model.slideAudioTime!) &&
+                _model.isSliding) ||
+            ((e.startTime <= _model.currentAudioTime) &&
+                (e.endTime > _model.currentAudioTime) &&
+                !_model.isSliding))
+        .firstOrNull;
     return ClipRRect(
       child: Container(
         width: double.infinity,
@@ -146,7 +155,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                         itemBuilder: (context, index) {
                           final imageUrl = widget.imageUrls[index];
                           return Center(
-                            child: Container(
+                            child: SizedBox(
                               width: 260,
                               height: 260,
                               child: ClipRRect(
@@ -236,41 +245,26 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                                         FlutterFlowTheme.of(context).secondary,
                                   ),
                                 ),
-                                Text(
-                                  valueOrDefault<String>(
-                                    widget.texts
-                                        ?.where((e) =>
-                                            ((e.startTime <=
-                                                    _model.slideAudioTime!
-                                                        .toDouble()) &&
-                                                (e.endTime >=
-                                                    _model.slideAudioTime!
-                                                        .toDouble()) &&
-                                                _model.isSliding) ||
-                                            ((e.startTime <=
-                                                    valueOrDefault<double>(
-                                                      _model.currentAudioTime
-                                                          .toDouble(),
-                                                      0.0,
-                                                    )) &&
-                                                (e.endTime >=
-                                                    valueOrDefault<double>(
-                                                      _model.currentAudioTime
-                                                          .toDouble(),
-                                                      0.0,
-                                                    )) &&
-                                                !_model.isSliding))
-                                        .toList()
-                                        .firstOrNull
-                                        ?.title,
-                                    '-',
+                                GestureDetector(
+                                  child: Text(
+                                    valueOrDefault<String>(
+                                      currentText?.title,
+                                      '-',
+                                    ),
+                                    style: FlutterFlowTheme.of(context)
+                                        .titleSmall
+                                        .override(
+                                          fontFamily: 'Merriweather',
+                                          letterSpacing: 0.0,
+                                        ),
                                   ),
-                                  style: FlutterFlowTheme.of(context)
-                                      .titleSmall
-                                      .override(
-                                        fontFamily: 'Merriweather',
-                                        letterSpacing: 0.0,
-                                      ),
+                                  onTap: () async {
+                                    if (currentText != null) {
+                                      await widget.onAudioTimeChanged?.call(
+                                        currentText.startTime,
+                                      );
+                                    }
+                                  },
                                 ),
                                 Text(
                                   ' <',
@@ -361,7 +355,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                   ],
                 ),
               ),
-            ].divide(SizedBox(
+            ].divide(const SizedBox(
               width: 16,
             ))),
       ),

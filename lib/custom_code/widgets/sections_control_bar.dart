@@ -44,11 +44,10 @@ import 'package:flutter/services.dart'; // For rootBundle
 
 class SectionsControlBar extends StatefulWidget {
   final double? playbackRate;
-  final List<PrayerSectionStruct> sections;
-  final List<String> playlist;
   final double? width;
   final double? height;
   final Future Function()? switchContent;
+  final Future Function()? chooseChapter;
   final bool? showingTextContent;
 
   const SectionsControlBar(
@@ -56,10 +55,9 @@ class SectionsControlBar extends StatefulWidget {
       this.width,
       this.height,
       this.playbackRate,
-      required this.playlist,
       this.showingTextContent,
       this.switchContent,
-      required this.sections});
+      this.chooseChapter});
 
   @override
   State<SectionsControlBar> createState() => _SectionsControlBarState();
@@ -80,24 +78,6 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
   @override
   void dispose() {
     super.dispose();
-  }
-
-  Future<void> _chooseChapter(BuildContext content) async {
-    final index = await showModalBottomSheet<int>(
-        isDismissible: true,
-        useSafeArea: true,
-        context: context,
-        builder: (context) {
-          return ChooseChapterWidget(
-              currentChapterIndex: _pageManager.trackIndexNotifier.value,
-              chapterOptions:
-                  convertPrayerSectionToChapterOption(widget.sections));
-        });
-    if (index == null) {
-      return;
-    }
-
-    await _pageManager.skipToIndex(index);
   }
 
   void _switchContent() {
@@ -126,7 +106,7 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
               color: FlutterFlowTheme.of(context).primary,
               size: 24,
             ),
-            onPressed: () => _chooseChapter(context),
+            onPressed: widget.chooseChapter,
           ),
           FlutterFlowIconButton(
             borderRadius: 32,
