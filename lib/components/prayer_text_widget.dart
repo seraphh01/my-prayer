@@ -1,3 +1,5 @@
+import 'package:my_prayer/backend/schema/enums/enums.dart';
+
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
@@ -10,11 +12,13 @@ class PrayerTextWidget extends StatefulWidget {
     super.key,
     bool? isHighlighted,
     required this.textInput,
+    required this.type,
     bool? isPlaying,
     required this.onTextPressed,
   })  : highlight = isHighlighted ?? false,
         isPlaying = isPlaying ?? false;
 
+  final TextElementType type;
   final bool highlight;
   final String? textInput;
   final bool isPlaying;
@@ -48,9 +52,52 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
     super.dispose();
   }
 
+  TextStyle firstLetterStyle() {
+    return FlutterFlowTheme.of(context).headlineLarge.override(
+          fontFamily: 'PlayBall',
+          color: FlutterFlowTheme.of(context).secondary,
+          fontSize: valueOrDefault<double>(
+            valueOrDefault<double>(
+                  FFAppState().fontSizeMultiplier,
+                  1.0,
+                ) *
+                32,
+            32.0,
+          ),
+          letterSpacing: 0.0,
+          useGoogleFonts: false,
+          lineHeight: 0.5,
+        );
+  }
+
+  TextStyle restOfTextPlayingStyle() {
+    return FlutterFlowTheme.of(context).bodyMedium.override(
+          fontFamily: 'Inter',
+          fontSize: valueOrDefault<double>(
+            valueOrDefault<double>(
+                  FFAppState().fontSizeMultiplier,
+                  1.0,
+                ) *
+                18,
+            18,
+          ),
+          letterSpacing: widget.isPlaying ? 0.0 : 0.17,
+          fontWeight: widget.isPlaying ? FontWeight.w500 : FontWeight.w300,
+          fontStyle: switch (widget.type) {
+            TextElementType.quoteText => FontStyle.italic,
+            _ => FontStyle.normal,
+          },
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+
+    var firstLetter =
+        widget.highlight ? widget.textInput!.substring(0, 1) : null;
+    var restOfText =
+        widget.highlight ? widget.textInput!.substring(1) : widget.textInput;
 
     return InkWell(
       splashColor: Colors.transparent,
@@ -61,183 +108,26 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
         await widget.onTextPressed?.call();
       },
       child: Container(
-        decoration: const BoxDecoration(),
-        child: Builder(
-          builder: (context) {
-            if (valueOrDefault<bool>(
-              widget.highlight,
-              false,
-            )) {
-              return Builder(
-                builder: (context) {
-                  if (valueOrDefault<bool>(
-                    widget.isPlaying,
-                    false,
-                  )) {
-                    return RichText(
-                      textScaler: MediaQuery.of(context).textScaler,
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: valueOrDefault<String>(
-                              (widget.textInput!).substring(0, 1),
-                              'A',
-                            ),
-                            style: FlutterFlowTheme.of(context)
-                                .headlineLarge
-                                .override(
-                                  fontFamily: 'PlayBall',
-                                  color: FlutterFlowTheme.of(context).secondary,
-                                  fontSize: valueOrDefault<double>(
-                                    valueOrDefault<double>(
-                                          FFAppState().fontSizeMultiplier,
-                                          1.0,
-                                        ) *
-                                        32,
-                                    32.0,
-                                  ),
-                                  letterSpacing: 0.0,
-                                  useGoogleFonts: false,
-                                  lineHeight: 0.5,
-                                ),
-                          ),
-                          TextSpan(
-                            text: valueOrDefault<String>(
-                              (widget.textInput!).substring(1),
-                              'a',
-                            ),
-                            style: FlutterFlowTheme.of(context)
-                                .bodyMedium
-                                .override(
-                                  fontFamily: 'Inter',
-                                  fontSize: valueOrDefault<double>(
-                                    valueOrDefault<double>(
-                                          FFAppState().fontSizeMultiplier,
-                                          1.0,
-                                        ) *
-                                        18,
-                                    18,
-                                  ),
-                                  letterSpacing: 0.0,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                          )
-                        ],
-                      ),
-                    );
-                  } else {
-                    return RichText(
-                      textScaler: MediaQuery.of(context).textScaler,
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: valueOrDefault<String>(
-                              (widget.textInput!).substring(0, 1),
-                              'A',
-                            ),
-                            style: FlutterFlowTheme.of(context)
-                                .headlineLarge
-                                .override(
-                                    fontFamily: 'PlayBall',
-                                    color:
-                                        FlutterFlowTheme.of(context).secondary,
-                                    fontSize: valueOrDefault<double>(
-                                      valueOrDefault<double>(
-                                            FFAppState().fontSizeMultiplier,
-                                            1.0,
-                                          ) *
-                                          32,
-                                      32.0,
-                                    ),
-                                    letterSpacing: 0.0,
-                                    useGoogleFonts: false,
-                                    lineHeight: 0.5),
-                          ),
-                          TextSpan(
-                            text: valueOrDefault<String>(
-                              (widget.textInput!).substring(1),
-                              'A',
-                            ),
-                            style: FlutterFlowTheme.of(context)
-                                .bodyMedium
-                                .override(
-                                  fontFamily: 'Inter',
-                                  color:
-                                      FlutterFlowTheme.of(context).primaryText,
-                                  fontSize: valueOrDefault<double>(
-                                    valueOrDefault<double>(
-                                          FFAppState().fontSizeMultiplier,
-                                          1.0,
-                                        ) *
-                                        18.0,
-                                    18,
-                                  ),
-                                  letterSpacing: 0.17,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                          )
-                        ],
-                      ),
-                    );
-                  }
-                },
-              );
-            } else {
-              return Builder(
-                builder: (context) {
-                  if (widget.isPlaying) {
-                    return RichText(
-                        textScaler: MediaQuery.of(context).textScaler,
-                        text: TextSpan(
-                          text: valueOrDefault<String>(
-                            widget.textInput,
-                            'text',
-                          ),
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    fontFamily: 'Inter',
-                                    fontSize: valueOrDefault<double>(
-                                      valueOrDefault<double>(
-                                            FFAppState().fontSizeMultiplier,
-                                            1.0,
-                                          ) *
-                                          18,
-                                      18,
-                                    ),
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                        ));
-                  } else {
-                    return RichText(
-                        textScaler: MediaQuery.of(context).textScaler,
-                        text: TextSpan(
-                          text: valueOrDefault<String>(
-                            widget.textInput,
-                            'text',
-                          ),
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    fontFamily: 'Inter',
-                                    fontSize: valueOrDefault<double>(
-                                      valueOrDefault<double>(
-                                            FFAppState().fontSizeMultiplier,
-                                            1.0,
-                                          ) *
-                                          18,
-                                      18,
-                                    ),
-                                    letterSpacing: 0.17,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                        ));
-                  }
-                },
-              );
-            }
-          },
-        ),
-      ),
+          decoration: const BoxDecoration(),
+          child: RichText(
+            textScaler: MediaQuery.of(context).textScaler,
+            text: TextSpan(
+              children: [
+                if (firstLetter != null && firstLetter.isNotEmpty)
+                  TextSpan(
+                    text: firstLetter,
+                    style: firstLetterStyle(),
+                  ),
+                TextSpan(
+                  text: valueOrDefault<String>(
+                    restOfText,
+                    'Textul va fi adăugat curând.',
+                  ),
+                  style: restOfTextPlayingStyle(),
+                )
+              ],
+            ),
+          )),
     );
   }
 }

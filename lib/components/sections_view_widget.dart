@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:collection/collection.dart';
+import 'package:my_prayer/components/choose_chapter_widget.dart';
 import 'package:my_prayer/custom_code/actions/retrieve_audio_file.dart';
 import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
@@ -20,7 +21,6 @@ import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'sections_view_model.dart';
@@ -30,9 +30,13 @@ class SectionsViewWidget extends StatefulWidget {
   const SectionsViewWidget({
     super.key,
     this.sections,
+    this.prayerTitle,
+    this.prayerSubtitle,
   });
 
   final List<PrayerSectionStruct>? sections;
+  final String? prayerTitle;
+  final String? prayerSubtitle;
 
   @override
   State<SectionsViewWidget> createState() => _SectionsViewWidgetState();
@@ -235,6 +239,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
         .flattenSectionsList(widget.sections!.toList())!
         .toList()
         .cast<PrayerSectionStruct>();
+    _model.chapterOptions =
+        functions.convertPrayerSectionToChapterOption(widget.sections!);
     setCurrentSection(_pageManager.trackIndexNotifier.value);
     _scrollControllers = List.generate(
       _model.flattenedSections.length,
@@ -642,6 +648,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                       key: Key(
                                                                         'Keywwi_${textElementItem.text}',
                                                                       ),
+                                                                      type: textElementItem
+                                                                          .type,
                                                                       isHighlighted: textElementItem
                                                                               .highlight ||
                                                                           textElementIndex ==
@@ -787,9 +795,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                 child: custom_widgets.SectionsControlBar(
                   width: double.infinity,
                   height: double.infinity,
-                  playlist:
-                      _model.flattenedSections.map((e) => e.audioUrl).toList(),
-                  sections: widget.sections!,
                   showingTextContent: !_model.displayAudioPage,
                   playbackRate: valueOrDefault<double>(
                     FFAppState().audioSpeed,
@@ -800,6 +805,25 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                     _model.displayAudioPage = !_model.displayAudioPage;
                     FFAppState().isDisplayingAudio = _model.displayAudioPage;
                     safeSetState(() {});
+                  },
+                  chooseChapter: () async {
+                    final index = await showModalBottomSheet<int>(
+                        isDismissible: true,
+                        useSafeArea: true,
+                        context: context,
+                        builder: (context) {
+                          return ChooseChapterWidget(
+                              title:
+                                  "${widget.prayerTitle}${widget.prayerTitle!.isNotEmpty ? ' - ' : ''}${widget.prayerSubtitle}",
+                              currentChapterIndex:
+                                  _pageManager.trackIndexNotifier.value,
+                              chapterOptions: _model.chapterOptions);
+                        });
+                    if (index == null) {
+                      return;
+                    }
+
+                    await _pageManager.skipToIndex(index);
                   },
                 ),
               ),

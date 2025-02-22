@@ -1,3 +1,5 @@
+import 'package:auto_size_text/auto_size_text.dart';
+
 import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
 import '/components/chapter_options_view_widget.dart';
@@ -11,11 +13,13 @@ class ChooseChapterWidget extends StatefulWidget {
   const ChooseChapterWidget({
     super.key,
     required this.chapterOptions,
+    this.title,
     int? currentChapterIndex,
   }) : currentChapterIndex = currentChapterIndex ?? 0;
 
   final List<ChapterOptionStruct>? chapterOptions;
   final int currentChapterIndex;
+  final String? title;
 
   @override
   State<ChooseChapterWidget> createState() => _ChooseChapterWidgetState();
@@ -76,16 +80,17 @@ class _ChooseChapterWidgetState extends State<ChooseChapterWidget> {
             children: [
               Container(
                 width: double.infinity,
-                height: MediaQuery.sizeOf(context).height * 0.1,
                 decoration: const BoxDecoration(),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Mergi la secțiunea dorită',
+                  //autosize text with max one one line
+                  child: AutoSizeText(
+                    widget.title ?? 'Mergi la secțiunea dorită',
                     style: FlutterFlowTheme.of(context).headlineSmall.override(
                           fontFamily: 'Merriweather',
                           letterSpacing: 0.0,
                         ),
+                    maxLines: 1,
                   ),
                 ),
               ),
