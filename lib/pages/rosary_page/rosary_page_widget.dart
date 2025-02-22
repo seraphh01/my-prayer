@@ -393,6 +393,8 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                         _model.currentPrayer?.id != '') {
                       return SectionsViewWidget(
                         sections: _model.currentPrayer?.sections,
+                        prayerTitle: _model.currentPrayer?.title,
+                        prayerSubtitle: _model.currentPrayer?.subtitle,
                       );
                     } else {
                       return const Align(

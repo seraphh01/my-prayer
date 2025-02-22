@@ -17,6 +17,7 @@ class SectionsViewModel extends FlutterFlowModel<SectionsViewWidget> {
   int currentAudioDuration = 0;
 
   List<PrayerSectionStruct> flattenedSections = [];
+  List<ChapterOptionStruct> chapterOptions = [];
   void addToFlattenedSections(PrayerSectionStruct item) =>
       flattenedSections.add(item);
   void removeFromFlattenedSections(PrayerSectionStruct item) =>

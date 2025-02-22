@@ -169,7 +169,9 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                                   color: Colors.transparent,
                                   child: ListTile(
                                     title: Text(
-                                      favoritePrayerItem.title,
+                                      favoritePrayerItem.title.isNotEmpty
+                                          ? favoritePrayerItem.title
+                                          : favoritePrayerItem.subtitle,
                                       style: FlutterFlowTheme.of(context)
                                           .titleLarge
                                           .override(
@@ -177,15 +179,20 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                                             letterSpacing: 0.0,
                                           ),
                                     ),
-                                    subtitle: Text(
-                                      favoritePrayerItem.subtitle,
-                                      style: FlutterFlowTheme.of(context)
-                                          .labelMedium
-                                          .override(
-                                            fontFamily: 'Inter',
-                                            letterSpacing: 0.0,
-                                          ),
-                                    ),
+                                    subtitle: favoritePrayerItem
+                                                .title.isNotEmpty &&
+                                            favoritePrayerItem.title !=
+                                                favoritePrayerItem.subtitle
+                                        ? Text(
+                                            favoritePrayerItem.subtitle,
+                                            style: FlutterFlowTheme.of(context)
+                                                .labelMedium
+                                                .override(
+                                                  fontFamily: 'Inter',
+                                                  letterSpacing: 0.0,
+                                                ),
+                                          )
+                                        : null,
                                     trailing: Icon(
                                       Icons.arrow_forward_ios_rounded,
                                       color: FlutterFlowTheme.of(context)

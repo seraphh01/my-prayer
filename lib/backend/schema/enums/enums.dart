@@ -18,7 +18,16 @@ T? deserializeEnum<T>(String? value) {
   switch (T) {
     case (PrayerType):
       return PrayerType.values.deserialize(value) as T?;
+    case (TextElementType _):
+      return TextElementType.values.deserialize(value) as T?;
     default:
       return null;
   }
+}
+
+enum TextElementType {
+  plainText,
+  boldText,
+  quoteText,
+  underlinedText,
 }

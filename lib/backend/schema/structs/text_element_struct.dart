@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_getters_setters
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_prayer/backend/schema/enums/enums.dart';
 
 import '/backend/schema/util/firestore_util.dart';
 
@@ -13,12 +14,14 @@ class TextElementStruct extends FFFirebaseStruct {
     int? startTime,
     int? endTime,
     bool? highlight,
+    TextElementType? type,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _text = text,
         _sequence = sequence,
         _startTime = startTime,
         _endTime = endTime,
         _highlight = highlight ?? false,
+        _type = type ?? TextElementType.plainText,
         super(firestoreUtilData);
 
   // "text" field.
@@ -36,6 +39,10 @@ class TextElementStruct extends FFFirebaseStruct {
   bool _highlight;
   bool get highlight => _highlight;
   set highlight(bool val) => _highlight = val;
+
+  TextElementType _type;
+  TextElementType get type => _type;
+  set type(TextElementType val) => _type = val;
 
   void incrementSequence(int amount) => sequence = sequence + amount;
 
@@ -66,6 +73,7 @@ class TextElementStruct extends FFFirebaseStruct {
         startTime: castToType<int>(data['start_time']),
         endTime: castToType<int>(data['end_time']),
         highlight: castToType<bool>(data['highlight']),
+        type: castToType<TextElementType>(data['type']),
       );
 
   static TextElementStruct? maybeFromMap(dynamic data) => data is Map
@@ -77,6 +85,8 @@ class TextElementStruct extends FFFirebaseStruct {
         'sequence': _sequence,
         'start_time': _startTime,
         'end_time': _endTime,
+        'type': _type.serialize(),
+        'highlight': _highlight,
       }.withoutNulls;
 
   @override
@@ -100,6 +110,10 @@ class TextElementStruct extends FFFirebaseStruct {
         'highlight': serializeParam(
           _highlight,
           ParamType.bool,
+        ),
+        'type': serializeParam(
+          _type.serialize(),
+          ParamType.String,
         ),
       }.withoutNulls;
 
@@ -130,6 +144,9 @@ class TextElementStruct extends FFFirebaseStruct {
           ParamType.bool,
           false,
         ),
+        type: deserializeEnum<TextElementType>(
+          data['type'],
+        )!,
       );
 
   @override
@@ -142,12 +159,13 @@ class TextElementStruct extends FFFirebaseStruct {
         sequence == other.sequence &&
         startTime == other.startTime &&
         endTime == other.endTime &&
-        highlight == other.highlight;
+        highlight == other.highlight &&
+        type == other.type;
   }
 
   @override
   int get hashCode => const ListEquality()
-      .hash([text, sequence, startTime, endTime, highlight]);
+      .hash([text, sequence, startTime, endTime, highlight, type]);
 }
 
 TextElementStruct createTextElementStruct({
@@ -156,6 +174,7 @@ TextElementStruct createTextElementStruct({
   int? startTime,
   int? endTime,
   bool? highlight,
+  TextElementType? type,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
   bool create = false,
@@ -167,6 +186,7 @@ TextElementStruct createTextElementStruct({
       startTime: startTime,
       endTime: endTime,
       highlight: highlight,
+      type: type,
       firestoreUtilData: FirestoreUtilData(
         clearUnsetFields: clearUnsetFields,
         create: create,
