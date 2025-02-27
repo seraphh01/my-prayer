@@ -8,19 +8,21 @@ import 'prayer_text_model.dart';
 export 'prayer_text_model.dart';
 
 class PrayerTextWidget extends StatefulWidget {
-  const PrayerTextWidget({
-    super.key,
-    bool? isHighlighted,
-    required this.textInput,
-    required this.type,
-    bool? isPlaying,
-    required this.onTextPressed,
-  })  : highlight = isHighlighted ?? false,
+  const PrayerTextWidget(
+      {super.key,
+      bool? isHighlighted,
+      required this.textInput,
+      required this.type,
+      bool? isPlaying,
+      required this.onTextPressed,
+      required this.quoteSource})
+      : highlight = isHighlighted ?? false,
         isPlaying = isPlaying ?? false;
 
   final TextElementType type;
   final bool highlight;
   final String? textInput;
+  final String? quoteSource;
   final bool isPlaying;
   final Future Function()? onTextPressed;
 
@@ -84,7 +86,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
           letterSpacing: widget.isPlaying ? 0.0 : 0.17,
           fontWeight: widget.isPlaying ? FontWeight.w500 : FontWeight.w300,
           fontStyle: switch (widget.type) {
-            TextElementType.quoteText => FontStyle.italic,
+            TextElementType.italicText => FontStyle.italic,
             _ => FontStyle.normal,
           },
         );
@@ -113,6 +115,8 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
             textScaler: MediaQuery.of(context).textScaler,
             text: TextSpan(
               children: [
+                if (widget.type == TextElementType.quoteText)
+                  TextSpan(text: "«", style: restOfTextPlayingStyle()),
                 if (firstLetter != null && firstLetter.isNotEmpty)
                   TextSpan(
                     text: firstLetter,
@@ -124,7 +128,16 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                     'Textul va fi adăugat curând.',
                   ),
                   style: restOfTextPlayingStyle(),
-                )
+                ),
+                if (widget.type == TextElementType.quoteText)
+                  TextSpan(
+                    children: [
+                      TextSpan(text: "»", style: restOfTextPlayingStyle()),
+                      TextSpan(
+                          text: widget.quoteSource,
+                          style: restOfTextPlayingStyle())
+                    ],
+                  ),
               ],
             ),
           )),

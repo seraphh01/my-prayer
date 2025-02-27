@@ -14,6 +14,7 @@ class TextElementStruct extends FFFirebaseStruct {
     int? startTime,
     int? endTime,
     bool? highlight,
+    String? quoteSource,
     TextElementType? type,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _text = text,
@@ -22,6 +23,7 @@ class TextElementStruct extends FFFirebaseStruct {
         _endTime = endTime,
         _highlight = highlight ?? false,
         _type = type ?? TextElementType.plainText,
+        _quoteSource = quoteSource,
         super(firestoreUtilData);
 
   // "text" field.
@@ -39,6 +41,10 @@ class TextElementStruct extends FFFirebaseStruct {
   bool _highlight;
   bool get highlight => _highlight;
   set highlight(bool val) => _highlight = val;
+
+  String? _quoteSource;
+  String get quoteSource => _quoteSource ?? '';
+  set quoteSource(String? val) => _quoteSource = val;
 
   TextElementType _type;
   TextElementType get type => _type;
@@ -68,13 +74,13 @@ class TextElementStruct extends FFFirebaseStruct {
 
   static TextElementStruct fromMap(Map<String, dynamic> data) =>
       TextElementStruct(
-        text: data['text'] as String?,
-        sequence: castToType<int>(data['sequence']),
-        startTime: castToType<int>(data['start_time']),
-        endTime: castToType<int>(data['end_time']),
-        highlight: castToType<bool>(data['highlight']),
-        type: castToType<TextElementType>(data['type']),
-      );
+          text: data['text'] as String?,
+          sequence: castToType<int>(data['sequence']),
+          startTime: castToType<int>(data['start_time']),
+          endTime: castToType<int>(data['end_time']),
+          highlight: castToType<bool>(data['highlight']),
+          type: castToType<TextElementType>(data['type']),
+          quoteSource: data['quote_source'] as String?);
 
   static TextElementStruct? maybeFromMap(dynamic data) => data is Map
       ? TextElementStruct.fromMap(data.cast<String, dynamic>())
@@ -87,6 +93,7 @@ class TextElementStruct extends FFFirebaseStruct {
         'end_time': _endTime,
         'type': _type.serialize(),
         'highlight': _highlight,
+        'quote_source': _quoteSource
       }.withoutNulls;
 
   @override
@@ -115,6 +122,7 @@ class TextElementStruct extends FFFirebaseStruct {
           _type.serialize(),
           ParamType.String,
         ),
+        'quote_source': serializeParam(_quoteSource, ParamType.String)
       }.withoutNulls;
 
   static TextElementStruct fromSerializableMap(Map<String, dynamic> data) =>
@@ -147,6 +155,11 @@ class TextElementStruct extends FFFirebaseStruct {
         type: deserializeEnum<TextElementType>(
           data['type'],
         )!,
+        quoteSource: deserializeParam(
+          data['quote_source'],
+          ParamType.String,
+          false,
+        ),
       );
 
   @override
@@ -160,12 +173,13 @@ class TextElementStruct extends FFFirebaseStruct {
         startTime == other.startTime &&
         endTime == other.endTime &&
         highlight == other.highlight &&
-        type == other.type;
+        type == other.type &&
+        quoteSource == other.quoteSource;
   }
 
   @override
   int get hashCode => const ListEquality()
-      .hash([text, sequence, startTime, endTime, highlight, type]);
+      .hash([text, sequence, startTime, endTime, highlight, type, quoteSource]);
 }
 
 TextElementStruct createTextElementStruct({
@@ -175,6 +189,7 @@ TextElementStruct createTextElementStruct({
   int? endTime,
   bool? highlight,
   TextElementType? type,
+  String? quoteSource,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
   bool create = false,
@@ -187,6 +202,7 @@ TextElementStruct createTextElementStruct({
       endTime: endTime,
       highlight: highlight,
       type: type,
+      quoteSource: quoteSource,
       firestoreUtilData: FirestoreUtilData(
         clearUnsetFields: clearUnsetFields,
         create: create,
