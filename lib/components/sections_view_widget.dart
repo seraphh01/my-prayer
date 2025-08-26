@@ -355,22 +355,22 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                               if (_model.currentSection
                                                       ?.showTitle ==
                                                   true)
-                                                AutoSizeText(
+                                                Text(
                                                   valueOrDefault<String>(
                                                     _model
                                                         .currentSection?.title,
                                                     '',
                                                   ),
                                                   textAlign: TextAlign.center,
-                                                  maxLines: 1,
-                                                  minFontSize: 24.0,
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .titleMedium
                                                       .override(
                                                         fontFamily:
                                                             'Merriweather',
-                                                        fontSize: 24.0,
+                                                        fontSize: 18.0 *
+                                                            FFAppState()
+                                                                .fontSizeMultiplier,
                                                         letterSpacing: 0.0,
                                                       ),
                                                 ),
@@ -380,21 +380,21 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                   _model.currentSection!
                                                           .subtitle !=
                                                       '')
-                                                AutoSizeText(
+                                                Text(
                                                   valueOrDefault<String>(
                                                     _model.currentSection
                                                         ?.subtitle,
                                                     '',
                                                   ),
                                                   textAlign: TextAlign.center,
-                                                  maxLines: 1,
-                                                  minFontSize: 14.0,
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .labelMedium
                                                       .override(
                                                         fontFamily: 'Inter',
-                                                        fontSize: 20,
+                                                        fontSize: 16 *
+                                                            FFAppState()
+                                                                .fontSizeMultiplier,
                                                         letterSpacing: 0.0,
                                                         fontStyle:
                                                             FontStyle.italic,
@@ -511,14 +511,10 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                         if ((textsItem.startTime <= _model.currentAudioTime) &&
                                                                             (textsItem.endTime >
                                                                                 _model.currentAudioTime)) {
-                                                                          return AutoSizeText(
+                                                                          return Text(
                                                                             '${textsItem.repetition != 1 ? textsItem.repetition.toString() : ''}${textsItem.repetition != 1 ? ' ' : ''}${textsItem.title}',
                                                                             textAlign:
                                                                                 TextAlign.center,
-                                                                            maxLines:
-                                                                                2,
-                                                                            minFontSize:
-                                                                                16.0,
                                                                             style:
                                                                                 FlutterFlowTheme.of(context).titleSmall.override(
                                                                               fontFamily: 'Merriweather',
@@ -650,6 +646,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                       ),
                                                                       type: textElementItem
                                                                           .type,
+                                                                      quoteSource:
+                                                                          textElementItem
+                                                                              .quoteSource,
                                                                       isHighlighted: textElementItem
                                                                               .highlight ||
                                                                           textElementIndex ==

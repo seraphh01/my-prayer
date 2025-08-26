@@ -28,6 +28,6 @@ T? deserializeEnum<T>(String? value) {
 enum TextElementType {
   plainText,
   boldText,
+  italicText,
   quoteText,
-  underlinedText,
 }
