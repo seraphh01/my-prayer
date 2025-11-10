@@ -401,11 +401,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                       ),
                                                 ),
                                             ].divide(
-                                                const SizedBox(height: 4.0)),
+                                                const SizedBox(height: 8.0)),
                                           ),
                                           Padding(
                                             padding: const EdgeInsetsDirectional
-                                                .fromSTEB(16.0, 0.0, 16.0, 0.0),
+                                                .fromSTEB(12.0, 0.0, 12.0, 0.0),
                                             child: Builder(
                                               builder: (context) {
                                                 final texts = _model
@@ -520,7 +520,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                               fontFamily: 'Merriweather',
                                                                               fontStyle: textsItem.italic ? FontStyle.italic : FontStyle.normal,
                                                                               color: FlutterFlowTheme.of(context).secondary,
-                                                                              fontSize: FFAppState().fontSizeMultiplier * 16,
+                                                                              fontSize: FFAppState().fontSizeMultiplier * 18,
                                                                               letterSpacing: 0.0,
                                                                               shadows: [
                                                                                 Shadow(
@@ -545,7 +545,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                                           FFAppState().fontSizeMultiplier,
                                                                                           1.0,
                                                                                         ) *
-                                                                                        16,
+                                                                                        18,
                                                                                     32.0,
                                                                                   ),
                                                                                   letterSpacing: 0.0,
@@ -580,10 +580,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                             ),
                                                           ),
                                                         ),
-                                                        if ((textsItem
-                                                                .textElements
-                                                                .isNotEmpty) ==
-                                                            false)
+                                                        if (textsItem
+                                                            .textElements
+                                                            .isEmpty)
                                                           Text(
                                                             'Textul va fi adăugat curând.',
                                                             textAlign: TextAlign
@@ -618,10 +617,10 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                         .max,
                                                                 mainAxisAlignment:
                                                                     MainAxisAlignment
-                                                                        .start,
+                                                                        .center,
                                                                 crossAxisAlignment:
                                                                     CrossAxisAlignment
-                                                                        .stretch,
+                                                                        .center,
                                                                 children: List.generate(
                                                                     textElement
                                                                         .length,
@@ -682,17 +681,17 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                 }).divide(
                                                                     const SizedBox(
                                                                         height:
-                                                                            8.0)),
+                                                                            24.0)),
                                                               );
                                                             },
                                                           ),
                                                       ]
                                                           .divide(
                                                               const SizedBox(
-                                                                  height: 8.0))
+                                                                  height: 24.0))
                                                           .addToStart(
                                                               const SizedBox(
-                                                            height: 8,
+                                                            height: 24,
                                                           )),
                                                     );
                                                   },
