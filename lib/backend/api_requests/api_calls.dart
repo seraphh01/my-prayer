@@ -12,6 +12,8 @@ const _kPrivateApiFunctionName = 'ffPrivateApiCall';
 /// Start Suapabase Queries Group Code
 
 class SuapabaseQueriesGroup {
+  static String getCacheUrl() =>
+      'https://nrapqjwyqvwopwoxevlw.supabase.co/functions/v1/prayer-cache';
   static String getBaseUrl() =>
       'https://nrapqjwyqvwopwoxevlw.supabase.co/rest/v1/rpc';
   static Map<String, String> headers = {
@@ -29,12 +31,12 @@ class SuapabaseQueriesGroup {
 
 class GetPrayerTypesCall {
   Future<ApiCallResponse> call() async {
-    final baseUrl = SuapabaseQueriesGroup.getBaseUrl();
+    final baseUrl = SuapabaseQueriesGroup.getCacheUrl();
 
     return ApiManager.instance.makeApiCall(
       callName: 'Get Prayer Types',
-      apiUrl: '$baseUrl/get_prayer_types',
-      callType: ApiCallType.GET,
+      apiUrl: '$baseUrl?rpc=get_prayer_types',
+      callType: ApiCallType.POST,
       headers: {
         'apikey':
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yYXBxand5cXZ3b3B3b3hldmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4MDU2MzQsImV4cCI6MjA0NjM4MTYzNH0.hq-X6YEAD7DG9WIiJhqwRb3ZtMruaEzAbr0Wm4TBoQU',
@@ -56,27 +58,28 @@ class GetPrayerWithSectionsRecursiveCall {
   Future<ApiCallResponse> call({
     String? requestPrayerId = 'f4a69874-20b2-49f2-9fec-aaa764efddb6',
   }) async {
-    final baseUrl = SuapabaseQueriesGroup.getBaseUrl();
-
+    final baseUrl = SuapabaseQueriesGroup.getCacheUrl();
+    const encoder = JsonEncoder();
     return ApiManager.instance.makeApiCall(
       callName: 'Get prayer with sections recursive',
-      apiUrl: '$baseUrl/get_prayer_with_sections_recursive',
-      callType: ApiCallType.GET,
+      apiUrl: '$baseUrl?rpc=get_prayer_with_sections_recursive',
+      callType: ApiCallType.POST,
       headers: {
         'apikey':
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yYXBxand5cXZ3b3B3b3hldmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4MDU2MzQsImV4cCI6MjA0NjM4MTYzNH0.hq-X6YEAD7DG9WIiJhqwRb3ZtMruaEzAbr0Wm4TBoQU',
         'Authorization':
             'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yYXBxand5cXZ3b3B3b3hldmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4MDU2MzQsImV4cCI6MjA0NjM4MTYzNH0.hq-X6YEAD7DG9WIiJhqwRb3ZtMruaEzAbr0Wm4TBoQU',
       },
-      params: {
+      body: encoder.convert({
         'request_prayer_id': requestPrayerId,
-      },
+      }),
+      bodyType: BodyType.JSON,
       returnBody: true,
       encodeBodyUtf8: false,
       decodeUtf8: false,
       cache: true,
       isStreamingApi: false,
-      alwaysAllowBody: false,
+      alwaysAllowBody: true,
     );
   }
 }
@@ -124,11 +127,13 @@ class PrayerSectionContentCall {
   static Future<ApiCallResponse> call({
     String? prayerSectionId = '916e5a38-55b3-44b8-8027-def2b4a00128',
   }) async {
+    final baseUrl = SuapabaseQueriesGroup.getCacheUrl();
+    const encoder = JsonEncoder();
+
     return ApiManager.instance.makeApiCall(
       callName: 'PrayerSectionContent',
-      apiUrl:
-          'https://nrapqjwyqvwopwoxevlw.supabase.co/rest/v1/rpc/get_prayer_section_structure',
-      callType: ApiCallType.GET,
+      apiUrl: '$baseUrl?rpc=get_prayer_section_structure',
+      callType: ApiCallType.POST,
       headers: {
         'Authorization':
             'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yYXBxand5cXZ3b3B3b3hldmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4MDU2MzQsImV4cCI6MjA0NjM4MTYzNH0.hq-X6YEAD7DG9WIiJhqwRb3ZtMruaEzAbr0Wm4TBoQU',
@@ -136,15 +141,14 @@ class PrayerSectionContentCall {
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yYXBxand5cXZ3b3B3b3hldmx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4MDU2MzQsImV4cCI6MjA0NjM4MTYzNH0.hq-X6YEAD7DG9WIiJhqwRb3ZtMruaEzAbr0Wm4TBoQU',
         'Content-Type': 'application/json',
       },
-      params: {
-        'request_section_id': prayerSectionId,
-      },
+      body: encoder.convert({'request_section_id': prayerSectionId}),
+      bodyType: BodyType.JSON,
       returnBody: true,
       encodeBodyUtf8: false,
       decodeUtf8: false,
       cache: true,
       isStreamingApi: false,
-      alwaysAllowBody: false,
+      alwaysAllowBody: true,
     );
   }
 

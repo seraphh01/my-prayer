@@ -66,7 +66,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                 32,
             32.0,
           ),
-          letterSpacing: 0.0,
+          letterSpacing: 2,
           useGoogleFonts: false,
           lineHeight: 0.5,
         );
@@ -83,8 +83,8 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                 18,
             18,
           ),
-          letterSpacing: widget.isPlaying ? 0.0 : 0.17,
-          fontWeight: widget.isPlaying ? FontWeight.w500 : FontWeight.w300,
+          letterSpacing: widget.isPlaying ? 0.03 : 0.17,
+          fontWeight: widget.isPlaying ? FontWeight.w700 : FontWeight.w500,
           fontStyle: switch (widget.type) {
             TextElementType.italicText => FontStyle.italic,
             _ => FontStyle.normal,
@@ -113,6 +113,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
           decoration: const BoxDecoration(),
           child: RichText(
             textScaler: MediaQuery.of(context).textScaler,
+            textAlign: TextAlign.justify,
             text: TextSpan(
               children: [
                 if (widget.type == TextElementType.quoteText)
