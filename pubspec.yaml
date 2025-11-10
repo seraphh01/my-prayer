@@ -17,7 +17,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 
 
-version: 1.0.39+39
+version: 1.0.40+40
 
 
 
@@ -72,7 +72,7 @@ dependencies:
   hive: 2.2.3
   http: 1.2.2
   internet_connection_checker:
-  intl: 0.19.0
+  intl: 0.20.2
   json_path: 0.7.2
   just_audio:
   mime_type: 1.0.0

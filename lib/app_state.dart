@@ -134,7 +134,7 @@ class FFAppState extends ChangeNotifier {
     secureStorage.delete(key: 'ff_fontFamily');
   }
 
-  double _fontSizeMultiplier = 1.25;
+  double _fontSizeMultiplier = 1;
   double get fontSizeMultiplier => _fontSizeMultiplier;
   set fontSizeMultiplier(double value) {
     _fontSizeMultiplier = value;

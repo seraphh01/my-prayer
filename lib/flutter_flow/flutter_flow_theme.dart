@@ -182,68 +182,59 @@ class ThemeTypography extends Typography {
   final FlutterFlowTheme theme;
 
   String get displayLargeFamily => 'Merriweather';
-  TextStyle get displayLarge => GoogleFonts.getFont(
-        'Merriweather',
-        color: theme.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 64.0,
-      );
+  TextStyle get displayLarge => GoogleFonts.getFont('Merriweather',
+      color: theme.primaryText,
+      fontWeight: FontWeight.w600,
+      fontSize: 64.0,
+      locale: const Locale('rou', 'RO'));
   String get displayMediumFamily => 'Merriweather';
-  TextStyle get displayMedium => GoogleFonts.getFont(
-        'Merriweather',
-        color: theme.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 44.0,
-      );
+  TextStyle get displayMedium => GoogleFonts.getFont('Merriweather',
+      color: theme.primaryText,
+      fontWeight: FontWeight.w600,
+      fontSize: 44.0,
+      locale: const Locale('rou', 'RO'));
   String get displaySmallFamily => 'Merriweather';
-  TextStyle get displaySmall => GoogleFonts.getFont(
-        'Merriweather',
-        color: theme.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 36.0,
-      );
+  TextStyle get displaySmall => GoogleFonts.getFont('Merriweather',
+      color: theme.primaryText,
+      fontWeight: FontWeight.w600,
+      fontSize: 36.0,
+      locale: const Locale('rou', 'RO'));
   String get headlineLargeFamily => 'Merriweather';
-  TextStyle get headlineLarge => GoogleFonts.getFont(
-        'Merriweather',
-        color: theme.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 32.0,
-      );
+  TextStyle get headlineLarge => GoogleFonts.getFont('Merriweather',
+      color: theme.primaryText,
+      fontWeight: FontWeight.w600,
+      fontSize: 32.0,
+      locale: const Locale('rou', 'RO'));
   String get headlineMediumFamily => 'Merriweather';
-  TextStyle get headlineMedium => GoogleFonts.getFont(
-        'Merriweather',
-        color: theme.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 28.0,
-      );
+  TextStyle get headlineMedium => GoogleFonts.getFont('Merriweather',
+      color: theme.primaryText,
+      fontWeight: FontWeight.w600,
+      fontSize: 28.0,
+      locale: const Locale('rou', 'RO'));
   String get headlineSmallFamily => 'Merriweather';
-  TextStyle get headlineSmall => GoogleFonts.getFont(
-        'Merriweather',
-        color: theme.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 24.0,
-      );
+  TextStyle get headlineSmall => GoogleFonts.getFont('Merriweather',
+      color: theme.primaryText,
+      fontWeight: FontWeight.w600,
+      fontSize: 24.0,
+      locale: const Locale('rou', 'RO'));
   String get titleLargeFamily => 'Merriweather';
-  TextStyle get titleLarge => GoogleFonts.getFont(
-        'Merriweather',
-        color: theme.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 20.0,
-      );
+  TextStyle get titleLarge => GoogleFonts.getFont('Merriweather',
+      color: theme.primaryText,
+      fontWeight: FontWeight.w600,
+      fontSize: 20.0,
+      locale: const Locale('rou', 'RO'));
   String get titleMediumFamily => 'Merriweather';
-  TextStyle get titleMedium => GoogleFonts.getFont(
-        'Merriweather',
-        color: theme.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 18.0,
-      );
+  TextStyle get titleMedium => GoogleFonts.getFont('Merriweather',
+      color: theme.primaryText,
+      fontWeight: FontWeight.w600,
+      fontSize: 18.0,
+      locale: const Locale('rou', 'RO'));
   String get titleSmallFamily => 'Merriweather';
-  TextStyle get titleSmall => GoogleFonts.getFont(
-        'Merriweather',
-        color: theme.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 16.0,
-      );
+  TextStyle get titleSmall => GoogleFonts.getFont('Merriweather',
+      color: theme.primaryText,
+      fontWeight: FontWeight.w600,
+      fontSize: 16.0,
+      locale: const Locale('rou', 'RO'));
   String get labelLargeFamily => 'Inter';
   TextStyle get labelLarge => GoogleFonts.getFont(
         'Inter',
