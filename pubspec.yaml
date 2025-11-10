@@ -44,7 +44,7 @@ dependencies:
   cloud_firestore: 5.5.0
   cloud_firestore_platform_interface: 6.5.0
   cloud_firestore_web: 4.3.4
-  collection: 
+  collection: 1.19.1
   connectivity_plus:
   csv: 6.0.0
   dio:
