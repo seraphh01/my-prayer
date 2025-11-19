@@ -49,7 +49,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => AudioPageModel());
-    _model.totalDuration = _pageManager.totalDurationNotifier.value.inSeconds;
+    handleTotalDurationChanged();
     _model.currentAudioTime =
         _pageManager.currentProgressNotifier.value.inSeconds;
     _model.bufferedTime = _pageManager.bufferedTimeNotifier.value.inSeconds;
@@ -76,8 +76,15 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
   }
 
   void onTotalDurationChanged() {
-    _model.totalDuration = _pageManager.totalDurationNotifier.value.inSeconds;
+    handleTotalDurationChanged();
     safeSetState(() {});
+  }
+
+  void handleTotalDurationChanged() {
+    var totalDuration = _pageManager.totalDurationNotifier.value.inSeconds;
+    if (totalDuration > 0) {
+      _model.totalDuration = totalDuration;
+    }
   }
 
   void onTrackIndexChanged() {
