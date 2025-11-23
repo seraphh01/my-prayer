@@ -77,7 +77,9 @@ class PageManager {
 
   void _listenToTotalDuration() {
     _audioHandler.mediaItem.listen((mediaItem) {
-      totalDurationNotifier.value = mediaItem?.duration ?? Duration.zero;
+      if (mediaItem != null && mediaItem.duration != null && mediaItem.duration!.inSeconds > 0) {
+          totalDurationNotifier.value = mediaItem.duration!;
+        }
     });
   }
 

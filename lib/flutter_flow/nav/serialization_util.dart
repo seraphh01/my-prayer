@@ -42,72 +42,57 @@ String _serializeDocumentReference(DocumentReference ref) {
   // Reverse the list to get the correct ordering.
   return docIds.reversed.join(_kDocIdDelimeter);
 }
-
-String? serializeParam(
+dynamic serializeParam(
   dynamic param,
   ParamType paramType, {
   bool isList = false,
 }) {
-  try {
-    if (param == null) {
+  if (param == null) return null;
+
+  if (isList) {
+    final serializedValues = (param as Iterable)
+        .map((p) => serializeParam(p, paramType, isList: false))
+        .where((p) => p != null)
+        .toList();
+    return serializedValues;
+  }
+
+  switch (paramType) {
+    case ParamType.int:
+    case ParamType.double:
+    case ParamType.String:
+    case ParamType.bool:
+      return param;
+    case ParamType.DateTime:
+      return (param as DateTime).millisecondsSinceEpoch;
+    case ParamType.DateTimeRange:
+      return dateTimeRangeToString(param as DateTimeRange);
+    case ParamType.LatLng:
+      return (param as LatLng).serialize();
+    case ParamType.Color:
+      return (param as Color).toCssString();
+    case ParamType.FFPlace:
+      return placeToString(param as FFPlace);
+    case ParamType.FFUploadedFile:
+      return uploadedFileToString(param as FFUploadedFile);
+    case ParamType.JSON:
+      return param; // return Map/List directly
+    case ParamType.DocumentReference:
+      return _serializeDocumentReference(param as DocumentReference);
+    case ParamType.Document:
+      final reference = (param as FirestoreRecord).reference;
+      return _serializeDocumentReference(reference);
+    case ParamType.DataStruct:
+      return (param is BaseStruct) ? param.serialize() : null; // Map
+    case ParamType.Enum:
+      return (param is Enum) ? param.serialize() : null;
+    case ParamType.SupabaseRow:
+      return (param as SupabaseDataRow).data; // Map
+    default:
       return null;
-    }
-    if (isList) {
-      final serializedValues = (param as Iterable)
-          .map((p) => serializeParam(p, paramType, isList: false))
-          .where((p) => p != null)
-          .map((p) => p!)
-          .toList();
-      return json.encode(serializedValues);
-    }
-    String? data;
-    switch (paramType) {
-      case ParamType.int:
-        data = param.toString();
-      case ParamType.double:
-        data = param.toString();
-      case ParamType.String:
-        data = param;
-      case ParamType.bool:
-        data = param ? 'true' : 'false';
-      case ParamType.DateTime:
-        data = (param as DateTime).millisecondsSinceEpoch.toString();
-      case ParamType.DateTimeRange:
-        data = dateTimeRangeToString(param as DateTimeRange);
-      case ParamType.LatLng:
-        data = (param as LatLng).serialize();
-      case ParamType.Color:
-        data = (param as Color).toCssString();
-      case ParamType.FFPlace:
-        data = placeToString(param as FFPlace);
-      case ParamType.FFUploadedFile:
-        data = uploadedFileToString(param as FFUploadedFile);
-      case ParamType.JSON:
-        data = json.encode(param);
-      case ParamType.DocumentReference:
-        data = _serializeDocumentReference(param as DocumentReference);
-      case ParamType.Document:
-        final reference = (param as FirestoreRecord).reference;
-        data = _serializeDocumentReference(reference);
-
-      case ParamType.DataStruct:
-        data = param is BaseStruct ? param.serialize() : null;
-
-      case ParamType.Enum:
-        data = (param is Enum) ? param.serialize() : null;
-
-      case ParamType.SupabaseRow:
-        return json.encode((param as SupabaseDataRow).data);
-
-      default:
-        data = null;
-    }
-    return data;
-  } catch (e) {
-    print('Error serializing parameter: $e');
-    return null;
   }
 }
+
 
 /// END SERIALIZATION HELPERS
 
@@ -195,102 +180,117 @@ enum ParamType {
 }
 
 dynamic deserializeParam<T>(
-  String? param,
-  ParamType paramType,
-  bool isList, {
+  dynamic param,
+  ParamType paramType,{
+  bool isList = false, 
   List<String>? collectionNamePath,
   StructBuilder<T>? structBuilder,
 }) {
-  try {
-    if (param == null) {
-      return null;
-    }
-    if (isList) {
-      final paramValues = json.decode(param);
-      if (paramValues is! Iterable || paramValues.isEmpty) {
-        return null;
-      }
-      return paramValues
-          .whereType<String>()
-          .map((p) => p)
-          .map((p) => deserializeParam<T>(
-                p,
-                paramType,
-                false,
-                collectionNamePath: collectionNamePath,
-                structBuilder: structBuilder,
-              ))
-          .where((p) => p != null)
-          .map((p) => p! as T)
-          .toList();
-    }
-    switch (paramType) {
-      case ParamType.int:
-        return int.tryParse(param);
-      case ParamType.double:
-        return double.tryParse(param);
-      case ParamType.String:
-        return param;
-      case ParamType.bool:
-        return param == 'true';
-      case ParamType.DateTime:
-        final milliseconds = int.tryParse(param);
-        return milliseconds != null
-            ? DateTime.fromMillisecondsSinceEpoch(milliseconds)
-            : null;
-      case ParamType.DateTimeRange:
-        return dateTimeRangeFromString(param);
-      case ParamType.LatLng:
-        return latLngFromString(param);
-      case ParamType.Color:
-        return fromCssColor(param);
-      case ParamType.FFPlace:
-        return placeFromString(param);
-      case ParamType.FFUploadedFile:
-        return uploadedFileFromString(param);
-      case ParamType.JSON:
-        return json.decode(param);
-      case ParamType.DocumentReference:
-        return _deserializeDocumentReference(param, collectionNamePath ?? []);
+  if (param == null) return null;
 
-      case ParamType.SupabaseRow:
-        final data = json.decode(param) as Map<String, dynamic>;
+  if (isList) {
+    if (param is! Iterable) return null;
+    return param
+        .map((p) => deserializeParam<T>(
+              p,
+              paramType,
+              isList: false,
+              collectionNamePath: collectionNamePath,
+              structBuilder: structBuilder,
+            ))
+        .where((p) => p != null)
+        .map((p) => p! as T)
+        .toList();
+  }
+
+  switch (paramType) {
+    case ParamType.int:
+      return param is int ? param : int.tryParse(param.toString());
+    case ParamType.double:
+      return param is double ? param : double.tryParse(param.toString());
+    case ParamType.String:
+      return param.toString();
+    case ParamType.bool:
+      if (param is bool) return param;
+      return param.toString() == 'true';
+    case ParamType.DateTime:
+      if (param is int) return DateTime.fromMillisecondsSinceEpoch(param);
+      final ms = int.tryParse(param.toString());
+      return ms != null ? DateTime.fromMillisecondsSinceEpoch(ms) : null;
+    case ParamType.DateTimeRange:
+      return dateTimeRangeFromString(param.toString());
+    case ParamType.LatLng:
+      return latLngFromString(param.toString());
+    case ParamType.Color:
+      return fromCssColor(param.toString());
+    case ParamType.FFPlace:
+      return placeFromString(param.toString());
+    case ParamType.FFUploadedFile:
+      return uploadedFileFromString(param.toString());
+    case ParamType.JSON:
+      return param; // Map/List already
+    case ParamType.DocumentReference:
+      return _deserializeDocumentReference(param, collectionNamePath ?? []);
+    case ParamType.SupabaseRow:
+      if (param is Map<String, dynamic>) {
         switch (T) {
           case TextElementsRow:
-            return TextElementsRow(data);
+            return TextElementsRow(param);
           case LiturgicalTextsRow:
-            return LiturgicalTextsRow(data);
+            return LiturgicalTextsRow(param);
           case PrayerTypeRow:
-            return PrayerTypeRow(data);
+            return PrayerTypeRow(param);
           case PrayersSectionsRow:
-            return PrayersSectionsRow(data);
+            return PrayersSectionsRow(param);
           case LiturgicalTextsWithElementsRow:
-            return LiturgicalTextsWithElementsRow(data);
+            return LiturgicalTextsWithElementsRow(param);
           case SectionsRow:
-            return SectionsRow(data);
+            return SectionsRow(param);
           case PrayersRow:
-            return PrayersRow(data);
+            return PrayersRow(param);
           case SectionTextsRow:
-            return SectionTextsRow(data);
+            return SectionTextsRow(param);
           default:
             return null;
         }
-
-      case ParamType.DataStruct:
-        final data = json.decode(param) as Map<String, dynamic>? ?? {};
-        return structBuilder != null ? structBuilder(data) : null;
-
-      case ParamType.Enum:
-        return deserializeEnum<T>(param);
-
-      default:
-        return null;
-    }
-  } catch (e) {
-    print('Error deserializing parameter: $e');
-    return null;
+      }
+      return null;
+    case ParamType.DataStruct:
+      if (param is Map<String, dynamic>) {
+        return structBuilder != null ? structBuilder(param) : null;
+      }
+      return null;
+    case ParamType.Enum:
+      return deserializeEnum<T>(param.toString());
+    default:
+      return null;
   }
 }
+
+
+T? _constructSupabaseRow<T>(Map<String, dynamic> data) {
+  switch (T) {
+    case TextElementsRow:
+      return TextElementsRow(data) as T;
+    case LiturgicalTextsRow:
+      return LiturgicalTextsRow(data) as T;
+    case PrayerTypeRow:
+      return PrayerTypeRow(data) as T;
+    case PrayersSectionsRow:
+      return PrayersSectionsRow(data) as T;
+    case LiturgicalTextsWithElementsRow:
+      return LiturgicalTextsWithElementsRow(data) as T;
+    case SectionsRow:
+      return SectionsRow(data) as T;
+    case PrayersRow:
+      return PrayersRow(data) as T;
+    case SectionTextsRow:
+      return SectionTextsRow(data) as T;
+    default:
+      return null;
+  }
+}
+
 
 Future<dynamic> Function(String) getDoc(
   List<String> collectionNamePath,

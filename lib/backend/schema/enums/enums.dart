@@ -1,8 +1,8 @@
 import 'package:collection/collection.dart';
 
 enum PrayerType {
-  Rozariu,
-  Canonice,
+  rozariu,
+  canonice,
 }
 
 extension FFEnumExtensions<T extends Enum> on T {
@@ -15,15 +15,17 @@ extension FFEnumListExtensions<T extends Enum> on Iterable<T> {
 }
 
 T? deserializeEnum<T>(String? value) {
-  switch (T) {
-    case (PrayerType):
-      return PrayerType.values.deserialize(value) as T?;
-    case (TextElementType _):
-      return TextElementType.values.deserialize(value) as T?;
-    default:
-      return null;
+  if (value == null) return null;
+
+  if (T == PrayerType) {
+    return PrayerType.values.deserialize(value) as T?;
+  } else if (T == TextElementType) {
+    return TextElementType.values.deserialize(value) as T?;
   }
+
+  return null; // unsupported type
 }
+
 
 enum TextElementType {
   plainText,

@@ -88,7 +88,6 @@ class ChapterOptionStruct extends FFFirebaseStruct {
         title: deserializeParam(
           data['title'],
           ParamType.String,
-          false,
         ),
         childOptions: deserializeStructParam<ChapterOptionStruct>(
           data['childOptions'],
@@ -99,7 +98,6 @@ class ChapterOptionStruct extends FFFirebaseStruct {
         index: deserializeParam(
           data['index'],
           ParamType.int,
-          false,
         ),
       );
 

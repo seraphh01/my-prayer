@@ -200,7 +200,7 @@ class FFParameters {
     return deserializeParam<T>(
       param,
       type,
-      isList,
+      isList: isList,
       collectionNamePath: collectionNamePath,
       structBuilder: structBuilder,
     );

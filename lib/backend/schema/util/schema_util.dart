@@ -14,8 +14,14 @@ typedef StructBuilder<T> = T Function(Map<String, dynamic> data);
 
 abstract class BaseStruct {
   Map<String, dynamic> toSerializableMap();
-  String serialize() => json.encode(toSerializableMap());
+
+  /// If `asString` is true, returns JSON string. Default false.
+  dynamic serialize({bool asString = false}) {
+    final map = toSerializableMap();
+    return asString ? jsonEncode(map) : map;
+  }
 }
+
 
 dynamic deserializeStructParam<T>(
   dynamic param,
@@ -45,7 +51,7 @@ dynamic deserializeStructParam<T>(
     return deserializeParam<T>(
       param,
       paramType,
-      isList,
+      isList: isList,
       structBuilder: structBuilder,
     );
   }

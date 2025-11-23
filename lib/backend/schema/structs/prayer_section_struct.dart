@@ -213,27 +213,22 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         id: deserializeParam(
           data['id'],
           ParamType.String,
-          false,
         ),
         title: deserializeParam(
           data['title'],
           ParamType.String,
-          false,
         ),
         sequence: deserializeParam(
           data['sequence'],
           ParamType.int,
-          false,
         ),
         audioUrl: deserializeParam(
           data['audio_url'],
           ParamType.String,
-          false,
         ),
         subtitle: deserializeParam(
           data['subtitle'],
           ParamType.String,
-          false,
         ),
         subsections: deserializeStructParam<PrayerSectionStruct>(
           data['subsections'],
@@ -244,17 +239,14 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         sectionId: deserializeParam(
           data['section_id'],
           ParamType.String,
-          false,
         ),
         duration: deserializeParam(
           data['duration'],
           ParamType.int,
-          false,
         ),
         imageUrl: deserializeParam(
           data['image_url'],
           ParamType.String,
-          false,
         ),
         texts: deserializeStructParam<SectionTextStruct>(
           data['texts'],
@@ -265,12 +257,10 @@ class PrayerSectionStruct extends FFFirebaseStruct {
         showTitle: deserializeParam(
           data['show_title'],
           ParamType.bool,
-          false,
         ),
         showSubtitle: deserializeParam(
           data['show_subtitle'],
           ParamType.bool,
-          false,
         ),
       );
 

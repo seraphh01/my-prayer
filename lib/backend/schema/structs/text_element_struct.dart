@@ -130,27 +130,22 @@ class TextElementStruct extends FFFirebaseStruct {
         text: deserializeParam(
           data['text'],
           ParamType.String,
-          false,
         ),
         sequence: deserializeParam(
           data['sequence'],
           ParamType.int,
-          false,
         ),
         startTime: deserializeParam(
           data['start_time'],
           ParamType.int,
-          false,
         ),
         endTime: deserializeParam(
           data['end_time'],
           ParamType.int,
-          false,
         ),
         highlight: deserializeParam(
           data['highlight'],
           ParamType.bool,
-          false,
         ),
         type: deserializeEnum<TextElementType>(
           data['type'],
@@ -158,7 +153,6 @@ class TextElementStruct extends FFFirebaseStruct {
         quoteSource: deserializeParam(
           data['quote_source'],
           ParamType.String,
-          false,
         ),
       );
 
