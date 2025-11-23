@@ -41,19 +41,22 @@ class FFAppState extends ChangeNotifier {
               _fontSizeMultiplier;
     });
     await _safeInitAsync(() async {
-      _favoritePrayers =
-          (await secureStorage.getStringList('ff_favoritePrayers'))
-                  ?.map((x) {
+      var prayers = await secureStorage.getString('ff_favoritePrayers');
+      if(prayers == null || prayers.isEmpty) return;
+
+      var prayersList = json.decode(prayers);
+      if(prayersList is! List) return;
+
+      _favoritePrayers = prayersList.map((x) {
                     try {
-                      return PrayerStruct.fromSerializableMap(jsonDecode(x));
+                      return PrayerStruct.fromSerializableMap(x);
                     } catch (e) {
                       print("Can't decode persisted data type. Error: $e.");
                       return null;
                     }
                   })
                   .withoutNulls
-                  .toList() ??
-              _favoritePrayers;
+                  .toList();
     });
     await _safeInitAsync(() async {
       var prayers = await secureStorage.getString('ff_downloadedPrayers');
@@ -61,8 +64,6 @@ class FFAppState extends ChangeNotifier {
 
       var prayersList = json.decode(prayers);
       if(prayersList is! List) return;
-
-      var m = PrayerStruct.fromSerializableMap(prayersList[0]);
 
       _downloadedPrayers = prayersList.map((x) {
                     try {
@@ -73,8 +74,7 @@ class FFAppState extends ChangeNotifier {
                     }
                   })
                   .withoutNulls
-                  .toList() ??
-              _downloadedPrayers;
+                  .toList();
     });
     await _safeInitAsync(() async {
       if (await secureStorage.read(key: 'ff_savedPrayer') != null) {
