@@ -251,7 +251,7 @@ class FFAppState extends ChangeNotifier {
   SavedPrayerDataStruct get savedPrayer => _savedPrayer;
   set savedPrayer(SavedPrayerDataStruct value) {
     _savedPrayer = value;
-    secureStorage.setString('ff_savedPrayer', value.serialize());
+    secureStorage.setString('ff_savedPrayer', jsonEncode(value.serialize()));
   }
 
   void deleteSavedPrayer() {

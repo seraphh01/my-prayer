@@ -19,9 +19,11 @@ Future<String?> retrieveAudioFile(String url) async {
   try {
     final fileName = extractFileName(url);
 
+    final sanitized = sanitizeFilename(fileName);
+
     final dir = await getApplicationDocumentsDirectory();
 
-    final filePath = '${dir.path}/$fileName';
+    final filePath = '${dir.path}/$sanitized';
 
     final file = File(filePath);
     if (await file.exists()) {

@@ -348,21 +348,21 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                     'continueAudio': serializeParam(
                                       true,
                                       ParamType.bool,
-                                    ),
+                                    ).toString(),
                                     'page': serializeParam(
                                       valueOrDefault<int>(
                                           _pageManager.trackIndexNotifier.value,
                                           0),
                                       ParamType.int,
-                                    ),
+                                    ).toString(),
                                     'initialAudioTime': serializeParam(
                                       valueOrDefault<double>(
                                           _pageManager.currentProgressNotifier
                                               .value.inSeconds
                                               .toDouble(),
                                           0.0),
-                                      ParamType.int,
-                                    ),
+                                      ParamType.double,
+                                    ).toString(),
                                   }.withoutNulls),
                               child: Container(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
@@ -592,14 +592,14 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             'prayerId': serializeParam(
                               prayerId,
                               ParamType.String,
-                            ),
+                            ).toString(),
                             'page': serializeParam(
                               valueOrDefault<int>(
                                 page,
                                 0,
                               ),
                               ParamType.int,
-                            ),
+                            ).toString(),
                           }.withoutNulls,
                           extra: <String, dynamic>{
                             kTransitionInfoKey: const TransitionInfo(
