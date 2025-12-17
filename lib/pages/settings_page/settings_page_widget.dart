@@ -260,7 +260,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Stil font (indisponibil)',
+                          'Stil font',
                           style:
                               FlutterFlowTheme.of(context).bodyMedium.override(
                                     fontFamily: 'Inter',
@@ -275,10 +275,10 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                             decoration: const BoxDecoration(),
                             child: FlutterFlowChoiceChips(
                               options: const [
-                                ChipData('Roboto'),
-                                ChipData('Playfair'),
-                                ChipData('Montserrat'),
-                                ChipData('Open Sans')
+                                ChipData('Noto Serif'),
+                                ChipData('Patrick Hand'),
+                                ChipData('Tinos'),
+                                ChipData('Inter')
                               ],
                               onChanged: (val) async {
                                 safeSetState(() =>
@@ -301,6 +301,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                 iconSize: 18.0,
                                 elevation: 0.0,
                                 borderRadius: BorderRadius.circular(8.0),
+                                
                               ),
                               unselectedChipStyle: ChipStyle(
                                 backgroundColor: const Color(0x00000000),
@@ -401,7 +402,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                     ),
                                     label:
                                         _model.fontSizeSliderValue?.toString(),
-                                    divisions: 5,
+                                    divisions: 10,
                                     onChanged: (newValue) {
                                       safeSetState(() => _model
                                           .fontSizeSliderValue = newValue);
@@ -706,7 +707,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                       ),
                                 ),
                                 Text(
-                                  'Versiunea curentă: 1.0.43',
+                                  'Versiunea curentă: 1.0.44',
                                   style: FlutterFlowTheme.of(context)
                                       .bodySmall
                                       .override(
@@ -767,7 +768,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                         maxLines: 1,
                         minFontSize: 12.0,
                         style: FlutterFlowTheme.of(context).titleSmall.override(
-                              fontFamily: 'Merriweather',
+                              fontFamily: FFAppState().fontFamily,
                               letterSpacing: 0.0,
                             ),
                       ),

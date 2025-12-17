@@ -67,10 +67,11 @@ class _MyAppState extends State<MyApp> {
     getIt<PageManager>().init();
 
     _appStateNotifier = AppStateNotifier.instance;
+    
+    // Future.delayed(const Duration(milliseconds: 500),
+    //     () => safeSetState(() => _appStateNotifier.stopShowingSplashImage()));
     _router = createRouter(_appStateNotifier);
 
-    Future.delayed(const Duration(milliseconds: 500),
-        () => safeSetState(() => _appStateNotifier.stopShowingSplashImage()));
   }
 
   @override

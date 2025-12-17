@@ -175,7 +175,7 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                                       style: FlutterFlowTheme.of(context)
                                           .titleLarge
                                           .override(
-                                            fontFamily: 'Merriweather',
+                                            fontFamily: FFAppState().fontFamily,
                                             letterSpacing: 0.0,
                                           ),
                                     ),

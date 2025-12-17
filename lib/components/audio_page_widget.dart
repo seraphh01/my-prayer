@@ -260,7 +260,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                                     style: FlutterFlowTheme.of(context)
                                         .titleSmall
                                         .override(
-                                          fontFamily: 'Merriweather',
+                                          fontFamily: FFAppState().fontFamily,
                                           letterSpacing: 0.0,
                                         ),
                                   ),

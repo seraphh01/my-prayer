@@ -367,7 +367,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                       .titleMedium
                                                       .override(
                                                         fontFamily:
-                                                            'Merriweather',
+                                                            FFAppState()
+                                                                .fontFamily,
                                                         fontSize: 18.0 *
                                                             FFAppState()
                                                                 .fontSizeMultiplier,
@@ -447,7 +448,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                           MainAxisSize.max,
                                                       crossAxisAlignment:
                                                           CrossAxisAlignment
-                                                              .center,
+                                                              .stretch,
                                                       children: [
                                                         Align(
                                                           alignment:
@@ -517,7 +518,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                                 TextAlign.center,
                                                                             style:
                                                                                 FlutterFlowTheme.of(context).titleSmall.override(
-                                                                              fontFamily: 'Merriweather',
+                                                                              fontFamily: FFAppState().fontFamily,
                                                                               fontStyle: textsItem.italic ? FontStyle.italic : FontStyle.normal,
                                                                               color: FlutterFlowTheme.of(context).secondary,
                                                                               fontSize: FFAppState().fontSizeMultiplier * 18,
@@ -537,7 +538,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                             textAlign:
                                                                                 TextAlign.center,
                                                                             style: FlutterFlowTheme.of(context).titleMedium.override(
-                                                                                  fontFamily: 'Merriweather',
+                                                                                  fontFamily: FFAppState().fontFamily,
                                                                                   fontStyle: textsItem.italic ? FontStyle.italic : FontStyle.normal,
                                                                                   color: FlutterFlowTheme.of(context).secondary,
                                                                                   fontSize: valueOrDefault<double>(
@@ -617,10 +618,10 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                         .max,
                                                                 mainAxisAlignment:
                                                                     MainAxisAlignment
-                                                                        .center,
+                                                                        .start,
                                                                 crossAxisAlignment:
                                                                     CrossAxisAlignment
-                                                                        .center,
+                                                                        .start,
                                                                 children: List.generate(
                                                                     textElement
                                                                         .length,

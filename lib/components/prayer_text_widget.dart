@@ -74,7 +74,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
 
   TextStyle restOfTextPlayingStyle() {
     return FlutterFlowTheme.of(context).bodyMedium.override(
-          fontFamily: 'Inter',
+          fontFamily: FFAppState().fontFamily,
           fontSize: valueOrDefault<double>(
             valueOrDefault<double>(
                   FFAppState().fontSizeMultiplier,
@@ -83,12 +83,12 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                 18,
             18,
           ),
-          letterSpacing: widget.isPlaying ? 0.03 : 0.17,
-          fontWeight: widget.isPlaying ? FontWeight.w700 : FontWeight.w500,
+          fontWeight: widget.isPlaying ? FontWeight.w600 : FontWeight.w500,
           fontStyle: switch (widget.type) {
             TextElementType.italicText => FontStyle.italic,
             _ => FontStyle.normal,
           },
+          lineHeight: 1.35
         );
   }
 

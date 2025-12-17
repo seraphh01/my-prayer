@@ -1,3 +1,6 @@
+import 'package:my_prayer/flutter_flow/flutter_flow_choice_chips.dart';
+import 'package:my_prayer/flutter_flow/form_field_controller.dart';
+
 import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -82,6 +85,95 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
             Column(
               mainAxisSize: MainAxisSize.max,
               children: [
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).primaryBackground,
+                
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        24.0, 16.0, 24.0, 16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Stil font',
+                          style:
+                              FlutterFlowTheme.of(context).bodyMedium.override(
+                                    fontFamily: 'Inter',
+                                    fontSize: 16.0,
+                                    letterSpacing: 0.0,
+                                  ),
+                        ),
+                        Align(
+                          alignment: const AlignmentDirectional(0.0, 0.0),
+                          child: Container(
+                            width: double.infinity,
+                            decoration: const BoxDecoration(),
+                            child: FlutterFlowChoiceChips(
+                              options: const [
+                                ChipData('Noto Serif'),
+                                ChipData('Patrick Hand'),
+                                ChipData('Tinos'),
+                                ChipData('Inter')
+                              ],
+                              onChanged: (val) async {
+                                safeSetState(() =>
+                                    _model.choiceChipsValue = val?.firstOrNull);
+                                FFAppState().fontFamily =
+                                    _model.choiceChipsValue!;
+                                safeSetState(() {});
+                              },
+                              selectedChipStyle: ChipStyle(
+                                backgroundColor:
+                                    FlutterFlowTheme.of(context).primary,
+                                textStyle: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .override(
+                                      fontFamily: 'Inter',
+                                      color: Colors.white,
+                                      letterSpacing: 0.0,
+                                    ),
+                                iconColor: Colors.white,
+                                iconSize: 18.0,
+                                elevation: 0.0,
+                                borderRadius: BorderRadius.circular(8.0),
+                                
+                              ),
+                              unselectedChipStyle: ChipStyle(
+                                backgroundColor: const Color(0x00000000),
+                                textStyle: FlutterFlowTheme.of(context)
+                                    .bodySmall
+                                    .override(
+                                      fontFamily: 'Inter',
+                                      color: FlutterFlowTheme.of(context)
+                                          .secondaryText,
+                                      letterSpacing: 0.0,
+                                    ),
+                                iconColor: Colors.white,
+                                iconSize: 18.0,
+                                elevation: 0.0,
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              chipSpacing: 16.0,
+                              rowSpacing: 8.0,
+                              multiselect: false,
+                              initialized: _model.choiceChipsValue != null,
+                              alignment: WrapAlignment.spaceBetween,
+                              controller: _model.choiceChipsValueController ??=
+                                  FormFieldController<List<String>>(
+                                [FFAppState().fontFamily],
+                              ),
+                              wrapped: false,
+                            ),
+                          ),
+                        ),
+                      ].divide(const SizedBox(height: 16.0)),
+                    ),
+                  ),
+                ),
                 Padding(
                   padding:
                       const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
@@ -130,7 +222,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                                     ),
                                     label:
                                         _model.fontSizeSliderValue?.toString(),
-                                    divisions: 5,
+                                    divisions: 10,
                                     onChanged: (newValue) {
                                       safeSetState(() => _model
                                           .fontSizeSliderValue = newValue);

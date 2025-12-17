@@ -23,7 +23,7 @@ class AppStateNotifier extends ChangeNotifier {
   static AppStateNotifier? _instance;
   static AppStateNotifier get instance => _instance ??= AppStateNotifier._();
 
-  bool showSplashImage = true;
+  bool showSplashImage = false;
 
   void stopShowingSplashImage() {
     showSplashImage = false;

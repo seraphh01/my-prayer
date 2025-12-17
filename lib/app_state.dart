@@ -131,7 +131,7 @@ class FFAppState extends ChangeNotifier {
     secureStorage.delete(key: 'ff_audioSpeed');
   }
 
-  String _fontFamily = 'Georgia';
+  String _fontFamily = 'Crimson Pro';
   String get fontFamily => _fontFamily;
   set fontFamily(String value) {
     _fontFamily = value;
