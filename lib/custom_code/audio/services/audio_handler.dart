@@ -8,6 +8,7 @@ Future<AudioHandler> initAudioService() async {
       androidNotificationChannelId: 'com.sserafim.socaciu.wings.audio',
       androidNotificationChannelName: 'Music Playback',
       androidNotificationOngoing: true,
+      androidNotificationIcon: 'mipmap/launcher_icon',
     ),
   );
 }
