@@ -47,7 +47,7 @@ dependencies:
   dio:
   get_it:
   equatable: ^2.0.7
-  firebase_core: ^4.2.1
+  firebase_core: ^4.3.0
   firebase_core_platform_interface: ^6.0.2
   firebase_core_web: ^3.3.0
   flutter_animate: ^4.5.2
