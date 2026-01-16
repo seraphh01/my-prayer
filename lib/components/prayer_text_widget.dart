@@ -83,12 +83,25 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                 18,
             18,
           ),
-          fontWeight: widget.isPlaying ? FontWeight.w600 : FontWeight.w500,
+          fontWeight: FontWeight.w500,
           fontStyle: switch (widget.type) {
             TextElementType.italicText => FontStyle.italic,
             _ => FontStyle.normal,
           },
-          lineHeight: 1.35
+          lineHeight: 1.35,
+          color: widget.isPlaying
+              ? FlutterFlowTheme.of(context).primaryText
+              : FlutterFlowTheme.of(context).secondaryText,
+          shadows: widget.isPlaying
+              ? [
+                  Shadow(
+                    blurRadius: 0.6,
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                    offset: Offset(0, 0),
+  
+                  )
+                ]
+              : null,
         );
   }
 
