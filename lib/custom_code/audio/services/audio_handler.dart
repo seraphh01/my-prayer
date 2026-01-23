@@ -7,8 +7,10 @@ Future<AudioHandler> initAudioService() async {
     config: const AudioServiceConfig(
       androidNotificationChannelId: 'com.sserafim.socaciu.wings.audio',
       androidNotificationChannelName: 'Music Playback',
-      androidNotificationOngoing: true,
+      androidNotificationOngoing: false,
       androidNotificationIcon: 'mipmap/launcher_icon',
+      androidStopForegroundOnPause: true,
+      androidResumeOnClick: true
     ),
   );
 }
@@ -23,6 +25,7 @@ class MyAudioHandler extends BaseAudioHandler {
     _listenForDurationChanges();
     _listenForCurrentSongIndexChanges();
     _listenForSequenceStateChanges();
+
   }
 
   Future<void> _loadEmptyPlaylist() async {
@@ -32,6 +35,7 @@ class MyAudioHandler extends BaseAudioHandler {
       print("Error: $e");
     }
   }
+
 
   void _notifyAudioHandlerAboutPlaybackEvents() {
     _player.playbackEventStream.listen((PlaybackEvent event) {
@@ -69,6 +73,7 @@ class MyAudioHandler extends BaseAudioHandler {
       ));
     });
   }
+
 
   void _listenForDurationChanges() {
     _player.durationStream.listen((duration) {
@@ -160,10 +165,10 @@ class MyAudioHandler extends BaseAudioHandler {
   }
 
   @override
-  Future<void> play() => _player.play();
+  Future<void> play() async => await _player.play();
 
   @override
-  Future<void> pause() => _player.pause();
+  Future<void> pause() async => await _player.pause();
 
   @override
   Future<void> seek(Duration position) async => await _player.seek(position);
@@ -230,6 +235,7 @@ class MyAudioHandler extends BaseAudioHandler {
   @override
   Future<void> stop() async {
     await _player.stop();
+    await AudioService.stop();
     return super.stop();
   }
 }

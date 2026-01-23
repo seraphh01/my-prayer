@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:collection/collection.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:my_prayer/components/download_progress_indicator.dart';
 import 'package:my_prayer/custom_code/actions/retrieve_audio_file.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
@@ -64,11 +65,20 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
 
       final filePath = await retrieveAudioFile(section.audioUrl);
 
+      final tempPlayer = AudioPlayer();
+      final source = filePath != null
+          ? AudioSource.uri(Uri.file(filePath))
+          : AudioSource.uri(Uri.parse(section.audioUrl));
+      await tempPlayer.setAudioSource(source);
+      final duration = tempPlayer.duration;
+      await tempPlayer.dispose();
+
       return MediaItem(
         id: section.id,
         album: section.subtitle,
         title: section.title,
         artUri: artUri,
+        duration: duration,
         extras: {
           'url': section.audioUrl,
           'isDownloaded': filePath != null,
@@ -310,7 +320,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                               } else if (_model.pressedButton == 'share') {
                                 if (!isWeb) {
                                   await Share.share(
-                                    'myprayer://myprayer.com${GoRouterState.of(context).uri.toString()}',
+                                    'rugaciuni-si-cnatari-cmd://rugaciuni-si-cantari-cmd.com${GoRouterState.of(context).uri.toString()}',
                                     sharePositionOrigin:
                                         getWidgetBoundingBox(context),
                                   );

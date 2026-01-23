@@ -1,4 +1,4 @@
-# MyPrayer
+# Rugăciuni și cântări
 
 A new Flutter project.
 

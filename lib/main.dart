@@ -1,5 +1,6 @@
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/service_locator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '/custom_code/actions/index.dart' as actions;
 import 'package:provider/provider.dart';
@@ -33,6 +34,9 @@ void main() async {
   //await actions.initializeAudioHandler();
   // End final custom actions code
   await setupServiceLocator();
+
+  await Permission.notification.request();
+  await Permission.mediaLibrary.request();
   runApp(ChangeNotifierProvider(
     create: (context) => appState,
     child: const MyApp(),
