@@ -1,3 +1,4 @@
+import 'package:audio_session/audio_session.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/service_locator.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -34,7 +35,7 @@ void main() async {
   //await actions.initializeAudioHandler();
   // End final custom actions code
   await setupServiceLocator();
-
+  
   await Permission.notification.request();
   await Permission.mediaLibrary.request();
   runApp(ChangeNotifierProvider(
@@ -67,6 +68,13 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+
+    AudioSession.instance.then((audioSession) async {
+      // This line configures the app's audio session, indicating to the OS the
+      // type of audio we intend to play. Using the "speech" recipe rather than
+      // "music" since we are playing a podcast.
+      await audioSession.configure(AudioSessionConfiguration.music());
+    });
 
     getIt<PageManager>().init();
 
