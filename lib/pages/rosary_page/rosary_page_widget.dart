@@ -76,6 +76,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       return MediaItem(
         id: section.id,
         album: section.subtitle,
+        artist: _model.currentPrayer?.title ?? '',
         title: section.title,
         artUri: artUri,
         duration: duration,
