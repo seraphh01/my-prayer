@@ -5,7 +5,7 @@ Future<AudioHandler> initAudioService() async {
   return await AudioService.init(
     builder: () => MyAudioHandler(),
     config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.sserafim.socaciu.wings.audio',
+      androidNotificationChannelId: 'com.surorilecmd.rugaciunisicantari.audio',
       androidNotificationChannelName: 'Music Playback',
       androidNotificationOngoing: false,
       androidNotificationIcon: 'mipmap/launcher_icon',

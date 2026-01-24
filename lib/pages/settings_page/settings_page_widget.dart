@@ -671,7 +671,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                         }
                       : () async {
                           await launchURL(
-                              'https://play.google.com/store/apps/details?id=com.sserafim.socaciu.wings');
+                              'https://play.google.com/store/apps/details?id=com.surorilecmd.rugaciunisicantari');
                         },
                   child: Container(
                     width: double.infinity,
