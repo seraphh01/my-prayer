@@ -305,6 +305,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                                   safeSetState(() {});
                                 },
                                 onValueChangeEnd: (newValue) async {
+                                  print('Slider change end: $newValue');
                                   await widget.onAudioTimeChanged?.call(
                                     functions.doubleToInt(newValue),
                                   );

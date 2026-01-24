@@ -241,7 +241,13 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
         .cast<PrayerSectionStruct>();
     _model.chapterOptions =
         functions.convertPrayerSectionToChapterOption(widget.sections!);
-    setCurrentSection(_pageManager.trackIndexNotifier.value);
+        
+    Future.microtask(() async {
+      _model.isLoading = true;
+      await setCurrentSection(_pageManager.trackIndexNotifier.value);
+      safeSetState(() {});
+    });
+    
     _scrollControllers = List.generate(
       _model.flattenedSections.length,
       (index) => ScrollController(),
