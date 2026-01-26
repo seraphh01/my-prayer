@@ -12,10 +12,12 @@ class SubTypesViewWidget extends StatefulWidget {
     super.key,
     this.prayerTypes,
     required this.onSelectPrayer,
+    this.expandAll = false,
   });
 
   final List<PrayerTypeStruct>? prayerTypes;
   final Future Function(String prayerId)? onSelectPrayer;
+  final bool expandAll;
 
   @override
   State<SubTypesViewWidget> createState() => _SubTypesViewWidgetState();
@@ -103,15 +105,20 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                 await widget.onSelectPrayer?.call(
                                   subTypesItem.prayers.firstOrNull!.id,
                                 );
+                                return;
+                              }
+
+                              if (widget.expandAll) {
+                                return;
+                              }
+
+                              if (_model.currentExpandedType ==
+                                  subTypesItem.id) {
+                                _model.currentExpandedType = null;
+                                safeSetState(() {});
                               } else {
-                                if (_model.currentExpandedType ==
-                                    subTypesItem.id) {
-                                  _model.currentExpandedType = null;
-                                  safeSetState(() {});
-                                } else {
-                                  _model.currentExpandedType = subTypesItem.id;
-                                  safeSetState(() {});
-                                }
+                                _model.currentExpandedType = subTypesItem.id;
+                                safeSetState(() {});
                               }
                             },
                             child: Material(
@@ -153,7 +160,8 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                         ),
                       ],
                     ),
-                    if (subTypesItem.id == _model.currentExpandedType)
+                    if (widget.expandAll ||
+                        subTypesItem.id == _model.currentExpandedType)
                       Column(
                         mainAxisSize: MainAxisSize.max,
                         children: [
@@ -249,6 +257,7 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                     'Keyf0l_${subTypesItem.id.toString()}',
                                   ),
                                   prayerTypes: subTypesItem.subtypes,
+                                  expandAll: widget.expandAll,
                                   onSelectPrayer: (prayerId) async {
                                     await widget.onSelectPrayer?.call(
                                       prayerId,

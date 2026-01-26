@@ -54,6 +54,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+    _model.themeMode ??= FlutterFlowTheme.themeMode;
 
     return Material(
       color: Colors.transparent,
@@ -98,15 +99,6 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                       mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Stil font',
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    fontFamily: 'Inter',
-                                    fontSize: 16.0,
-                                    letterSpacing: 0.0,
-                                  ),
-                        ),
                         Align(
                           alignment: const AlignmentDirectional(0.0, 0.0),
                           child: Container(
@@ -156,6 +148,9 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                                 iconSize: 18.0,
                                 elevation: 0.0,
                                 borderRadius: BorderRadius.circular(8.0),
+                                borderWidth: 0.6,
+                                borderColor: FlutterFlowTheme.of(context)
+                                    .secondaryBackground,
                               ),
                               chipSpacing: 16.0,
                               rowSpacing: 8.0,
@@ -252,6 +247,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                     ),
                   ),
                 ),
+
                 Padding(
                   padding:
                       const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
@@ -322,6 +318,63 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                      1.0, 0.0, 0.0, 0.0),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                            24.0, 12.0, 24.0, 8.0),
+                        child: Wrap(
+                          spacing: 12.0,
+                          runSpacing: 8.0,
+                          children: [
+                            buildThemeChip(
+                              context: context,
+                              label: themeModeToLabel(ThemeMode.light),
+                              icon: Icons.light_mode_outlined,
+                              isSelected: _model.themeMode == ThemeMode.light,
+                              onSelected: () {
+
+                                
+                                safeSetState(() =>
+                                    _model.themeMode = ThemeMode.light);
+                                setDarkModeSetting(context, ThemeMode.light);
+                              },
+                            ),
+                            buildThemeChip(
+                              context: context,
+                              label: themeModeToLabel(  ThemeMode.dark),
+                              icon: Icons.dark_mode_outlined,
+                              isSelected: _model.themeMode == ThemeMode.dark,
+                              onSelected: () {
+                                
+                                safeSetState(() =>
+                                    _model.themeMode = ThemeMode.dark);
+                                setDarkModeSetting(context, ThemeMode.dark);
+                              },
+                            ),
+                            buildThemeChip(
+                              context: context,
+                              label: themeModeToLabel(ThemeMode.system),
+                              icon: Icons.settings_suggest_outlined,
+                              isSelected: _model.themeMode == ThemeMode.system,
+                              onSelected: () {
+                                
+                                safeSetState(() =>
+                                    _model.themeMode = ThemeMode.system);
+                                setDarkModeSetting(context, ThemeMode.system);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),

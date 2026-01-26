@@ -24,10 +24,6 @@ class FFAppState extends ChangeNotifier {
   Future initializePersistedState() async {
     secureStorage = const FlutterSecureStorage();
     await _safeInitAsync(() async {
-      _autoPlayNext =
-          await secureStorage.getBool('ff_autoPlayNext') ?? _autoPlayNext;
-    });
-    await _safeInitAsync(() async {
       _audioSpeed =
           await secureStorage.getDouble('ff_audioSpeed') ?? _audioSpeed;
     });
@@ -96,17 +92,6 @@ class FFAppState extends ChangeNotifier {
   }
 
   late FlutterSecureStorage secureStorage;
-
-  bool _autoPlayNext = true;
-  bool get autoPlayNext => _autoPlayNext;
-  set autoPlayNext(bool value) {
-    _autoPlayNext = value;
-    secureStorage.setBool('ff_autoPlayNext', value);
-  }
-
-  void deleteAutoPlayNext() {
-    secureStorage.delete(key: 'ff_autoPlayNext');
-  }
 
   bool _isDisplayingAudio = true;
   bool get isDisplayingAudio => _isDisplayingAudio;

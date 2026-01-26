@@ -18,6 +18,9 @@ class PrayerOptionsModel extends FlutterFlowModel<PrayerOptionsWidget> {
   // State field(s) for AudioSpeedSlider widget.
   double? audioSpeedSliderValue;
 
+  // State field(s) for ThemeMode chips.
+  ThemeMode? themeMode;
+
   FormFieldController<List<String>>? choiceChipsValueController;
   String? get choiceChipsValue =>
       choiceChipsValueController?.value?.firstOrNull;

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:collection/collection.dart';
 import 'package:just_audio/just_audio.dart';
@@ -5,6 +7,7 @@ import 'package:my_prayer/components/download_progress_indicator.dart';
 import 'package:my_prayer/custom_code/actions/retrieve_audio_file.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/download/download_manager.dart';
+import 'package:my_prayer/custom_code/download/notifiers/download_state_notifier.dart';
 import 'package:my_prayer/service_locator.dart';
 
 import '/backend/api_requests/api_calls.dart';
@@ -270,9 +273,10 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                           builder: (context) => FlutterFlowIconButton(
                             borderRadius: 8.0,
                             buttonSize: 48.0,
-                            icon: Icon(
+                            icon:  Icon(
                               Icons.more_vert_rounded,
-                              color: FlutterFlowTheme.of(context).alternate,
+                              color: _downloadManager.downloadStateNotifier.value !=
+                            DownloadState.downloading && _downloadManager.downloadStateNotifier.value !=  DownloadState.loading ? FlutterFlowTheme.of(context).alternate : Colors.transparent,
                               size: 24.0,
                             ),
                             onPressed: () async {
@@ -320,10 +324,20 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                 );
                               } else if (_model.pressedButton == 'share') {
                                 if (!isWeb) {
-                                  await Share.share(
-                                    'rugaciuni-si-cnatari-cmd://rugaciuni-si-cantari-cmd.com${GoRouterState.of(context).uri.toString()}',
-                                    sharePositionOrigin:
-                                        getWidgetBoundingBox(context),
+                                  await SharePlus.instance.share( 
+                                    ShareParams(
+                                      text: 'Descoperă rugăciunea „${_model.currentPrayer?.title}” în aplicația „Rugăciuni și Cântări - CMD”! \nDescarcă aplicația din  App Store sau Google Play: '
+                                 
+                            '\nhttps://play.google.com/store/apps/details?id=com.surorilecmd.rugaciunisicantari'
+                             '\nhttps://apps.apple.com/app/rugaciunisicantaricmd/id6758237098',
+                                      
+                                      subject: _model.currentPrayer?.title,
+                                      title:
+                                          'Descoperă „${_model.currentPrayer?.title}” în aplicația „Rugăciuni și Cântări - CMD”!',
+                                          sharePositionOrigin: getWidgetBoundingBox(context)
+
+                                    ),
+     
                                   );
                                 }
                               } else if (_model.pressedButton == 'save') {

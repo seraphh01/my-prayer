@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 
 import '/flutter_flow/flutter_flow_choice_chips.dart';
@@ -52,6 +54,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+    _model.themeMode ??= FlutterFlowTheme.themeMode;
 
     return Scaffold(
       key: scaffoldKey,
@@ -82,54 +85,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                  ),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: SwitchListTile.adaptive(
-                    value: _model.switchListTileValue ??=
-                        FFAppState().autoPlayNext,
-                    onChanged: (newValue) async {
-                      safeSetState(() => _model.switchListTileValue = newValue);
-                      if (newValue) {
-                        FFAppState().autoPlayNext = true;
-                        safeSetState(() {});
-                      } else {
-                        FFAppState().autoPlayNext = false;
-                        safeSetState(() {});
-                      }
-                    },
-                    title: Text(
-                      'Derulare automată',
-                      style: FlutterFlowTheme.of(context).bodyLarge.override(
-                            fontFamily: 'Inter',
-                            letterSpacing: 0.0,
-                            lineHeight: 2.0,
-                          ),
-                    ),
-                    subtitle: Text(
-                      'Mergi automat la urmatoarea sectiune. Daca este audio in curs de redare, se porneste automat redarea audio.',
-                      style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            fontFamily: 'Inter',
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                            letterSpacing: 0.0,
-                          ),
-                    ),
-                    tileColor: FlutterFlowTheme.of(context).primaryBackground,
-                    activeColor: FlutterFlowTheme.of(context).primary,
-                    activeTrackColor:
-                        FlutterFlowTheme.of(context).secondaryBackground,
-                    dense: false,
-                    controlAffinity: ListTileControlAffinity.trailing,
-                    contentPadding: const EdgeInsetsDirectional.fromSTEB(
-                        24.0, 12.0, 24.0, 12.0),
-                  ),
-                ),
-              ),
+
               Padding(
                 padding:
                     const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
@@ -433,6 +389,96 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                   ),
                 ),
               ),
+              Padding(
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).primaryBackground,
+                    border: Border.all(
+                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        24.0, 16.0, 24.0, 16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Temă aplicație',
+                          style: FlutterFlowTheme.of(context)
+                              .bodyMedium
+                              .override(
+                                fontFamily: 'Inter',
+                                fontSize: 16.0,
+                                letterSpacing: 0.0,
+                              ),
+                        ),
+
+                        Wrap(
+                          spacing: 12.0,
+                          runSpacing: 8.0,
+                          children: [
+                            buildThemeChip(
+                              context: context,
+                              label: themeModeToLabel(ThemeMode.light),
+                              icon: Icons.light_mode_outlined,
+                              isSelected: _model.themeMode == ThemeMode.light,
+                              onSelected: () {
+                                
+                                safeSetState(() =>
+                                    _model.themeMode = ThemeMode.light);
+                                setDarkModeSetting(context, ThemeMode.light);
+                              },
+                            ),
+                            buildThemeChip(
+                              context: context,
+                              label: themeModeToLabel(ThemeMode.dark),
+                              icon: Icons.dark_mode_outlined,
+                              isSelected: _model.themeMode == ThemeMode.dark,
+                              onSelected: () {
+                                
+                                safeSetState(() =>
+                                    _model.themeMode = ThemeMode.dark);
+                                setDarkModeSetting(context, ThemeMode.dark);
+                              },
+                            ),
+                            buildThemeChip(
+                              context: context,
+                              label: themeModeToLabel(ThemeMode.system),
+                              icon: Icons.settings_suggest_outlined,
+                              isSelected: _model.themeMode == ThemeMode.system,
+                              onSelected: () {
+                                
+                                safeSetState(() =>
+                                    _model.themeMode = ThemeMode.system);
+                                setDarkModeSetting(context, ThemeMode.system);
+                              },
+                            ),
+                          ],
+                        ),
+                                               if(_model.themeMode == ThemeMode.system)
+                                                Text(
+                          'Auto - se sincronizează cu tema telefonului dumneavoastră.',
+                          style: FlutterFlowTheme.of(context)
+                              .bodySmall
+                              .override(
+                                fontFamily: 'Inter',
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                letterSpacing: 0.0,
+                              ),
+                        ),
+                      ].divide(const SizedBox(height: 12.0)),
+                      
+                    ),
+                  ),
+                ),
+              ),
               Visibility(
                 visible: !kIsWeb,
                 child: Padding(
@@ -670,8 +716,10 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                           ));
                         }
                       : () async {
-                          await launchURL(
-                              'https://play.google.com/store/apps/details?id=com.surorilecmd.rugaciunisicantari');
+                        var url = Platform.isAndroid
+                            ? 'https://play.google.com/store/apps/details?id=com.surorilecmd.rugaciunisicantari'
+                            : 'https://apps.apple.com/app/rugaciunisicantaricmd/id6758237098';
+                          await launchURL(url);
                         },
                   child: Container(
                     width: double.infinity,
@@ -707,7 +755,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                       ),
                                 ),
                                 Text(
-                                  'Versiunea curentă: 1.0.47',
+                                  'Versiunea curentă: 1.0.0',
                                   style: FlutterFlowTheme.of(context)
                                       .bodySmall
                                       .override(

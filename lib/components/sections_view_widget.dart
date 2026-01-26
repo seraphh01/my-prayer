@@ -667,6 +667,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                                   .currentAudioTime) &&
                                                                           (textsItem.startTime + textElementItem.endTime >
                                                                               _model.currentAudioTime),
+                                                                              hasPassed: _model.currentAudioTime >= (textsItem.startTime + textElementItem.endTime),
                                                                       onTextPressed:
                                                                           () async {
                                                                         currentPlayingTextIndex =

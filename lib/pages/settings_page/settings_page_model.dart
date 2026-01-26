@@ -24,6 +24,8 @@ class SettingsPageModel extends FlutterFlowModel<SettingsPageWidget> {
       choiceChipsValueController?.value = val != null ? [val] : [];
   // State field(s) for FontSizeSlider widget.
   double? fontSizeSliderValue;
+  // State field(s) for ThemeMode chips.
+  ThemeMode? themeMode;
   // Stores action output result for [Custom Action - deleteFileOrFolder] action in IconButton widget.
   bool? success;
 

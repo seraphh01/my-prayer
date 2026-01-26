@@ -10,6 +10,7 @@ import 'dart:math' show pow, pi, sin;
 import 'package:intl/intl.dart';
 import 'package:json_path/json_path.dart';
 import 'package:my_prayer/backend/schema/enums/enums.dart';
+import 'package:my_prayer/flutter_flow/flutter_flow_theme.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -446,3 +447,61 @@ double computeGradientAlignmentY(double evaluatedAngle) {
   }
   return double.parse(roundTo(y, 2));
 }
+
+
+  String themeModeToLabel(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return 'Luminos';
+      case ThemeMode.dark:
+        return 'Întunecat';
+      case ThemeMode.system:
+        return 'Auto';
+    }
+  }
+
+  Widget buildThemeChip({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required void Function() onSelected
+  }) {
+    
+    return ChoiceChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16.0,
+            color: isSelected
+                ? Colors.white
+                : FlutterFlowTheme.of(context).secondaryText,
+          ),
+          const SizedBox(width: 6.0),
+          Text(label),
+        ],
+      ),
+      selected: isSelected,
+      showCheckmark: true,
+      selectedColor: FlutterFlowTheme.of(context).primary,
+      backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+      labelStyle: FlutterFlowTheme.of(context).bodySmall.override(
+            fontFamily: 'Inter',
+            color: isSelected
+                ? Colors.white
+                : FlutterFlowTheme.of(context).secondaryText,
+            letterSpacing: 0.0,
+          ),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          color: isSelected
+              ? FlutterFlowTheme.of(context).primary
+              : FlutterFlowTheme.of(context).secondaryBackground,
+        ),
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      onSelected: (_) => onSelected(),
+    );
+  }
