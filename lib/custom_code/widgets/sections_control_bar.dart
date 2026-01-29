@@ -48,14 +48,18 @@ class SectionsControlBar extends StatefulWidget {
   final double? height;
   final Future Function()? switchContent;
   final Future Function()? chooseChapter;
-  final bool? showingTextContent;
+  final bool showingTextContent;
+  final bool hasTextContent;
+  final bool hasAudioContent;
 
   const SectionsControlBar(
       {super.key,
       this.width,
       this.height,
       this.playbackRate,
-      this.showingTextContent,
+      required this.showingTextContent,
+      required this.hasTextContent,
+      required this.hasAudioContent,
       this.switchContent,
       this.chooseChapter});
 
@@ -188,13 +192,14 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
             buttonSize: 48,
             fillColor: FlutterFlowTheme.of(context).primaryBackground,
             icon: Icon(
-              widget.showingTextContent!
+              widget.showingTextContent
                   ? Icons.audiotrack_rounded
                   : Icons.text_fields_rounded,
               color: FlutterFlowTheme.of(context).primary,
               size: 24,
             ),
-            onPressed: widget.switchContent,
+            onPressed: (widget.showingTextContent && widget.hasAudioContent) || (!widget.showingTextContent && widget.hasTextContent) ? widget.switchContent : null,
+            disabledIconColor: FlutterFlowTheme.of(context).secondaryText,
           )
         ],
       ),

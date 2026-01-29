@@ -15,7 +15,8 @@ class PrayerTextWidget extends StatefulWidget {
       required this.type,
       bool? isPlaying,
       required this.onTextPressed,
-      required this.quoteSource})
+      required this.quoteSource,
+      required this.hasPassed})
       : highlight = isHighlighted ?? false,
         isPlaying = isPlaying ?? false;
 
@@ -24,6 +25,7 @@ class PrayerTextWidget extends StatefulWidget {
   final String? textInput;
   final String? quoteSource;
   final bool isPlaying;
+  final bool hasPassed;
   final Future Function()? onTextPressed;
 
   @override
@@ -83,25 +85,46 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                 18,
             18,
           ),
-          fontWeight: FontWeight.w500,
+          
+          fontWeight: widget.hasPassed ? FontWeight.w200 : FontWeight.w500,
           fontStyle: switch (widget.type) {
             TextElementType.italicText => FontStyle.italic,
             _ => FontStyle.normal,
           },
           lineHeight: 1.35,
-          color: widget.isPlaying
+          color: widget.isPlaying || !widget.hasPassed
               ? FlutterFlowTheme.of(context).primaryText
               : FlutterFlowTheme.of(context).secondaryText,
-          shadows: widget.isPlaying
+          shadows: widget.isPlaying 
               ? [
+                                  Shadow(
+                    blurRadius: 1,
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                    offset: Offset(-0.5, 0),
+                  ),
                   Shadow(
                     blurRadius: 0.6,
                     color: FlutterFlowTheme.of(context).secondaryText,
-                    offset: Offset(0, 0),
-  
-                  )
-                ]
-              : null,
+                    offset: Offset(-0.3, 0),
+                  ),
+                                    Shadow(
+                    blurRadius: 0.6,
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                    offset: Offset(0.3, 0),
+                  ),
+                                    Shadow(
+                    blurRadius: 0.6,
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                    offset: Offset(0, -0.1),
+                    
+                  ),
+                                    Shadow(
+                    blurRadius: 0.6,
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                    offset: Offset(0, 0.1),
+                  ),
+                ] 
+              :  null,
         );
   }
 

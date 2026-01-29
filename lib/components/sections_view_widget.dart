@@ -329,7 +329,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                     child: CircularProgressIndicator(),
                                   );
                                 }
-                                if (!_model.displayAudioPage) {
+                                if ((!_model.displayAudioPage || _model.currentSection?.audioUrl == null || _model.currentSection!.audioUrl.isEmpty) && (_model.currentSection?.texts != null &&
+                                    _model.currentSection!.texts.isNotEmpty)) {
                                   return Container(
                                     height: double.infinity,
                                     decoration: const BoxDecoration(),
@@ -667,6 +668,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                                   .currentAudioTime) &&
                                                                           (textsItem.startTime + textElementItem.endTime >
                                                                               _model.currentAudioTime),
+                                                                              hasPassed: _model.currentAudioTime >= (textsItem.startTime + textElementItem.endTime),
                                                                       onTextPressed:
                                                                           () async {
                                                                         currentPlayingTextIndex =
@@ -735,6 +737,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                           _model.currentSection!.title,
                                           'Titlu',
                                         ),
+                                        audioUrl: _model.currentSection!.audioUrl,
                                         subtitle:
                                             _model.currentSection!.subtitle,
                                         imageUrl:
@@ -805,6 +808,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                     FFAppState().audioSpeed,
                     1.0,
                   ),
+                  hasAudioContent: _model.currentSection?.audioUrl != null && _model.currentSection!.audioUrl.isNotEmpty,
+                  hasTextContent: _model.currentSection?.texts != null && _model.currentSection!.texts.isNotEmpty,
                   switchContent: () async {
                     currentPlayingTextIndex = -1;
                     _model.displayAudioPage = !_model.displayAudioPage;

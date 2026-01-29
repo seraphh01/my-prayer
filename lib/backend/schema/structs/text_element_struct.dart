@@ -122,6 +122,7 @@ class TextElementStruct extends FFFirebaseStruct {
           _type.serialize(),
           ParamType.String,
         ),
+        
         'quote_source': serializeParam(_quoteSource, ParamType.String)
       }.withoutNulls;
 

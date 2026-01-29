@@ -35,7 +35,7 @@ void main() async {
   //await actions.initializeAudioHandler();
   // End final custom actions code
   await setupServiceLocator();
-  
+
   await Permission.notification.request();
   await Permission.mediaLibrary.request();
   runApp(ChangeNotifierProvider(
@@ -58,7 +58,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Locale? _locale;
 
-  ThemeMode _themeMode = FlutterFlowTheme.themeMode;
+  AppThemeMode _appThemeMode = FlutterFlowTheme.themeMode;
+  ThemeMode get _themeMode =>
+      FlutterFlowTheme.getFlutterThemeMode(_appThemeMode);
 
   late AppStateNotifier _appStateNotifier;
   late GoRouter _router;
@@ -79,11 +81,10 @@ class _MyAppState extends State<MyApp> {
     getIt<PageManager>().init();
 
     _appStateNotifier = AppStateNotifier.instance;
-    
+
     // Future.delayed(const Duration(milliseconds: 500),
     //     () => safeSetState(() => _appStateNotifier.stopShowingSplashImage()));
     _router = createRouter(_appStateNotifier);
-
   }
 
   @override
@@ -96,15 +97,15 @@ class _MyAppState extends State<MyApp> {
     safeSetState(() => _locale = createLocale(language));
   }
 
-  void setThemeMode(ThemeMode mode) => safeSetState(() {
-        _themeMode = mode;
+  void setThemeMode(AppThemeMode mode) => safeSetState(() {
+        _appThemeMode = mode;
         FlutterFlowTheme.saveThemeMode(mode);
       });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Congregația Surorilor Maicii Domnului',
+      title: 'Rugăciuni și Cântări - CMD',
       localizationsDelegates: const [
         FFLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,

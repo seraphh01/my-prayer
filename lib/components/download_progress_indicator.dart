@@ -119,9 +119,6 @@ class _DownloadProgressIndicatorState extends State<DownloadProgressIndicator> {
           return Container(
             width: 48.0,
             height: 48.0,
-            decoration: BoxDecoration(
-              color: FlutterFlowTheme.of(context).primary,
-            ),
             child: Align(
               alignment: const AlignmentDirectional(0.0, 0.0),
               child: SizedBox(
@@ -139,9 +136,7 @@ class _DownloadProgressIndicatorState extends State<DownloadProgressIndicator> {
           return Container(
             width: 48.0,
             height: 48.0,
-            decoration: BoxDecoration(
-              color: FlutterFlowTheme.of(context).primary,
-            ),
+
             child: AlignedTooltip(
               content: Padding(
                 padding: const EdgeInsets.all(4.0),

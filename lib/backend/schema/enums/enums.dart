@@ -21,6 +21,8 @@ T? deserializeEnum<T>(String? value) {
     return PrayerType.values.deserialize(value) as T?;
   } else if (T == TextElementType) {
     return TextElementType.values.deserialize(value) as T?;
+  } else if (T == PrayerMode) {
+    return PrayerMode.values.deserialize(value) as T?;
   }
 
   return null; // unsupported type
@@ -32,4 +34,10 @@ enum TextElementType {
   boldText,
   italicText,
   quoteText,
+}
+
+enum PrayerMode {
+  audioOnly,
+  textOnly,
+  audioAndText,
 }
