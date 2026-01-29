@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:my_prayer/backend/schema/enums/enums.dart';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:my_prayer/components/download_progress_indicator.dart';
@@ -971,7 +972,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                               title: result.prayer.subtitle,
                                               subtitle: result.prayer.title,
                                               trailingText: null,
-                                              trailingIcon: Icons.chevron_right_rounded,
+                                              trailingIcons: result.prayer.mode != PrayerMode.audioAndText ? [result.prayer.mode == PrayerMode.audioOnly ? Icons.audiotrack_rounded : Icons.text_snippet_rounded, Icons.chevron_right_rounded] : const [Icons.chevron_right_rounded],
                                               onTap: () async {
                                                 _typeStack.clear();
                                                 _exitSearch();
@@ -1025,7 +1026,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                         shrinkWrap: true,
                                         physics:
                                             const NeverScrollableScrollPhysics(),
-                                        itemCount: prayerTypes.length, // Simulate more items
+                                        itemCount: prayerTypes.length,
                                         separatorBuilder: (_, __) =>
                                             const SizedBox(height: 12.0),
                                         itemBuilder: (context, index) {
@@ -1033,26 +1034,27 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                           final totalCount =
                                               type.subtypes.length +
                                                   type.prayers.length;
-                                          return PrayerTypeCardWidget(
-                                            title: type.type,
+                                          if (totalCount == 0) {
+                                            // Skip types with no subtypes or prayers
+                                            return const SizedBox.shrink();
+                                          }
+
+                                          if(type.subtypes.isEmpty &&
+                                             type.prayers.length == 1) {
+                                            final prayer = type.prayers.first;
+                                             return PrayerTypeCardWidget(
+                                            title: prayer.subtitle,
                                             subtitle: null,
                                             trailingText: null,
-                                            trailingIcon: totalCount > 1
-                                                ? Icons.menu_book_rounded
-                                                : Icons.chevron_right_rounded,
+                                            trailingIcons: prayer.mode != PrayerMode.audioAndText ? [prayer.mode == PrayerMode.audioOnly ? Icons.audiotrack_rounded : Icons.text_snippet_rounded, Icons.chevron_right_rounded] : const [Icons.chevron_right_rounded],
                                             onTap: () async {
-                                              if (type.subtypes.isEmpty &&
-                                                  type.prayers.isEmpty) {
-                                                return;
-                                              }
-                                              // If only one prayer and no subtypes, open it directly
-                                              if (type.subtypes.isEmpty &&
-                                                  type.prayers.length == 1) {
+                                              // only one prayer and no subtypes, open it directly
+             
                                                 await context.pushNamed(
                                                   'RosaryPage',
                                                   queryParameters: {
                                                     'prayerId': serializeParam(
-                                                      type.prayers.first.id,
+                                                      prayer.id,
                                                       ParamType.String,
                                                     ),
                                                   }.withoutNulls,
@@ -1067,6 +1069,18 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                     ),
                                                   },
                                                 );
+                                            },
+                                          );
+                                          }
+
+                                          return PrayerTypeCardWidget(
+                                            title: type.type,
+                                            subtitle: null,
+                                            trailingText: null,
+                                            trailingIcons: [Icons.chevron_right_rounded],
+                                            onTap: () async {
+                                              if (type.subtypes.isEmpty &&
+                                                  type.prayers.isEmpty) {
                                                 return;
                                               }
                                               _typeStack.add(type);
@@ -1447,7 +1461,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                         child: PrayerTypeCardWidget(
                                                           title: prayer.subtitle,
                                                           trailingText: null,
-                                                          trailingIcon: Icons.chevron_right_rounded,
+                                                          trailingIcons: prayer.mode != PrayerMode.audioAndText ? [prayer.mode == PrayerMode.audioOnly ? Icons.audiotrack_rounded : Icons.format_size_rounded, Icons.chevron_right_rounded] : const [Icons.chevron_right_rounded],
                                                           onTap: () async {
                                                             _typeStack.clear();
                                                             safeSetState(() {});
@@ -1498,9 +1512,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                           title: subtype.type,
                                                           subtitle: null,
                                                           trailingText:  null,
-                                                          trailingIcon: totalCount > 1
-                                                              ? Icons.menu_book_rounded
-                                                              : Icons.chevron_right_rounded,
+                                                          trailingIcons: [Icons.chevron_right_rounded],
                                                           onTap: () async {
                                                             if (subtype
                                                                     .subtypes.isEmpty &&

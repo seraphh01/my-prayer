@@ -1,3 +1,4 @@
+import 'package:my_prayer/flutter_flow/flutter_flow_theme.dart';
 import 'package:my_prayer/flutter_flow/form_field_controller.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
@@ -19,7 +20,7 @@ class PrayerOptionsModel extends FlutterFlowModel<PrayerOptionsWidget> {
   double? audioSpeedSliderValue;
 
   // State field(s) for ThemeMode chips.
-  ThemeMode? themeMode;
+  AppThemeMode? themeMode;
 
   FormFieldController<List<String>>? choiceChipsValueController;
   String? get choiceChipsValue =>

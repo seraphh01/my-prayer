@@ -32,6 +32,9 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
     super.initState();
     _model = createModel(context, () => SettingsPageModel());
 
+    // Initialize theme mode
+    _model.themeMode = FlutterFlowTheme.themeMode;
+
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       _model.resultedSize = await actions.computeFolderSize(
@@ -54,7 +57,6 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
-    _model.themeMode ??= FlutterFlowTheme.themeMode;
 
     return Scaffold(
       key: scaffoldKey,
@@ -85,7 +87,6 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-
               Padding(
                 padding:
                     const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
@@ -257,7 +258,6 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                 iconSize: 18.0,
                                 elevation: 0.0,
                                 borderRadius: BorderRadius.circular(8.0),
-                                
                               ),
                               unselectedChipStyle: ChipStyle(
                                 backgroundColor: const Color(0x00000000),
@@ -410,71 +410,79 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                       children: [
                         Text(
                           'Temă aplicație',
-                          style: FlutterFlowTheme.of(context)
-                              .bodyMedium
-                              .override(
-                                fontFamily: 'Inter',
-                                fontSize: 16.0,
-                                letterSpacing: 0.0,
-                              ),
+                          style:
+                              FlutterFlowTheme.of(context).bodyMedium.override(
+                                    fontFamily: 'Inter',
+                                    fontSize: 16.0,
+                                    letterSpacing: 0.0,
+                                  ),
                         ),
-
                         Wrap(
                           spacing: 12.0,
                           runSpacing: 8.0,
                           children: [
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(ThemeMode.light),
-                              icon: Icons.light_mode_outlined,
-                              isSelected: _model.themeMode == ThemeMode.light,
+                              label: themeModeToLabel(AppThemeMode.light),
+                              icon: Icons.wb_sunny_outlined,
+                              isSelected:
+                                  _model.themeMode == AppThemeMode.light,
                               onSelected: () {
-                                
                                 safeSetState(() =>
-                                    _model.themeMode = ThemeMode.light);
-                                setDarkModeSetting(context, ThemeMode.light);
+                                    _model.themeMode = AppThemeMode.light);
+                                setDarkModeSetting(context, AppThemeMode.light);
                               },
                             ),
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(ThemeMode.dark),
+                              label: themeModeToLabel(AppThemeMode.sepia),
+                              icon: Icons.auto_stories_outlined,
+                              isSelected:
+                                  _model.themeMode == AppThemeMode.sepia,
+                              onSelected: () {
+                                safeSetState(() =>
+                                    _model.themeMode = AppThemeMode.sepia);
+                                setDarkModeSetting(context, AppThemeMode.sepia);
+                              },
+                            ),
+                            buildThemeChip(
+                              context: context,
+                              label: themeModeToLabel(AppThemeMode.dark),
                               icon: Icons.dark_mode_outlined,
-                              isSelected: _model.themeMode == ThemeMode.dark,
+                              isSelected: _model.themeMode == AppThemeMode.dark,
                               onSelected: () {
-                                
-                                safeSetState(() =>
-                                    _model.themeMode = ThemeMode.dark);
-                                setDarkModeSetting(context, ThemeMode.dark);
+                                safeSetState(
+                                    () => _model.themeMode = AppThemeMode.dark);
+                                setDarkModeSetting(context, AppThemeMode.dark);
                               },
                             ),
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(ThemeMode.system),
+                              label: themeModeToLabel(AppThemeMode.system),
                               icon: Icons.settings_suggest_outlined,
-                              isSelected: _model.themeMode == ThemeMode.system,
+                              isSelected:
+                                  _model.themeMode == AppThemeMode.system,
                               onSelected: () {
-                                
                                 safeSetState(() =>
-                                    _model.themeMode = ThemeMode.system);
-                                setDarkModeSetting(context, ThemeMode.system);
+                                    _model.themeMode = AppThemeMode.system);
+                                setDarkModeSetting(
+                                    context, AppThemeMode.system);
                               },
                             ),
                           ],
                         ),
-                                               if(_model.themeMode == ThemeMode.system)
-                                                Text(
-                          'Auto - se sincronizează cu tema telefonului dumneavoastră.',
-                          style: FlutterFlowTheme.of(context)
-                              .bodySmall
-                              .override(
-                                fontFamily: 'Inter',
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                letterSpacing: 0.0,
-                              ),
-                        ),
+                        if (_model.themeMode == AppThemeMode.system)
+                          Text(
+                            'Auto - se sincronizează cu tema telefonului dumneavoastră (folosește Sepia pentru luminos și Întunecat pentru întunecat).',
+                            style:
+                                FlutterFlowTheme.of(context).bodySmall.override(
+                                      fontFamily: 'Inter',
+                                      color: FlutterFlowTheme.of(context)
+                                          .secondaryText,
+                                      letterSpacing: 0.0,
+                                    ),
+                          ),
                       ].divide(const SizedBox(height: 12.0)),
-                      
                     ),
                   ),
                 ),
@@ -716,9 +724,9 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                           ));
                         }
                       : () async {
-                        var url = Platform.isAndroid
-                            ? 'https://play.google.com/store/apps/details?id=com.surorilecmd.rugaciunisicantari'
-                            : 'https://apps.apple.com/app/rugaciunisicantaricmd/id6758237098';
+                          var url = Platform.isAndroid
+                              ? 'https://play.google.com/store/apps/details?id=com.surorilecmd.rugaciunisicantari'
+                              : 'https://apps.apple.com/app/rugaciunisicantaricmd/id6758237098';
                           await launchURL(url);
                         },
                   child: Container(

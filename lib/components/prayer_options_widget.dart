@@ -337,39 +337,46 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                           children: [
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(ThemeMode.light),
+                              label: themeModeToLabel(AppThemeMode.light),
                               icon: Icons.light_mode_outlined,
-                              isSelected: _model.themeMode == ThemeMode.light,
-                              onSelected: () {
-
-                                
+                              isSelected: _model.themeMode == AppThemeMode.light,
+                              onSelected: () {               
                                 safeSetState(() =>
-                                    _model.themeMode = ThemeMode.light);
-                                setDarkModeSetting(context, ThemeMode.light);
+                                    _model.themeMode = AppThemeMode.light);
+                                setDarkModeSetting(context, AppThemeMode.light);
                               },
                             ),
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(  ThemeMode.dark),
+                              label: themeModeToLabel(  AppThemeMode.sepia),
                               icon: Icons.dark_mode_outlined,
-                              isSelected: _model.themeMode == ThemeMode.dark,
+                              isSelected: _model.themeMode == AppThemeMode.sepia,
                               onSelected: () {
-                                
                                 safeSetState(() =>
-                                    _model.themeMode = ThemeMode.dark);
-                                setDarkModeSetting(context, ThemeMode.dark);
+                                    _model.themeMode = AppThemeMode.sepia);
+                                setDarkModeSetting(context, AppThemeMode.sepia);
                               },
                             ),
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(ThemeMode.system),
-                              icon: Icons.settings_suggest_outlined,
-                              isSelected: _model.themeMode == ThemeMode.system,
+                              label: themeModeToLabel(  AppThemeMode.dark),
+                              icon: Icons.dark_mode_outlined,
+                              isSelected: _model.themeMode == AppThemeMode.dark,
                               onSelected: () {
-                                
                                 safeSetState(() =>
-                                    _model.themeMode = ThemeMode.system);
-                                setDarkModeSetting(context, ThemeMode.system);
+                                    _model.themeMode = AppThemeMode.dark);
+                                setDarkModeSetting(context, AppThemeMode.dark);
+                              },
+                            ),
+                            buildThemeChip(
+                              context: context,
+                              label: themeModeToLabel(AppThemeMode.system),
+                              icon: Icons.settings_suggest_outlined,
+                              isSelected: _model.themeMode == AppThemeMode.system,
+                              onSelected: () {
+                                safeSetState(() =>
+                                    _model.themeMode = AppThemeMode.system);
+                                setDarkModeSetting(context, AppThemeMode.system);
                               },
                             ),
                           ],

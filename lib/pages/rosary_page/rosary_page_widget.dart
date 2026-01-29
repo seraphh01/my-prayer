@@ -54,7 +54,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   List<PrayerSectionStruct> flattenedSections = [];
 
   Future<void> setInitialMediaItems() async {
-    if (flattenedSections.isEmpty) {
+    if (flattenedSections.isEmpty || flattenedSections.where((element) => element.audioUrl.isEmpty).isNotEmpty) {
       return;
     }
 

@@ -16,12 +16,13 @@ class AudioPageWidget extends StatefulWidget {
     super.key,
     String? title,
     String? subtitle,
+    String? audioUrl,
     required this.onAudioTimeChanged,
     required this.imageUrls,
     required this.imageUrl,
     this.texts,
   })  : title = title ?? 'Titlu',
-        subtitle = subtitle ?? 'Subtitlu';
+        subtitle = subtitle ?? 'Subtitlu', audioUrl = audioUrl ?? '';
 
   final String title;
   final String subtitle;
@@ -29,6 +30,7 @@ class AudioPageWidget extends StatefulWidget {
   final String? imageUrl;
   final List<String> imageUrls;
   final List<SectionTextStruct>? texts;
+  final String? audioUrl;
 
   @override
   State<AudioPageWidget> createState() => _AudioPageWidgetState();
@@ -310,8 +312,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                       children: [
                         Visibility(
                           visible: valueOrDefault<bool>(
-                            widget.texts != null &&
-                                (widget.texts)!.isNotEmpty,
+                            widget.audioUrl != null && widget.audioUrl!.isNotEmpty,
                             false,
                           ),
                           child: Column(
@@ -339,6 +340,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
+                                      if(currentText != null)
                                       Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,

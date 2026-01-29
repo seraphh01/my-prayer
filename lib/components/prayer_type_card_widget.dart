@@ -9,14 +9,16 @@ class PrayerTypeCardWidget extends StatefulWidget {
     this.subtitle,
     this.trailingText,
     this.onTap,
-    this.trailingIcon,
+    this.trailingIcons,
+    this.prefixIcon,
   });
 
   final String title;
   final String? subtitle;
   final String? trailingText;
   final VoidCallback? onTap;
-  final IconData? trailingIcon;
+  final List<IconData>? trailingIcons;
+  final IconData? prefixIcon;
 
   @override
   State<PrayerTypeCardWidget> createState() => _PrayerTypeCardWidgetState();
@@ -70,6 +72,15 @@ class _PrayerTypeCardWidgetState extends State<PrayerTypeCardWidget>
           ),
           child: Row(
             children: [
+              if (widget.prefixIcon != null)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 8.0),
+                  child: Icon(
+                    widget.prefixIcon,
+                    size: 24.0,
+                    color: FlutterFlowTheme.of(context).primary,
+                  ),
+                ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,10 +126,14 @@ class _PrayerTypeCardWidgetState extends State<PrayerTypeCardWidget>
                         ),
                   ),
                 ),
-              Icon(
-                widget.trailingIcon ?? Icons.chevron_right_rounded,
-                size: 24.0,
-                color: FlutterFlowTheme.of(context).primary,
+                if(widget.trailingIcons != null)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: widget.trailingIcons!.map((icon) => Icon(
+                  icon,
+                  size: 24.0,
+                  color: FlutterFlowTheme.of(context).primary,
+                )).toList().divide(const SizedBox(width: 4.0)),
               ),
             ],
           ),
