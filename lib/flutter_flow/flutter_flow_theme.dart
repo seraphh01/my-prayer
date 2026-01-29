@@ -13,7 +13,7 @@ enum AppThemeMode {
   system,
 }
 
-const kThemeModeKey = '__theme_mode__';
+const kThemeModeKey = 'app_theme_mode';
 SharedPreferences? _prefs;
 
 abstract class FlutterFlowTheme {
@@ -38,7 +38,6 @@ abstract class FlutterFlowTheme {
   }
 
   static void saveThemeMode(AppThemeMode mode) {
-    print('Saving theme mode: $mode');
     switch (mode) {
       case AppThemeMode.light:
         _prefs?.setString(kThemeModeKey, 'light');
