@@ -151,7 +151,7 @@ class MyAudioHandler extends BaseAudioHandler {
           ? Uri.file(mediaItem.extras!['filePath'] as String)
           : Uri.parse(mediaItem.extras!['url'] as String),
       tag: mediaItem,
-    );
+    ) ;
   }
 
   @override

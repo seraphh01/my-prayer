@@ -35,9 +35,13 @@ void main() async {
   //await actions.initializeAudioHandler();
   // End final custom actions code
   await setupServiceLocator();
+  try {
+      await Permission.notification.request();
+      await Permission.mediaLibrary.request();
+  } catch (e) {
+      print('Error requesting permissions: $e');
+  }
 
-  await Permission.notification.request();
-  await Permission.mediaLibrary.request();
   runApp(ChangeNotifierProvider(
     create: (context) => appState,
     child: const MyApp(),

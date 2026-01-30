@@ -232,7 +232,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                             decoration: const BoxDecoration(),
                             child: FlutterFlowChoiceChips(
                               options: const [
-                                ChipData('Noto Serif'),
+                                ChipData('Crimson Pro'),
                                 ChipData('Patrick Hand'),
                                 ChipData('Tinos'),
                                 ChipData('Inter')

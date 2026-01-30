@@ -14,6 +14,7 @@ class PrayerTextWidget extends StatefulWidget {
       required this.textInput,
       required this.type,
       bool? isPlaying,
+      required this.isSynced,
       required this.onTextPressed,
       required this.quoteSource,
       required this.hasPassed})
@@ -26,6 +27,7 @@ class PrayerTextWidget extends StatefulWidget {
   final String? quoteSource;
   final bool isPlaying;
   final bool hasPassed;
+  final bool isSynced;
   final Future Function()? onTextPressed;
 
   @override
@@ -86,13 +88,13 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
             18,
           ),
           
-          fontWeight: widget.hasPassed ? FontWeight.w200 : FontWeight.w500,
+          fontWeight: widget.isSynced ? widget.hasPassed ? FontWeight.w200 : FontWeight.w500 : FontWeight.w400,
           fontStyle: switch (widget.type) {
             TextElementType.italicText => FontStyle.italic,
             _ => FontStyle.normal,
           },
           lineHeight: 1.35,
-          color: widget.isPlaying || !widget.hasPassed
+          color: !widget.isSynced ||  widget.isPlaying || !widget.hasPassed
               ? FlutterFlowTheme.of(context).primaryText
               : FlutterFlowTheme.of(context).secondaryText,
           shadows: widget.isPlaying 
@@ -152,6 +154,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
             textAlign: TextAlign.justify,
             text: TextSpan(
               children: [
+                TextSpan(text: "\u00A0\u00A0\u00A0"),
                 if (widget.type == TextElementType.quoteText)
                   TextSpan(text: "«", style: restOfTextPlayingStyle()),
                 if (firstLetter != null && firstLetter.isNotEmpty)

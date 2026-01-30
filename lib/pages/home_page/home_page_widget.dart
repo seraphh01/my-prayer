@@ -1275,6 +1275,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                       const SizedBox(width: 8.0)),
                                                 ),
                                               ),
+                                              if(mediaItem.extras!['url'].toString().isNotEmpty)
                                               ValueListenableBuilder(
                                                   valueListenable:
                                                       _pageManager.playButtonNotifier,

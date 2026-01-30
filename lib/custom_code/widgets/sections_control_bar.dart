@@ -154,7 +154,8 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
                         color: FlutterFlowTheme.of(context).primaryBackground,
                         size: 32,
                       ),
-                      onPressed: _pageManager.play,
+                      onPressed: widget.hasAudioContent ? _pageManager.play : null,
+                      disabledColor: FlutterFlowTheme.of(context).secondaryText,
                     );
                   case ButtonState.playing:
                     return FlutterFlowIconButton(
@@ -166,7 +167,8 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
                         color: FlutterFlowTheme.of(context).primaryBackground,
                         size: 32,
                       ),
-                      onPressed: _pageManager.pause,
+                      onPressed: widget.hasAudioContent ? _pageManager.pause : null,
+                      disabledColor: FlutterFlowTheme.of(context).secondary,
                     );
 
                   default:
@@ -193,13 +195,13 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
             fillColor: FlutterFlowTheme.of(context).primaryBackground,
             icon: Icon(
               widget.showingTextContent
-                  ? Icons.audiotrack_rounded
-                  : Icons.text_fields_rounded,
+                  ? widget.hasAudioContent ? Icons.audiotrack_rounded : Icons.text_fields_rounded
+                  : widget.hasTextContent ? Icons.text_fields_rounded : Icons.audiotrack_rounded,
               color: FlutterFlowTheme.of(context).primary,
               size: 24,
             ),
             onPressed: (widget.showingTextContent && widget.hasAudioContent) || (!widget.showingTextContent && widget.hasTextContent) ? widget.switchContent : null,
-            disabledIconColor: FlutterFlowTheme.of(context).secondaryText,
+
           )
         ],
       ),

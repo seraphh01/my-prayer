@@ -32,11 +32,15 @@ class SectionsViewWidget extends StatefulWidget {
     this.sections,
     this.prayerTitle,
     this.prayerSubtitle,
+    this.controlBarVisibilityNotifier,
+    this.allowScrollNotifier,
   });
 
   final List<PrayerSectionStruct>? sections;
   final String? prayerTitle;
   final String? prayerSubtitle;
+  final ValueNotifier<bool>? controlBarVisibilityNotifier;
+  final ValueNotifier<bool>? allowScrollNotifier;
 
   @override
   State<SectionsViewWidget> createState() => _SectionsViewWidgetState();
@@ -45,9 +49,10 @@ class SectionsViewWidget extends StatefulWidget {
 class _SectionsViewWidgetState extends State<SectionsViewWidget>
     with TickerProviderStateMixin {
   late SectionsViewModel _model;
-  late List<ScrollController> _scrollControllers = [];
+  ScrollController? _primaryScrollController;
   int currentPlayingTextIndex = 0;
   int currentSectionIndex = 0;
+  late final ValueNotifier<bool> _controlBarVisibility;
   final GlobalKey pageKey = GlobalKey();
   final Map<int, List<GlobalKey>> _keys = {};
 
@@ -60,6 +65,29 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
   void setState(VoidCallback callback) {
     super.setState(callback);
     _model.onUpdate();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _primaryScrollController = PrimaryScrollController.of(context);
+  }
+
+  ScrollController? _getActiveScrollController() => _primaryScrollController;
+
+  void _setAllowScroll(bool allow) {
+    if (widget.allowScrollNotifier == null) {
+      return;
+    }
+    if (widget.allowScrollNotifier!.value == allow) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      widget.allowScrollNotifier!.value = allow;
+    });
   }
 
   void setTextKeys(int sectionIndex) {
@@ -123,12 +151,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     if (currentSectionIndex == _pageManager.trackIndexNotifier.value) {
       return;
     }
-    if (_scrollControllers.isNotEmpty &&
-        _scrollControllers.length > currentSectionIndex) {
-      var controller = _scrollControllers[currentSectionIndex];
-      if (controller.hasClients) {
-        controller.jumpTo(0.0);
-      }
+    final controller = _getActiveScrollController();
+    if (controller != null && controller.hasClients) {
+      controller.jumpTo(0.0);
     }
 
     await setCurrentSection(_pageManager.trackIndexNotifier.value);
@@ -160,10 +185,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
 
     currentPlayingTextIndex = visibleTextIndex;
 
-    if (_scrollControllers.isEmpty) {
-      return;
-    }
-
     if (_keys.isEmpty ||
         _keys[currentSectionIndex] == null ||
         _keys[currentSectionIndex]!.isEmpty ||
@@ -171,12 +192,24 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
       return;
     }
 
-    var controller = _scrollControllers[valueOrDefault<int>(
-      currentSectionIndex,
-      0,
-    )];
+    final controller = _getActiveScrollController();
+    if (controller == null || !controller.hasClients) {
+      return;
+    }
 
-    if (!controller.hasClients) {
+    final remaining =
+        controller.position.maxScrollExtent - controller.position.pixels;
+    if (remaining <= 32.0) {
+      return;
+    }
+
+    if (currentPlayingTextIndex == 0) {
+      controller.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+      );
+      
       return;
     }
 
@@ -234,6 +267,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
   void initState() {
     super.initState();
     _model = createModel(context, () => SectionsViewModel());
+    _controlBarVisibility =
+        widget.controlBarVisibilityNotifier ?? ValueNotifier(true);
 
     _model.flattenedSections = functions
         .flattenSectionsList(widget.sections!.toList())!
@@ -248,10 +283,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
       safeSetState(() {});
     });
     
-    _scrollControllers = List.generate(
-      _model.flattenedSections.length,
-      (index) => ScrollController(),
-    );
     setTextKeys(valueOrDefault<int>(0, 0));
 
     onTrackIndexChanged();
@@ -289,6 +320,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
         .removeListener(onCurrentAudioTimeChanged);
     _pageManager.totalDurationNotifier
         .removeListener(onCurrentAudioDurationChanged);
+    if (widget.controlBarVisibilityNotifier == null) {
+      _controlBarVisibility.dispose();
+    }
     super.dispose();
   }
 
@@ -297,17 +331,17 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     context.watch<FFAppState>();
 
     return Container(
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).primaryBackground,
-      ),
-      child: Column(
-        key: pageKey,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Expanded(
-            child: Builder(
-              builder: (context) {
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: FlutterFlowTheme.of(context).primaryBackground,
+        ),
+        child: Column(
+          key: pageKey,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: Builder(
+                builder: (context) {
                 final prayerSection = _model.flattenedSections.toList();
                 if (prayerSection.isEmpty) {
                   return const SizedBox(
@@ -325,18 +359,32 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                             Builder(
                               builder: (context) {
                                 if (_model.currentSection == null) {
+                                  _setAllowScroll(true);
                                   return const Center(
                                     child: CircularProgressIndicator(),
                                   );
                                 }
-                                if ((!_model.displayAudioPage || _model.currentSection?.audioUrl == null || _model.currentSection!.audioUrl.isEmpty) && (_model.currentSection?.texts != null &&
-                                    _model.currentSection!.texts.isNotEmpty)) {
+                                final hasAudioContent =
+                                    _model.currentSection?.audioUrl != null &&
+                                        _model.currentSection!.audioUrl
+                                            .isNotEmpty;
+                                final isAudioPage =
+                                    _model.displayAudioPage && hasAudioContent;
+                                _setAllowScroll(!isAudioPage);
+
+                                if ((!_model.displayAudioPage ||
+                                        _model.currentSection?.audioUrl ==
+                                            null ||
+                                        _model.currentSection!
+                                            .audioUrl.isEmpty) &&
+                                    (_model.currentSection?.texts != null &&
+                                        _model.currentSection!.texts
+                                            .isNotEmpty)) {
                                   return Container(
                                     height: double.infinity,
                                     decoration: const BoxDecoration(),
                                     child: SingleChildScrollView(
-                                      controller: _scrollControllers[
-                                          currentSectionIndex],
+                                      primary: true,
                                       scrollDirection: Axis.vertical,
                                       physics:
                                           const AlwaysScrollableScrollPhysics(),
@@ -357,7 +405,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                           ?.showSubtitle ==
                                                       true)
                                                 SizedBox(
-                                                  height: 16,
+                                                  height: 32.0,
                                                 ),
                                               if (_model.currentSection
                                                       ?.showTitle ==
@@ -669,6 +717,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                           (textsItem.startTime + textElementItem.endTime >
                                                                               _model.currentAudioTime),
                                                                               hasPassed: _model.currentAudioTime >= (textsItem.startTime + textElementItem.endTime),
+                                                                        isSynced: _model.currentSection!.audioUrl.isNotEmpty,
                                                                       onTextPressed:
                                                                           () async {
                                                                         currentPlayingTextIndex =
@@ -713,7 +762,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                 const SizedBox(height: 16.0))
                                             .addToEnd(
                                                 const SizedBox(height: 16.0)),
-                                      ),
+                                        ),
                                     ),
                                   );
                                 } else {
@@ -789,58 +838,88 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                         ))
                     .animateOnPageLoad(
                         animationsMap['pageViewOnPageLoadAnimation']!);
-              },
-            ),
-          ),
-          Align(
-            alignment: const AlignmentDirectional(0.0, 0.0),
-            child: Container(
-              height: 80.0,
-              decoration: const BoxDecoration(),
-              child: SizedBox(
-                width: double.infinity,
-                height: double.infinity,
-                child: custom_widgets.SectionsControlBar(
-                  width: double.infinity,
-                  height: double.infinity,
-                  showingTextContent: !_model.displayAudioPage,
-                  playbackRate: valueOrDefault<double>(
-                    FFAppState().audioSpeed,
-                    1.0,
-                  ),
-                  hasAudioContent: _model.currentSection?.audioUrl != null && _model.currentSection!.audioUrl.isNotEmpty,
-                  hasTextContent: _model.currentSection?.texts != null && _model.currentSection!.texts.isNotEmpty,
-                  switchContent: () async {
-                    currentPlayingTextIndex = -1;
-                    _model.displayAudioPage = !_model.displayAudioPage;
-                    FFAppState().isDisplayingAudio = _model.displayAudioPage;
-                    safeSetState(() {});
-                  },
-                  chooseChapter: () async {
-                    final index = await showModalBottomSheet<int>(
-                        isDismissible: true,
-                        useSafeArea: true,
-                        context: context,
-                        builder: (context) {
-                          return ChooseChapterWidget(
-                              title:
-                                  "${widget.prayerTitle}${widget.prayerTitle!.isNotEmpty ? ' - ' : ''}${widget.prayerSubtitle}",
-                              currentChapterIndex:
-                                  _pageManager.trackIndexNotifier.value,
-                              chapterOptions: _model.chapterOptions);
-                        });
-                    if (index == null) {
-                      return;
-                    }
-
-                    await _pageManager.skipToIndex(index);
-                  },
-                ),
+                },
               ),
             ),
-          ),
-        ],
-      ),
-    );
+            ValueListenableBuilder<bool>(
+              valueListenable: _controlBarVisibility,
+              builder: (context, showControlBar, child) {
+                final bottomInset = MediaQuery.paddingOf(context).bottom;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  height: showControlBar ? 80.0 + bottomInset : 0.0,
+                  child: AnimatedSlide(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    offset:
+                        showControlBar ? Offset.zero : const Offset(0.0, 1.0),
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      opacity: showControlBar ? 1.0 : 0.0,
+                      child: SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: bottomInset),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 80.0,
+                            child: custom_widgets.SectionsControlBar(
+                              width: double.infinity,
+                              height: double.infinity,
+                              showingTextContent: !_model.displayAudioPage,
+                              playbackRate: valueOrDefault<double>(
+                                FFAppState().audioSpeed,
+                                1.0,
+                              ),
+                              hasAudioContent:
+                                  _model.currentSection?.audioUrl != null &&
+                                      _model.currentSection!.audioUrl
+                                          .isNotEmpty,
+                              hasTextContent:
+                                  _model.currentSection?.texts != null &&
+                                      _model.currentSection!.texts.isNotEmpty,
+                              switchContent: () async {
+                                currentPlayingTextIndex = -1;
+                                _model.displayAudioPage =
+                                    !_model.displayAudioPage;
+                                FFAppState().isDisplayingAudio =
+                                    _model.displayAudioPage;
+                                safeSetState(() {});
+                              },
+                              chooseChapter: () async {
+                                final index =
+                                    await showModalBottomSheet<int>(
+                                        isDismissible: true,
+                                        useSafeArea: true,
+                                        context: context,
+                                        builder: (context) {
+                                          return ChooseChapterWidget(
+                                              title:
+                                                  "${widget.prayerTitle}${widget.prayerTitle!.isNotEmpty ? ' - ' : ''}${widget.prayerSubtitle}",
+                                              currentChapterIndex: _pageManager
+                                                  .trackIndexNotifier.value,
+                                              chapterOptions:
+                                                  _model.chapterOptions);
+                                        });
+                                if (index == null) {
+                                  return;
+                                }
+
+                                await _pageManager.skipToIndex(index);
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      );
   }
 }
