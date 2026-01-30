@@ -3,7 +3,7 @@ name: Gh-Pages
 on:
   push:
     branches:
-      - web
+      - main
 
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
         uses: subosito/flutter-action@v1 
         with:
           channel: stable
-          flutter-version: 3.27.3
+          flutter-version: 3.38.4
 
       - name: Build and deploy to GitHub Pages
         uses: bluefireteam/flutter-gh-pages@v7
