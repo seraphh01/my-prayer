@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_getters_setters
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:my_prayer/backend/schema/enums/enums.dart';
 
 import '/backend/schema/util/firestore_util.dart';
 
@@ -14,12 +15,14 @@ class PrayerStruct extends FFFirebaseStruct {
     List<PrayerSectionStruct>? sections,
     String? subtitle,
     int? sequence,
+    PrayerMode? mode,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _id = id,
         _title = title,
         _sections = sections,
         _subtitle = subtitle,
         _sequence = sequence,
+        _mode = mode,
         super(firestoreUtilData);
 
   // "id" field.
@@ -33,6 +36,10 @@ class PrayerStruct extends FFFirebaseStruct {
   String? _title;
   String get title => _title ?? '';
   set title(String? val) => _title = val;
+
+  PrayerMode? _mode;
+  PrayerMode get mode => _mode ?? PrayerMode.audioAndText;
+  set mode(PrayerMode val) => _mode = val;
 
   bool hasTitle() => _title != null;
 
@@ -72,6 +79,7 @@ class PrayerStruct extends FFFirebaseStruct {
         ),
         subtitle: data['subtitle'] as String?,
         sequence: castToType<int>(data['sequence']),
+        mode: castToType<PrayerMode>(data['mode']),
       );
 
   static PrayerStruct? maybeFromMap(dynamic data) =>
@@ -83,6 +91,7 @@ class PrayerStruct extends FFFirebaseStruct {
         'sections': _sections?.map((e) => e.toMap()).toList(),
         'subtitle': _subtitle,
         'sequence': _sequence,
+        'mode': _mode?.serialize(),
       }.withoutNulls;
 
   @override
@@ -108,19 +117,21 @@ class PrayerStruct extends FFFirebaseStruct {
           _sequence,
           ParamType.int,
         ),
+                'mode': serializeParam(
+          _mode?.serialize(),
+          ParamType.String,
+        ),
       }.withoutNulls;
 
   static PrayerStruct fromSerializableMap(Map<String, dynamic> data) =>
       PrayerStruct(
         id: deserializeParam(
           data['id'],
-          ParamType.String,
-          false,
+          ParamType.String
         ),
         title: deserializeParam(
           data['title'],
-          ParamType.String,
-          false,
+          ParamType.String
         ),
         sections: deserializeStructParam<PrayerSectionStruct>(
           data['sections'],
@@ -131,12 +142,15 @@ class PrayerStruct extends FFFirebaseStruct {
         subtitle: deserializeParam(
           data['subtitle'],
           ParamType.String,
-          false,
+          isList: false,
         ),
         sequence: deserializeParam(
           data['sequence'],
           ParamType.int,
-          false,
+          isList: false,
+        ),
+        mode: deserializeEnum<PrayerMode>(
+            data['mode'],
         ),
       );
 
@@ -151,18 +165,20 @@ class PrayerStruct extends FFFirebaseStruct {
         title == other.title &&
         listEquality.equals(sections, other.sections) &&
         subtitle == other.subtitle &&
-        sequence == other.sequence;
+        sequence == other.sequence &&
+        mode == other.mode;
   }
 
   @override
   int get hashCode =>
-      const ListEquality().hash([id, title, sections, subtitle, sequence]);
+      const ListEquality().hash([id, title, sections, subtitle, sequence, mode]);
 }
 
 PrayerStruct createPrayerStruct({
   String? id,
   String? title,
   String? subtitle,
+  PrayerMode? mode,
   int? sequence,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
@@ -174,6 +190,7 @@ PrayerStruct createPrayerStruct({
       title: title,
       subtitle: subtitle,
       sequence: sequence,
+      mode: mode,
       firestoreUtilData: FirestoreUtilData(
         clearUnsetFields: clearUnsetFields,
         create: create,

@@ -77,7 +77,9 @@ class PageManager {
 
   void _listenToTotalDuration() {
     _audioHandler.mediaItem.listen((mediaItem) {
-      totalDurationNotifier.value = mediaItem?.duration ?? Duration.zero;
+      if (mediaItem != null && mediaItem.duration != null && mediaItem.duration!.inSeconds > 0) {
+          totalDurationNotifier.value = mediaItem.duration!;
+        }
     });
   }
 
@@ -146,10 +148,10 @@ class PageManager {
     }
   }
 
-  void remove() {
+  Future<void> remove() async {
     final lastIndex = _audioHandler.queue.value.length - 1;
     if (lastIndex < 0) return;
-    _audioHandler.removeQueueItemAt(lastIndex);
+    await _audioHandler.removeQueueItemAt(lastIndex);
   }
 
   Future<void> setQueue(List<MediaItem> mediaItems) async {
@@ -158,10 +160,10 @@ class PageManager {
   }
 
   Future<void> clearQueue() async {
-    _audioHandler.skipToQueueItem(0);
-    _audioHandler.seek(Duration(seconds: 0));
-    _audioHandler.stop();
-    _audioHandler.updateQueue([]);
+    await _audioHandler.skipToQueueItem(0);
+    await _audioHandler.seek(Duration(seconds: 0));
+    await _audioHandler.stop();
+    await _audioHandler.updateQueue([]);
   }
 
   void dispose() {

@@ -28,8 +28,9 @@ class ConnectivityService {
 
   void initialize() {
     // Listen for connectivity changes
-    _subscription = Connectivity().onConnectivityChanged.listen((_) async {
-      bool isConnected = await InternetConnectionChecker().hasConnection;
+    _subscription = Connectivity().onConnectivityChanged.listen((result) async {
+      bool isConnected = result.isNotEmpty &&
+          result.every((connection) => connection != ConnectivityResult.none);
 
       // Update FFAppState with connectivity status
       FFAppState().isDeviceOnline = isConnected;

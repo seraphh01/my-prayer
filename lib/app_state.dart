@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
@@ -22,10 +24,6 @@ class FFAppState extends ChangeNotifier {
   Future initializePersistedState() async {
     secureStorage = const FlutterSecureStorage();
     await _safeInitAsync(() async {
-      _autoPlayNext =
-          await secureStorage.getBool('ff_autoPlayNext') ?? _autoPlayNext;
-    });
-    await _safeInitAsync(() async {
       _audioSpeed =
           await secureStorage.getDouble('ff_audioSpeed') ?? _audioSpeed;
     });
@@ -39,34 +37,40 @@ class FFAppState extends ChangeNotifier {
               _fontSizeMultiplier;
     });
     await _safeInitAsync(() async {
-      _favoritePrayers =
-          (await secureStorage.getStringList('ff_favoritePrayers'))
-                  ?.map((x) {
+      var prayers = await secureStorage.getString('ff_favoritePrayers');
+      if(prayers == null || prayers.isEmpty) return;
+
+      var prayersList = json.decode(prayers);
+      if(prayersList is! List) return;
+
+      _favoritePrayers = prayersList.map((x) {
                     try {
-                      return PrayerStruct.fromSerializableMap(jsonDecode(x));
+                      return PrayerStruct.fromSerializableMap(x);
                     } catch (e) {
                       print("Can't decode persisted data type. Error: $e.");
                       return null;
                     }
                   })
                   .withoutNulls
-                  .toList() ??
-              _favoritePrayers;
+                  .toList();
     });
     await _safeInitAsync(() async {
-      _downloadedPrayers =
-          (await secureStorage.getStringList('ff_downloadedPrayers'))
-                  ?.map((x) {
+      var prayers = await secureStorage.getString('ff_downloadedPrayers');
+      if(prayers == null || prayers.isEmpty) return;
+
+      var prayersList = json.decode(prayers);
+      if(prayersList is! List) return;
+
+      _downloadedPrayers = prayersList.map((x) {
                     try {
-                      return PrayerStruct.fromSerializableMap(jsonDecode(x));
+                      return PrayerStruct.fromSerializableMap(x);
                     } catch (e) {
                       print("Can't decode persisted data type. Error: $e.");
                       return null;
                     }
                   })
                   .withoutNulls
-                  .toList() ??
-              _downloadedPrayers;
+                  .toList();
     });
     await _safeInitAsync(() async {
       if (await secureStorage.read(key: 'ff_savedPrayer') != null) {
@@ -88,17 +92,6 @@ class FFAppState extends ChangeNotifier {
   }
 
   late FlutterSecureStorage secureStorage;
-
-  bool _autoPlayNext = true;
-  bool get autoPlayNext => _autoPlayNext;
-  set autoPlayNext(bool value) {
-    _autoPlayNext = value;
-    secureStorage.setBool('ff_autoPlayNext', value);
-  }
-
-  void deleteAutoPlayNext() {
-    secureStorage.delete(key: 'ff_autoPlayNext');
-  }
 
   bool _isDisplayingAudio = true;
   bool get isDisplayingAudio => _isDisplayingAudio;
@@ -123,7 +116,7 @@ class FFAppState extends ChangeNotifier {
     secureStorage.delete(key: 'ff_audioSpeed');
   }
 
-  String _fontFamily = 'Georgia';
+  String _fontFamily = 'Crimson Pro';
   String get fontFamily => _fontFamily;
   set fontFamily(String value) {
     _fontFamily = value;
@@ -149,8 +142,10 @@ class FFAppState extends ChangeNotifier {
   List<PrayerStruct> get favoritePrayers => _favoritePrayers;
   set favoritePrayers(List<PrayerStruct> value) {
     _favoritePrayers = value;
-    secureStorage.setStringList(
-        'ff_favoritePrayers', value.map((x) => x.serialize()).toList());
+    secureStorage.setString('ff_favoritePrayers',
+        jsonEncode(
+      value.map((x) => x.toSerializableMap()).toList(),
+    ));
   }
 
   void deleteFavoritePrayers() {
@@ -159,20 +154,17 @@ class FFAppState extends ChangeNotifier {
 
   void addToFavoritePrayers(PrayerStruct value) {
     favoritePrayers.add(value);
-    secureStorage.setStringList('ff_favoritePrayers',
-        _favoritePrayers.map((x) => x.serialize()).toList());
+    favoritePrayers = favoritePrayers;
   }
 
   void removeFromFavoritePrayers(PrayerStruct value) {
     favoritePrayers.remove(value);
-    secureStorage.setStringList('ff_favoritePrayers',
-        _favoritePrayers.map((x) => x.serialize()).toList());
+    favoritePrayers = favoritePrayers;
   }
 
   void removeAtIndexFromFavoritePrayers(int index) {
     favoritePrayers.removeAt(index);
-    secureStorage.setStringList('ff_favoritePrayers',
-        _favoritePrayers.map((x) => x.serialize()).toList());
+    favoritePrayers = favoritePrayers;
   }
 
   void updateFavoritePrayersAtIndex(
@@ -180,22 +172,20 @@ class FFAppState extends ChangeNotifier {
     PrayerStruct Function(PrayerStruct) updateFn,
   ) {
     favoritePrayers[index] = updateFn(_favoritePrayers[index]);
-    secureStorage.setStringList('ff_favoritePrayers',
-        _favoritePrayers.map((x) => x.serialize()).toList());
+    favoritePrayers = favoritePrayers;
   }
 
   void insertAtIndexInFavoritePrayers(int index, PrayerStruct value) {
     favoritePrayers.insert(index, value);
-    secureStorage.setStringList('ff_favoritePrayers',
-        _favoritePrayers.map((x) => x.serialize()).toList());
+    favoritePrayers = favoritePrayers;
   }
 
   List<PrayerStruct> _downloadedPrayers = [];
   List<PrayerStruct> get downloadedPrayers => _downloadedPrayers;
   set downloadedPrayers(List<PrayerStruct> value) {
     _downloadedPrayers = value;
-    secureStorage.setStringList(
-        'ff_downloadedPrayers', value.map((x) => x.serialize()).toList());
+    secureStorage.setString(
+        'ff_downloadedPrayers', jsonEncode(value.map((x) => x.serialize()).toList()));
   }
 
   void deleteDownloadedPrayers() {
@@ -204,20 +194,17 @@ class FFAppState extends ChangeNotifier {
 
   void addToDownloadedPrayers(PrayerStruct value) {
     downloadedPrayers.add(value);
-    secureStorage.setStringList('ff_downloadedPrayers',
-        _downloadedPrayers.map((x) => x.serialize()).toList());
+    downloadedPrayers = downloadedPrayers;
   }
 
   void removeFromDownloadedPrayers(PrayerStruct value) {
     downloadedPrayers.remove(value);
-    secureStorage.setStringList('ff_downloadedPrayers',
-        _downloadedPrayers.map((x) => x.serialize()).toList());
+    downloadedPrayers = downloadedPrayers;
   }
 
   void removeAtIndexFromDownloadedPrayers(int index) {
     downloadedPrayers.removeAt(index);
-    secureStorage.setStringList('ff_downloadedPrayers',
-        _downloadedPrayers.map((x) => x.serialize()).toList());
+    downloadedPrayers = downloadedPrayers;
   }
 
   void updateDownloadedPrayersAtIndex(
@@ -225,14 +212,12 @@ class FFAppState extends ChangeNotifier {
     PrayerStruct Function(PrayerStruct) updateFn,
   ) {
     downloadedPrayers[index] = updateFn(_downloadedPrayers[index]);
-    secureStorage.setStringList('ff_downloadedPrayers',
-        _downloadedPrayers.map((x) => x.serialize()).toList());
+    downloadedPrayers = downloadedPrayers;
   }
 
   void insertAtIndexInDownloadedPrayers(int index, PrayerStruct value) {
     downloadedPrayers.insert(index, value);
-    secureStorage.setStringList('ff_downloadedPrayers',
-        _downloadedPrayers.map((x) => x.serialize()).toList());
+    downloadedPrayers = downloadedPrayers;
   }
 
   bool _isDeviceOnline = false;
@@ -251,7 +236,7 @@ class FFAppState extends ChangeNotifier {
   SavedPrayerDataStruct get savedPrayer => _savedPrayer;
   set savedPrayer(SavedPrayerDataStruct value) {
     _savedPrayer = value;
-    secureStorage.setString('ff_savedPrayer', value.serialize());
+    secureStorage.setString('ff_savedPrayer', jsonEncode(value.serialize()));
   }
 
   void deleteSavedPrayer() {

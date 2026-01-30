@@ -9,6 +9,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/backend/schema/structs/index.dart';
 import './notifiers/download_state_notifier.dart';
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:my_prayer/custom_code/extensions/string_extensions.dart';
 
 class DownloadManager {
   final ValueNotifier<int> downloadedSizeNotifier = ValueNotifier<int>(0);
@@ -177,21 +178,33 @@ class DownloadManager {
         false;
   }
 
-  Future<String?> _downloadFile(String url) async {
-    try {
-      final fileName = extractFileName(url);
-      final dir = await getApplicationDocumentsDirectory();
-      final filePath = '${dir.path}/$fileName';
-      final response = await http.get(Uri.parse(url));
 
-      if (response.statusCode == 200) {
-        final file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
-        return filePath;
-      }
-    } catch (e) {
-      // Log error if needed
+Future<String?> _downloadFile(String url) async {
+  try {
+    final rawName = extractFileName(url) ?? "file";
+    final fileName = sanitizeFilename(rawName);
+
+    // Prevent empty or extension-less filenames
+    final safeName = fileName.isEmpty ? "file" : fileName;
+
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File("${dir.path}/$safeName");
+
+    // Create the directory if missing (fixes iOS errors)
+    await file.parent.create(recursive: true);
+
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      await file.writeAsBytes(response.bodyBytes);
+      return file.path;
+    } else {
+      print("Download error: ${response.statusCode}");
     }
-    return null;
+  } catch (e) {
+    print('Error when downloading: $e');
   }
+  return null;
+}
+
 }

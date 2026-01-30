@@ -93,12 +93,10 @@ class SavedPrayerDataStruct extends FFFirebaseStruct {
         page: deserializeParam(
           data['page'],
           ParamType.int,
-          false,
         ),
         audioTime: deserializeParam(
           data['audioTime'],
           ParamType.int,
-          false,
         ),
       );
 

@@ -241,7 +241,13 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
         .cast<PrayerSectionStruct>();
     _model.chapterOptions =
         functions.convertPrayerSectionToChapterOption(widget.sections!);
-    setCurrentSection(_pageManager.trackIndexNotifier.value);
+        
+    Future.microtask(() async {
+      _model.isLoading = true;
+      await setCurrentSection(_pageManager.trackIndexNotifier.value);
+      safeSetState(() {});
+    });
+    
     _scrollControllers = List.generate(
       _model.flattenedSections.length,
       (index) => ScrollController(),
@@ -323,7 +329,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                     child: CircularProgressIndicator(),
                                   );
                                 }
-                                if (!_model.displayAudioPage) {
+                                if ((!_model.displayAudioPage || _model.currentSection?.audioUrl == null || _model.currentSection!.audioUrl.isEmpty) && (_model.currentSection?.texts != null &&
+                                    _model.currentSection!.texts.isNotEmpty)) {
                                   return Container(
                                     height: double.infinity,
                                     decoration: const BoxDecoration(),
@@ -367,7 +374,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                       .titleMedium
                                                       .override(
                                                         fontFamily:
-                                                            'Merriweather',
+                                                            FFAppState()
+                                                                .fontFamily,
                                                         fontSize: 18.0 *
                                                             FFAppState()
                                                                 .fontSizeMultiplier,
@@ -447,7 +455,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                           MainAxisSize.max,
                                                       crossAxisAlignment:
                                                           CrossAxisAlignment
-                                                              .center,
+                                                              .stretch,
                                                       children: [
                                                         Align(
                                                           alignment:
@@ -517,7 +525,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                                 TextAlign.center,
                                                                             style:
                                                                                 FlutterFlowTheme.of(context).titleSmall.override(
-                                                                              fontFamily: 'Merriweather',
+                                                                              fontFamily: FFAppState().fontFamily,
                                                                               fontStyle: textsItem.italic ? FontStyle.italic : FontStyle.normal,
                                                                               color: FlutterFlowTheme.of(context).secondary,
                                                                               fontSize: FFAppState().fontSizeMultiplier * 18,
@@ -537,7 +545,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                             textAlign:
                                                                                 TextAlign.center,
                                                                             style: FlutterFlowTheme.of(context).titleMedium.override(
-                                                                                  fontFamily: 'Merriweather',
+                                                                                  fontFamily: FFAppState().fontFamily,
                                                                                   fontStyle: textsItem.italic ? FontStyle.italic : FontStyle.normal,
                                                                                   color: FlutterFlowTheme.of(context).secondary,
                                                                                   fontSize: valueOrDefault<double>(
@@ -617,10 +625,10 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                         .max,
                                                                 mainAxisAlignment:
                                                                     MainAxisAlignment
-                                                                        .center,
+                                                                        .start,
                                                                 crossAxisAlignment:
                                                                     CrossAxisAlignment
-                                                                        .center,
+                                                                        .start,
                                                                 children: List.generate(
                                                                     textElement
                                                                         .length,
@@ -660,6 +668,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                                   .currentAudioTime) &&
                                                                           (textsItem.startTime + textElementItem.endTime >
                                                                               _model.currentAudioTime),
+                                                                              hasPassed: _model.currentAudioTime >= (textsItem.startTime + textElementItem.endTime),
                                                                       onTextPressed:
                                                                           () async {
                                                                         currentPlayingTextIndex =
@@ -728,6 +737,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                           _model.currentSection!.title,
                                           'Titlu',
                                         ),
+                                        audioUrl: _model.currentSection!.audioUrl,
                                         subtitle:
                                             _model.currentSection!.subtitle,
                                         imageUrl:
@@ -798,6 +808,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                     FFAppState().audioSpeed,
                     1.0,
                   ),
+                  hasAudioContent: _model.currentSection?.audioUrl != null && _model.currentSection!.audioUrl.isNotEmpty,
+                  hasTextContent: _model.currentSection?.texts != null && _model.currentSection!.texts.isNotEmpty,
                   switchContent: () async {
                     currentPlayingTextIndex = -1;
                     _model.displayAudioPage = !_model.displayAudioPage;

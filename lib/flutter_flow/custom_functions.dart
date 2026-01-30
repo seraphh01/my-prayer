@@ -77,7 +77,7 @@ List<ChapterOptionStruct> convertPrayerSectionToChapterOption(
   return mapSectionToChapter(sections);
 }
 
-String? extractFileName(String? url) {
+String extractFileName(String? url) {
   if (url!.isEmpty) {
     return '';
   }
@@ -85,3 +85,39 @@ String? extractFileName(String? url) {
   final uri = Uri.parse(url!);
   return uri.pathSegments.last;
 }
+
+String sanitizeFilename(String input) {
+  // Step 1: Replace accented characters with ASCII equivalents
+  const accents = {
+    'ă': 'a', 'â': 'a', 'î': 'i', 'ș': 's', 'ş': 's', 'ț': 't', 'ţ': 't',
+    'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+    'á': 'a', 'à': 'a', 'ä': 'a',
+    'ó': 'o', 'ò': 'o', 'ö': 'o',
+    'ú': 'u', 'ù': 'u', 'ü': 'u',
+    'ñ': 'n', 'ç': 'c'
+  };
+
+  String txt = input;
+
+  accents.forEach((from, to) {
+    txt = txt.replaceAll(from, to);
+    txt = txt.replaceAll(from.toUpperCase(), to.toUpperCase());
+  });
+
+  // Step 2: Replace forbidden characters
+  txt = txt.replaceAll(RegExp(r"[<>:\/\\|?']"), "_");
+
+
+  // Step 3: Remove commas
+  txt = txt.replaceAll(',', '');
+
+  // Step 4: Normalize whitespace
+  txt = txt.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  // Step 5: Replace spaces with underscores
+  txt = txt.replaceAll(' ', '_');
+
+  return txt;
+}
+
+

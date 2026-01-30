@@ -167,17 +167,14 @@ class SectionTextStruct extends FFFirebaseStruct {
         title: deserializeParam(
           data['title'],
           ParamType.String,
-          false,
         ),
         sequence: deserializeParam(
           data['sequence'],
           ParamType.int,
-          false,
         ),
         repetition: deserializeParam(
           data['repetition'],
           ParamType.int,
-          false,
         ),
         textElements: deserializeStructParam<TextElementStruct>(
           data['text_elements'],
@@ -188,22 +185,18 @@ class SectionTextStruct extends FFFirebaseStruct {
         startTime: deserializeParam(
           data['start_time'],
           ParamType.int,
-          false,
         ),
         endTime: deserializeParam(
           data['end_time'],
           ParamType.int,
-          false,
         ),
         audioTime: deserializeParam(
           data['audio_time'],
           ParamType.int,
-          false,
         ),
         italic: deserializeParam(
           data['italic'],
           ParamType.bool,
-          false,
         ),
       );
 

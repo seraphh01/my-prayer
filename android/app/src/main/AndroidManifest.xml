@@ -1,17 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.sserafim.socaciu.wings"
+    package="com.surorilecmd.rugaciunisicantari"
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
-
     <uses-permission android:name="android.permission.storage"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <application
-        android:label="MyPrayer"
+        android:label="Rugaciuni și cântări - CMD"
         tools:replace="android:label"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/launcher_icon"
         android:requestLegacyExternalStorage="true">
 
         <activity
@@ -49,7 +48,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="myprayer" android:host="myprayer.com" />
+                <data android:scheme="rugaciuni-si-cantari-cmd" android:host="rugaciuni-si-cantari-cmd.com" />
             </intent-filter>
 
         </activity>

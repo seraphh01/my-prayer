@@ -1,5 +1,7 @@
+import 'package:audio_session/audio_session.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/service_locator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '/custom_code/actions/index.dart' as actions;
 import 'package:provider/provider.dart';
@@ -33,6 +35,9 @@ void main() async {
   //await actions.initializeAudioHandler();
   // End final custom actions code
   await setupServiceLocator();
+
+  await Permission.notification.request();
+  await Permission.mediaLibrary.request();
   runApp(ChangeNotifierProvider(
     create: (context) => appState,
     child: const MyApp(),
@@ -53,7 +58,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Locale? _locale;
 
-  ThemeMode _themeMode = FlutterFlowTheme.themeMode;
+  AppThemeMode _appThemeMode = FlutterFlowTheme.themeMode;
+  ThemeMode get _themeMode =>
+      FlutterFlowTheme.getFlutterThemeMode(_appThemeMode);
 
   late AppStateNotifier _appStateNotifier;
   late GoRouter _router;
@@ -64,13 +71,20 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
+    AudioSession.instance.then((audioSession) async {
+      // This line configures the app's audio session, indicating to the OS the
+      // type of audio we intend to play. Using the "speech" recipe rather than
+      // "music" since we are playing a podcast.
+      await audioSession.configure(AudioSessionConfiguration.music());
+    });
+
     getIt<PageManager>().init();
 
     _appStateNotifier = AppStateNotifier.instance;
-    _router = createRouter(_appStateNotifier);
 
-    Future.delayed(const Duration(milliseconds: 500),
-        () => safeSetState(() => _appStateNotifier.stopShowingSplashImage()));
+    // Future.delayed(const Duration(milliseconds: 500),
+    //     () => safeSetState(() => _appStateNotifier.stopShowingSplashImage()));
+    _router = createRouter(_appStateNotifier);
   }
 
   @override
@@ -83,15 +97,15 @@ class _MyAppState extends State<MyApp> {
     safeSetState(() => _locale = createLocale(language));
   }
 
-  void setThemeMode(ThemeMode mode) => safeSetState(() {
-        _themeMode = mode;
+  void setThemeMode(AppThemeMode mode) => safeSetState(() {
+        _appThemeMode = mode;
         FlutterFlowTheme.saveThemeMode(mode);
       });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Congregația Surorilor Maicii Domnului',
+      title: 'Rugăciuni și Cântări - CMD',
       localizationsDelegates: const [
         FFLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,

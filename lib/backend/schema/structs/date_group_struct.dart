@@ -84,12 +84,10 @@ class DateGroupStruct extends FFFirebaseStruct {
         name: deserializeParam(
           data['name'],
           ParamType.String,
-          false,
         ),
         description: deserializeParam(
           data['description'],
           ParamType.String,
-          false,
         ),
         prayers: deserializeStructParam<PrayerStruct>(
           data['prayers'],

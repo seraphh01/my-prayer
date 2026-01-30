@@ -127,17 +127,14 @@ class PrayerTypeStruct extends FFFirebaseStruct {
         id: deserializeParam(
           data['id'],
           ParamType.int,
-          false,
         ),
         type: deserializeParam(
           data['type'],
           ParamType.String,
-          false,
         ),
         sequence: deserializeParam(
           data['sequence'],
           ParamType.int,
-          false,
         ),
         subtypes: deserializeStructParam<PrayerTypeStruct>(
           data['subtypes'],

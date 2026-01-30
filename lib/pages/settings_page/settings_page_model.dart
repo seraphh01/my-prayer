@@ -1,4 +1,5 @@
 import '/flutter_flow/flutter_flow_util.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/form_field_controller.dart';
 import 'settings_page_widget.dart' show SettingsPageWidget;
 import 'package:flutter/material.dart';
@@ -24,6 +25,8 @@ class SettingsPageModel extends FlutterFlowModel<SettingsPageWidget> {
       choiceChipsValueController?.value = val != null ? [val] : [];
   // State field(s) for FontSizeSlider widget.
   double? fontSizeSliderValue;
+  // State field(s) for ThemeMode chips.
+  AppThemeMode? themeMode;
   // Stores action output result for [Custom Action - deleteFileOrFolder] action in IconButton widget.
   bool? success;
 

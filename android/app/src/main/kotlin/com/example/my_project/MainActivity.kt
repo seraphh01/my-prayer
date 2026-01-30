@@ -1,4 +1,4 @@
-package com.sserafim.socaciu.wings
+package com.surorilecmd.rugaciunisicantari
 
 import io.flutter.embedding.android.FlutterActivity
 
