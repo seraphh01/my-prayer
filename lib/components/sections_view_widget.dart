@@ -568,7 +568,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                             (textsItem.endTime >
                                                                                 _model.currentAudioTime)) {
                                                                           return Text(
-                                                                            '${textsItem.repetition != 1 ? textsItem.repetition.toString() : ''}${textsItem.repetition != 1 ? ' ' : ''}${textsItem.title}',
+                                                                            '${textsItem.repetition != 1 && textsItem.title.isNotEmpty ? textsItem.repetition.toString() : ''}${textsItem.repetition != 1 ? ' ' : ''}${textsItem.title}',
                                                                             textAlign:
                                                                                 TextAlign.center,
                                                                             style:
@@ -589,7 +589,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                           );
                                                                         } else {
                                                                           return Text(
-                                                                            '${textsItem.repetition > 1 ? textsItem.repetition.toString() : ''}${textsItem.repetition > 1 ? ' ' : ''}${textsItem.title}',
+                                                                            '${textsItem.repetition > 1 && textsItem.title.isNotEmpty ? textsItem.repetition.toString() : ''}${textsItem.repetition > 1 ? ' ' : ''}${textsItem.title}',
                                                                             textAlign:
                                                                                 TextAlign.center,
                                                                             style: FlutterFlowTheme.of(context).titleMedium.override(
