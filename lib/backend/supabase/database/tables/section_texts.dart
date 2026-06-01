@@ -39,4 +39,7 @@ class SectionTextsRow extends SupabaseDataRow {
 
   int? get endTime => getField<int>('end_time');
   set endTime(int? value) => setField<int>('end_time', value);
+
+  bool? get italic => getField<bool>('italic');
+  set italic(bool? value) => setField<bool>('italic', value);
 }

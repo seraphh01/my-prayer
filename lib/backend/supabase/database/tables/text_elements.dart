@@ -29,9 +29,12 @@ class TextElementsRow extends SupabaseDataRow {
   String get id => getField<String>('id')!;
   set id(String value) => setField<String>('id', value);
 
-  int? get startTime => getField<int>('start_time');
-  set startTime(int? value) => setField<int>('start_time', value);
+  String get type => getField<String>('type')!;
+  set type(String value) => setField<String>('type', value);
 
-  int? get endTime => getField<int>('end_time');
-  set endTime(int? value) => setField<int>('end_time', value);
+  String? get quoteSource => getField<String>('quote_source');
+  set quoteSource(String? value) => setField<String>('quote_source', value);
+
+  bool? get highlight => getField<bool>('highlight');
+  set highlight(bool? value) => setField<bool>('highlight', value);
 }
