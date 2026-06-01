@@ -21,8 +21,8 @@ class LiturgicalTextsRow extends SupabaseDataRow {
   DateTime get createdAt => getField<DateTime>('created_at')!;
   set createdAt(DateTime value) => setField<DateTime>('created_at', value);
 
-  String get title => getField<String>('title')!;
-  set title(String value) => setField<String>('title', value);
+  String? get title => getField<String>('title');
+  set title(String? value) => setField<String>('title', value);
 
   int? get audioTime => getField<int>('audio_time');
   set audioTime(int? value) => setField<int>('audio_time', value);

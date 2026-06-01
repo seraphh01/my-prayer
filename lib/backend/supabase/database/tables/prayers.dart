@@ -31,4 +31,7 @@ class PrayersRow extends SupabaseDataRow {
 
   int? get sequence => getField<int>('sequence');
   set sequence(int? value) => setField<int>('sequence', value);
+
+  String get mode => getField<String>('mode')!;
+  set mode(String value) => setField<String>('mode', value);
 }

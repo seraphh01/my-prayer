@@ -29,9 +29,12 @@ class SectionsRow extends SupabaseDataRow {
   String? get subtitle => getField<String>('subtitle');
   set subtitle(String? value) => setField<String>('subtitle', value);
 
-  int get duration => getField<int>('duration')!;
-  set duration(int value) => setField<int>('duration', value);
-
   String? get imageUrl => getField<String>('image_url');
   set imageUrl(String? value) => setField<String>('image_url', value);
+
+  bool? get showTitle => getField<bool>('show_title');
+  set showTitle(bool? value) => setField<bool>('show_title', value);
+
+  bool? get showSubtitle => getField<bool>('show_subtitle');
+  set showSubtitle(bool? value) => setField<bool>('show_subtitle', value);
 }
