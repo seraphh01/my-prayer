@@ -1,8 +1,8 @@
+import '/app_state.dart';
 import '/components/empty_favorite_prayers_list_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/custom_code/actions/index.dart' as actions;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -36,6 +36,17 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
     _model.dispose();
 
     super.dispose();
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+    final list = FFAppState().favoritePrayers.toList();
+    final item = list.removeAt(oldIndex);
+    list.insert(newIndex, item);
+    FFAppState().favoritePrayers = list;
+    safeSetState(() {});
   }
 
   @override
@@ -83,7 +94,7 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                       return AlertDialog(
                         title: const Text('Rugăciuni favorite'),
                         content: const Text(
-                            'Aici apar rugăciunile pe care le salvezi ca favorite. Pentru a șterge o rugăciune de la favorite, trage spre stânga și apasă butonul \"Șterge\". Rugaciunile favorite nu sunt disponibile in mod offline decât dacă au fost descărcate anterior.'),
+                            'Trage cu degetul pentru a reordona. Trage spre stânga pentru ștergere. Rugăciunile descărcate au pictograma offline.'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(alertDialogContext),
@@ -113,9 +124,8 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                 decoration: const BoxDecoration(),
                 child: Builder(
                   builder: (context) {
-                    final favoritePrayer =
-                        FFAppState().favoritePrayers.toList();
-                    if (favoritePrayer.isEmpty) {
+                    final favorites = FFAppState().favoritePrayers.toList();
+                    if (favorites.isEmpty) {
                       return Center(
                         child: SizedBox(
                           width: double.infinity,
@@ -125,88 +135,105 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                       );
                     }
 
-                    return ListView.builder(
+                    return ReorderableListView.builder(
                       padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      scrollDirection: Axis.vertical,
-                      itemCount: favoritePrayer.length,
-                      itemBuilder: (context, favoritePrayerIndex) {
-                        final favoritePrayerItem =
-                            favoritePrayer[favoritePrayerIndex];
+                      itemCount: favorites.length,
+                      onReorder: _onReorder,
+                      itemBuilder: (context, index) {
+                        final item = favorites[index];
+                        final downloaded = FFAppState()
+                            .downloadedPrayers
+                            .any((p) => p.id == item.id);
+
                         return Column(
-                          mainAxisSize: MainAxisSize.max,
+                          key: ValueKey(item.id),
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () {
-                                context.pushReplacementNamed('RosaryPage',
-                                    queryParameters: {
-                                      'prayerId': favoritePrayerItem.id,
-                                    }.withoutNulls);
-                              },
-                              child: Slidable(
-                                endActionPane: ActionPane(
-                                  motion: const ScrollMotion(),
-                                  extentRatio: 0.25,
-                                  children: [
-                                    SlidableAction(
-                                      label: 'Sterge',
-                                      backgroundColor:
-                                          FlutterFlowTheme.of(context).error,
-                                      icon: Icons.favorite_border_rounded,
-                                      onPressed: (_) async {
-                                        FFAppState().removeFromFavoritePrayers(
-                                            favoritePrayerItem);
-                                        safeSetState(() {});
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: ListTile(
-                                    title: Text(
-                                      favoritePrayerItem.title.isNotEmpty
-                                          ? favoritePrayerItem.title
-                                          : favoritePrayerItem.subtitle,
-                                      style: FlutterFlowTheme.of(context)
-                                          .titleLarge
-                                          .override(
-                                            fontFamily: FFAppState().fontFamily,
-                                            letterSpacing: 0.0,
-                                          ),
-                                    ),
-                                    subtitle: favoritePrayerItem
-                                                .title.isNotEmpty &&
-                                            favoritePrayerItem.title !=
-                                                favoritePrayerItem.subtitle
-                                        ? Text(
-                                            favoritePrayerItem.subtitle,
-                                            style: FlutterFlowTheme.of(context)
-                                                .labelMedium
-                                                .override(
-                                                  fontFamily: 'Inter',
-                                                  letterSpacing: 0.0,
-                                                ),
-                                          )
-                                        : null,
-                                    trailing: Icon(
-                                      Icons.arrow_forward_ios_rounded,
+                            Slidable(
+                              endActionPane: ActionPane(
+                                motion: const ScrollMotion(),
+                                extentRatio: 0.25,
+                                children: [
+                                  SlidableAction(
+                                    label: 'Șterge',
+                                    backgroundColor:
+                                        FlutterFlowTheme.of(context).error,
+                                    icon: Icons.favorite_border_rounded,
+                                    onPressed: (_) {
+                                      FFAppState()
+                                          .removeFavoriteById(item.id);
+                                      safeSetState(() {});
+                                    },
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: ListTile(
+                                  onTap: () {
+                                    context.pushNamed(
+                                      'RosaryPage',
+                                      queryParameters: {
+                                        'prayerId': item.id,
+                                      }.withoutNulls,
+                                    );
+                                  },
+                                  leading: ReorderableDragStartListener(
+                                    index: index,
+                                    child: Icon(
+                                      Icons.drag_handle_rounded,
                                       color: FlutterFlowTheme.of(context)
                                           .secondaryText,
-                                      size: 16.0,
-                                    ),
-                                    dense: false,
-                                    contentPadding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                            12.0, 0.0, 12.0, 0.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8.0),
                                     ),
                                   ),
+                                  title: Text(
+                                    item.title.isNotEmpty
+                                        ? item.title
+                                        : item.subtitle,
+                                    style: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .override(
+                                          fontFamily: FFAppState().fontFamily,
+                                          letterSpacing: 0.0,
+                                        ),
+                                  ),
+                                  subtitle: item.title.isNotEmpty &&
+                                          item.title != item.subtitle
+                                      ? Text(
+                                          item.subtitle,
+                                          style: FlutterFlowTheme.of(context)
+                                              .labelMedium
+                                              .override(
+                                                fontFamily: 'Inter',
+                                                letterSpacing: 0.0,
+                                              ),
+                                        )
+                                      : null,
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (downloaded)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 8.0),
+                                          child: Icon(
+                                            Icons.offline_pin_rounded,
+                                            color: FlutterFlowTheme.of(context)
+                                                .success,
+                                            size: 22.0,
+                                          ),
+                                        ),
+                                      Icon(
+                                        Icons.arrow_forward_ios_rounded,
+                                        color: FlutterFlowTheme.of(context)
+                                            .secondaryText,
+                                        size: 16.0,
+                                      ),
+                                    ],
+                                  ),
+                                  contentPadding:
+                                      const EdgeInsetsDirectional.fromSTEB(
+                                          4.0, 0.0, 12.0, 0.0),
                                 ),
                               ),
                             ),

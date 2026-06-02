@@ -98,6 +98,7 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
       width: widget.width,
       height: widget.height,
       child: Row(
+        mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -203,7 +204,7 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
             onPressed: (widget.showingTextContent && widget.hasAudioContent) || (!widget.showingTextContent && widget.hasTextContent) ? widget.switchContent : null,
 
           )
-        ],
+        ].divide(SizedBox(width: 4)),
       ),
     );
   }

@@ -72,7 +72,8 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
           ),
           letterSpacing: 2,
           useGoogleFonts: false,
-          lineHeight: 0.5,
+          lineHeight: 0.4,
+  
         );
   }
 
@@ -93,7 +94,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
             TextElementType.italicText => FontStyle.italic,
             _ => FontStyle.normal,
           },
-          lineHeight: 1.35,
+          lineHeight: 1.2,
           color: !widget.isSynced ||  widget.isPlaying || !widget.hasPassed
               ? FlutterFlowTheme.of(context).primaryText
               : FlutterFlowTheme.of(context).secondaryText,
@@ -152,6 +153,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
           child: RichText(
             textScaler: MediaQuery.of(context).textScaler,
             textAlign: TextAlign.justify,
+            textHeightBehavior: TextHeightBehavior(applyHeightToFirstAscent: false),
             text: TextSpan(
               children: [
                 TextSpan(text: "\u00A0\u00A0\u00A0"),
@@ -161,6 +163,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                   TextSpan(
                     text: firstLetter,
                     style: firstLetterStyle(),
+
                   ),
                 TextSpan(
                   text: valueOrDefault<String>(
@@ -180,6 +183,7 @@ class _PrayerTextWidgetState extends State<PrayerTextWidget> {
                   ),
               ],
             ),
+          
           )),
     );
   }

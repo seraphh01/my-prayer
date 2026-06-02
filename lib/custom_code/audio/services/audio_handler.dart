@@ -113,14 +113,33 @@ class MyAudioHandler extends BaseAudioHandler {
 
   @override
   Future<void> updateQueue(List<MediaItem> mediaItems) async {
-    // manage Just Audio
-    final audioSource = mediaItems.map(_createAudioSource);
-    _playlist.clear();
-    _playlist.addAll(audioSource.toList());
+    await loadQueueAtIndex(mediaItems, initialIndex: 0);
+  }
 
-    // notify system
+  Future<void> loadQueueAtIndex(
+    List<MediaItem> mediaItems, {
+    int initialIndex = 0,
+  }) async {
+    _playlist.clear();
     queue.value.clear();
+
+    if (mediaItems.isEmpty) {
+      queue.add([]);
+      await _player.stop();
+      return;
+    }
+
+    final audioSources = mediaItems.map(_createAudioSource).toList();
+    _playlist.addAll(audioSources);
     queue.add(mediaItems);
+
+    final index = initialIndex.clamp(0, mediaItems.length - 1);
+    await _player.setAudioSource(
+      _playlist,
+      initialIndex: index,
+      preload: true,
+    );
+    mediaItem.add(mediaItems[index]);
   }
 
   @override
@@ -179,7 +198,7 @@ class MyAudioHandler extends BaseAudioHandler {
     if (_player.shuffleModeEnabled) {
       index = _player.shuffleIndices![index];
     }
-    _player.seek(Duration.zero, index: index);
+    await _player.seek(Duration.zero, index: index);
   }
 
   @override

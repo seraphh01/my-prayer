@@ -2,15 +2,14 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_prayer/backend/schema/enums/enums.dart';
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:my_prayer/components/download_progress_indicator.dart';
-import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/download/download_manager.dart';
 import 'package:my_prayer/custom_code/download/notifiers/download_state_notifier.dart';
 import 'package:my_prayer/service_locator.dart';
 
 import '/backend/api_requests/api_calls.dart';
+import '/components/home_audio_mini_player.dart';
 import '/components/prayer_type_card_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -32,36 +31,6 @@ class HomePageWidget extends StatefulWidget {
   State<HomePageWidget> createState() => _HomePageWidgetState();
 }
 
-class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedHeaderDelegate({
-    required this.minExtent,
-    required this.maxExtent,
-    required this.child,
-  });
-
-  @override
-  final double minExtent;
-  @override
-  final double maxExtent;
-  final Widget child;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return SizedBox.expand(child: child);
-  }
-
-  @override
-  bool shouldRebuild(covariant _PinnedHeaderDelegate oldDelegate) {
-    return maxExtent != oldDelegate.maxExtent ||
-        minExtent != oldDelegate.minExtent ||
-        child != oldDelegate.child;
-  }
-}
-
 class _PrayerSearchItem {
   _PrayerSearchItem({
     required this.prayer,
@@ -76,8 +45,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   late HomePageModel _model;
 
   static const double _toolbarHeight = 60.0;
-  static const double _expandedHeight = 350.0;
   static const double _searchBarHeight = 72.0;
+  double _headerExpandedHeightCache = 320.0;
  final _downloadManager = getIt<DownloadManager>();
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _pageManager = getIt<PageManager>();
@@ -93,6 +62,438 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
   bool get _searchActive => _searchPinned || _searchQuery.isNotEmpty;
 
+  bool get _showAudioPlayer =>
+      FFAppState().currentPrayerId.isNotEmpty &&
+      !_searchPinned &&
+      _searchQuery.isEmpty;
+
+  double _headerExpandedHeight(BuildContext context) {
+    return _toolbarHeight + _searchBarHeight;
+  }
+
+  static const double _appBarLogoSize = 44.0;
+  static const Duration _headerAnimationDuration = Duration(milliseconds: 300);
+  static const String _homeLogoHeroTag = 'homeLogo';
+
+  double _fixedLogoSize(BuildContext context) {
+    return math.min(210.0, MediaQuery.sizeOf(context).width * 0.55);
+  }
+
+  Widget _buildAppLogo(double size) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(size / 2.5),
+      child: Image.asset(
+        'assets/images/logo.jpg',
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  Widget _buildHeroLogo(double size) {
+    return Hero(
+      tag: _homeLogoHeroTag,
+      child: Material(
+        type: MaterialType.transparency,
+        child: _buildAppLogo(size),
+      ),
+    );
+  }
+
+  void _popTypeNav() {
+    if (_typeStack.isEmpty) {
+      return;
+    }
+    _typeStack.removeLast();
+    safeSetState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollHomeToTop());
+  }
+
+  BoxDecoration _homeHeaderGradient(BuildContext context) {
+    return BoxDecoration(
+      gradient: LinearGradient(
+        colors: [
+          FlutterFlowTheme.of(context).primary,
+          const Color(0xFF3C010C),
+        ],
+        stops: const [0.0, 1.0],
+        begin: const AlignmentDirectional(0.0, -1.0),
+        end: const AlignmentDirectional(0, 1.0),
+      ),
+    );
+  }
+
+  Widget _buildToolbarLeading(BuildContext context) {
+    if (_downloadManager.downloadStateNotifier.value ==
+        DownloadState.downloading) {
+      return const Hero(
+        tag: 'downloadIndicator',
+        child: DownloadProgressIndicator(),
+      );
+    }
+    return IconButton(
+      icon: Icon(
+        Icons.menu_rounded,
+        color: FlutterFlowTheme.of(context).alternate,
+      ),
+      onPressed: () => scaffoldKey.currentState?.openDrawer(),
+    );
+  }
+
+  List<Widget> _buildToolbarActions(
+    BuildContext context, {
+    required bool includeSearch,
+  }) {
+    return [
+      if (includeSearch)
+        FlutterFlowIconButton(
+          borderColor: Colors.transparent,
+          borderRadius: 8.0,
+          buttonSize: 48.0,
+          icon: Icon(
+            Icons.search_rounded,
+            color: FlutterFlowTheme.of(context).alternate,
+            size: 24.0,
+          ),
+          onPressed: _enterSearch,
+        ),
+      FlutterFlowIconButton(
+        borderColor: Colors.transparent,
+        borderRadius: 8.0,
+        buttonSize: 48.0,
+        icon: Icon(
+          Icons.settings_rounded,
+          color: FlutterFlowTheme.of(context).alternate,
+          size: 24.0,
+        ),
+        onPressed: () async {
+          context.pushNamed(
+            'SettingsPage',
+            extra: <String, dynamic>{
+              kTransitionInfoKey: const TransitionInfo(
+                hasTransition: true,
+                transitionType: PageTransitionType.fade,
+                duration: Duration(milliseconds: 250),
+              ),
+            },
+          );
+        },
+      ),
+    ];
+  }
+
+  Widget _buildHomeHeader(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final inTypeNav = _typeStack.isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      decoration: _homeHeaderGradient(context),
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: _headerTextScaler(context),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: _toolbarHeight,
+              child: Row(
+                children: [
+                  _buildToolbarLeading(context),
+                  AnimatedSize(
+                    duration: _headerAnimationDuration,
+                    curve: Curves.easeInOutCubic,
+                    alignment: Alignment.centerLeft,
+                    clipBehavior: Clip.none,
+                    child: inTypeNav
+                        ? Row(
+                            key: const ValueKey('app-bar-logo'),
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(width: 4.0),
+                              _buildHeroLogo(_appBarLogoSize),
+                            ],
+                          )
+                        : const SizedBox(
+                            key: ValueKey('app-bar-logo-spacer'),
+                            width: 0.0,
+                            height: _appBarLogoSize,
+                          ),
+                  ),
+                  const Spacer(),
+                  ..._buildToolbarActions(context, includeSearch: true),
+                ],
+              ),
+            ),
+            AnimatedSize(
+              duration: _headerAnimationDuration,
+              curve: Curves.easeInOutCubic,
+              alignment: Alignment.topCenter,
+              clipBehavior: Clip.none,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16.0,
+                  0.0,
+                  16.0,
+                  inTypeNav ? 12.0 : 16.0,
+                ),
+                child: Column(
+                  key: ValueKey(inTypeNav ? 'header-compact' : 'header-expanded'),
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AutoSizeText(
+                      'Congregația Surorilor Maicii Domnului',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      minFontSize: 12.0,
+                      style: theme.titleMedium.override(
+                        fontFamily: 'PlayBall',
+                        color: theme.alternate,
+                        fontSize: 24.0,
+                        letterSpacing: 0.0,
+                        shadows: const [
+                          Shadow(
+                            color: Color(0xFF1C1200),
+                            offset: Offset(1.0, 1.0),
+                            blurRadius: 2.0,
+                          ),
+                        ],
+                        useGoogleFonts: false,
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    Text(
+                      dateTimeFormat(
+                        'yMMMMEEEEd',
+                        DateTime.fromMillisecondsSinceEpoch(
+                          getCurrentTimestamp.millisecondsSinceEpoch,
+                        ),
+                        locale: FFLocalizations.of(context).languageCode,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: theme.titleSmall.override(
+                        fontFamily: 'Inter',
+                        color: theme.alternate,
+                        letterSpacing: 0.0,
+                      ),
+                    ),
+                    AnimatedSize(
+                      duration: _headerAnimationDuration,
+                      curve: Curves.easeInOutCubic,
+                      alignment: Alignment.topCenter,
+                      clipBehavior: Clip.none,
+                      child: inTypeNav
+                          ? const SizedBox(width: double.infinity)
+                          : Column(
+                              key: const ValueKey('home-logo-expanded'),
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(height: 12.0),
+                                _buildHeroLogo(_fixedLogoSize(context)),
+                              ],
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeNavBackRow(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: InkWell(
+        onTap: _popTypeNav,
+        borderRadius: BorderRadius.circular(8.0),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Row(
+            children: [
+              Icon(Icons.arrow_back_rounded, color: theme.alternate, size: 24.0),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  _typeStack.last.type,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.titleMedium.override(
+                    fontFamily: 'Merriweather',
+                    color: theme.alternate,
+                    letterSpacing: 0.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectedTypeList(BuildContext context) {
+    final currentType = _typeStack.last;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildTypeNavBackRow(context),
+        if (currentType.prayers.isNotEmpty)
+          ...currentType.prayers.map(
+            (prayer) => Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: PrayerTypeCardWidget(
+                title: prayer.subtitle,
+                trailingText: null,
+                trailingIcons: prayer.mode != PrayerMode.audioAndText
+                    ? [
+                        prayer.mode == PrayerMode.audioOnly
+                            ? Icons.audiotrack_rounded
+                            : Icons.format_size_rounded,
+                        Icons.chevron_right_rounded,
+                      ]
+                    : const [Icons.chevron_right_rounded],
+                onTap: () => _openPrayerFromTypeNav(prayer.id),
+              ),
+            ),
+          ),
+        if (currentType.subtypes.isNotEmpty)
+          ...currentType.subtypes.map(
+            (subtype) => Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: PrayerTypeCardWidget(
+                title: subtype.type,
+                subtitle: null,
+                trailingText: null,
+                trailingIcons: const [Icons.chevron_right_rounded],
+                onTap: () => _onSubtypeTap(subtype),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _scrollHomeToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(0.0);
+    }
+  }
+
+  Future<void> _openPrayerFromTypeNav(String prayerId) async {
+    _typeStack.clear();
+    safeSetState(() {});
+    await context.pushNamed(
+      'RosaryPage',
+      queryParameters: {
+        'prayerId': serializeParam(prayerId, ParamType.String),
+      }.withoutNulls,
+      extra: <String, dynamic>{
+        kTransitionInfoKey: const TransitionInfo(
+          hasTransition: true,
+          transitionType: PageTransitionType.fade,
+          duration: Duration(milliseconds: 250),
+        ),
+      },
+    );
+  }
+
+  Future<void> _onSubtypeTap(PrayerTypeStruct subtype) async {
+    if (subtype.subtypes.isEmpty && subtype.prayers.isEmpty) {
+      return;
+    }
+    if (subtype.subtypes.isEmpty && subtype.prayers.length == 1) {
+      await _openPrayerFromTypeNav(subtype.prayers.first.id);
+      return;
+    }
+    _typeStack.add(subtype);
+    safeSetState(() {});
+    _scrollHomeToTop();
+  }
+
+  void _enterPrayerType(PrayerTypeStruct type) {
+    if (type.subtypes.isEmpty && type.prayers.isEmpty) {
+      return;
+    }
+    _typeStack.add(type);
+    safeSetState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollHomeToTop());
+  }
+
+  Widget _buildSearchSliverAppBar(BuildContext context) {
+    return SliverAppBar(
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      pinned: true,
+      toolbarHeight: _toolbarHeight,
+      expandedHeight: _headerExpandedHeightCache,
+      elevation: 0.0,
+      automaticallyImplyLeading: false,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(_searchBarHeight),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 16.0),
+          child: _buildSearchField(context),
+        ),
+      ),
+      leading: _buildToolbarLeading(context),
+      iconTheme: IconThemeData(color: FlutterFlowTheme.of(context).alternate),
+      actions: _buildToolbarActions(context, includeSearch: false),
+      flexibleSpace: Container(
+        decoration: _homeHeaderGradient(context),
+      ),
+    );
+  }
+
+  TextScaler _headerTextScaler(BuildContext context) {
+    return TextScaler.linear(
+      MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.3),
+    );
+  }
+
+  Future<void> _openCurrentPrayerWithAudio() async {
+    _typeStack.clear();
+    safeSetState(() {});
+    await context.pushNamed(
+      'RosaryPage',
+      queryParameters: {
+        'prayerId': serializeParam(
+          valueOrDefault<String>(FFAppState().currentPrayerId, ''),
+          ParamType.String,
+        ),
+        'continueAudio': serializeParam(true, ParamType.bool).toString(),
+        'page': serializeParam(
+          valueOrDefault<int>(_pageManager.trackIndexNotifier.value, 0),
+          ParamType.int,
+        ).toString(),
+        'initialAudioTime': serializeParam(
+          valueOrDefault<double>(
+            _pageManager.currentProgressNotifier.value.inSeconds.toDouble(),
+            0.0,
+          ),
+          ParamType.double,
+        ).toString(),
+      }.withoutNulls,
+    );
+  }
+
+  Future<void> _closeAudioPlayer() async {
+    _pageManager.stop();
+    await _pageManager.clearQueue();
+    FFAppState().currentPrayerId = '';
+    safeSetState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -103,7 +504,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       }
       final minHeight =
           _toolbarHeight + (_searchActive ? _searchBarHeight : 0.0);
-      final targetOffset = _expandedHeight - minHeight;
+      final targetOffset = _headerExpandedHeightCache - minHeight;
       final maxOffset = _scrollController.position.maxScrollExtent;
       final clampedTarget = math.min(targetOffset, maxOffset);
       if (_scrollController.offset < clampedTarget - 1.0) {
@@ -115,7 +516,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     _searchFocusNode.addListener(() {
       final pinned = _searchFocusNode.hasFocus;
       if (pinned) {
-        if (!_searchPinned) {
+        if (!_searchPinned || _typeStack.isNotEmpty) {
+          _typeStack.clear();
           _searchPinned = true;
           safeSetState(() {});
         }
@@ -135,7 +537,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           }
           final minHeight =
               _toolbarHeight + (_searchActive ? _searchBarHeight : 0.0);
-          final targetOffset = _expandedHeight - minHeight;
+          final targetOffset = _headerExpandedHeightCache - minHeight;
           final maxOffset = _scrollController.position.maxScrollExtent;
           final clampedTarget = math.min(targetOffset, maxOffset);
           if ((_scrollController.offset - clampedTarget).abs() < 2.0) {
@@ -151,7 +553,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
         });
       }
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      safeSetState(() {});
+      if (FFAppState().isFirstTime && mounted) {
+        context.pushNamed('OnboardingPage');
+      }
+    });
   }
 
   @override
@@ -167,6 +574,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+    _headerExpandedHeightCache = _headerExpandedHeight(context);
 
     return WillPopScope(
       onWillPop: () async {
@@ -175,8 +583,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           return false;
         }
         if (_typeStack.isNotEmpty) {
-          _typeStack.removeLast();
-          safeSetState(() {});
+          _popTypeNav();
           return false;
         }
         return true;
@@ -313,6 +720,34 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                   if (!kIsWeb)
                     ListTile(
                       leading: Icon(
+                        Icons.notifications_outlined,
+                        color: FlutterFlowTheme.of(context).primary,
+                      ),
+                      title: Text(
+                        'Memento rugăciune',
+                        style: FlutterFlowTheme.of(context).bodyLarge.override(
+                              fontFamily: 'Inter',
+                              color: FlutterFlowTheme.of(context).primaryText,
+                              letterSpacing: 0.0,
+                            ),
+                      ),
+                      onTap: () async {
+                        Navigator.of(context).pop();
+                        await context.pushNamed(
+                          'RemindersPage',
+                          extra: <String, dynamic>{
+                            kTransitionInfoKey: const TransitionInfo(
+                              hasTransition: true,
+                              transitionType: PageTransitionType.fade,
+                              duration: Duration(milliseconds: 250),
+                            ),
+                          },
+                        );
+                      },
+                    ),
+                  if (!kIsWeb)
+                    ListTile(
+                      leading: Icon(
                         Icons.download_rounded,
                         color: FlutterFlowTheme.of(context).primary,
                       ),
@@ -338,6 +773,24 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         );
                       },
                     ),
+                  ListTile(
+                    leading: Icon(
+                      Icons.menu_book_rounded,
+                      color: FlutterFlowTheme.of(context).primary,
+                    ),
+                    title: Text(
+                      'Jurnal de rugăciune',
+                      style: FlutterFlowTheme.of(context).bodyLarge.override(
+                            fontFamily: 'Inter',
+                            color: FlutterFlowTheme.of(context).primaryText,
+                            letterSpacing: 0.0,
+                          ),
+                    ),
+                    onTap: () async {
+                      Navigator.of(context).pop();
+                      await context.pushNamed('PrayerJournalPage');
+                    },
+                  ),
                   ListTile(
                     leading: Icon(
                       Icons.favorite_rounded,
@@ -420,224 +873,20 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                   end: const AlignmentDirectional(0, 1.0),
                 ),
               ),
-              child: Stack(
+              child: Column(
                 children: [
-                  CustomScrollView(
+                  if (!_searchActive) _buildHomeHeader(context),
+                  Expanded(
+                    child: CustomScrollView(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      SliverAppBar(
-                        backgroundColor: Colors.transparent,
-                        surfaceTintColor: Colors.transparent,
-                        pinned: true,
-                        toolbarHeight: _toolbarHeight,
-                        expandedHeight: _searchActive
-                          ? _toolbarHeight + _searchBarHeight
-                          : _expandedHeight,
-                        elevation: 0.0,
-                        automaticallyImplyLeading: false,
-                        bottom: _searchActive
-                            ? PreferredSize(
-                                preferredSize: const Size.fromHeight(
-                                    _searchBarHeight),
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsetsDirectional.fromSTEB(
-                                      16.0, 0.0, 16.0, 16.0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                  ),
-                                  child: _buildSearchField(context),
-                                ),
-                              )
-                            : null,
-                        leading: _downloadManager.downloadStateNotifier.value == DownloadState.downloading 
-                            ?  const Hero(
-                                tag: "downloadIndicator",
-                                child: DownloadProgressIndicator(),
-                              ) : IconButton(
-                          icon: Icon(
-                            Icons.menu_rounded,
-                            color: FlutterFlowTheme.of(context).alternate,
-                          ),
-                          onPressed: () {
-                            scaffoldKey.currentState?.openDrawer();
-                          },
-                        ),
-                        iconTheme: IconThemeData(
-                            color: FlutterFlowTheme.of(context).alternate),
-                        actions: [
-                          if (!_searchActive)
-                            FlutterFlowIconButton(
-                              borderColor: Colors.transparent,
-                              borderRadius: 8.0,
-                              buttonSize: 48.0,
-                              icon: Icon(
-                                Icons.search_rounded,
-                                color:
-                                    FlutterFlowTheme.of(context).alternate,
-                                size: 24.0,
-                              ),
-                              onPressed: () {
-                                _searchPinned = true;
-                                safeSetState(() {});
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
-                                  _searchFocusNode.requestFocus();
-                                });
-                              },
-                            ),
-                          FlutterFlowIconButton(
-                            borderColor: Colors.transparent,
-                            borderRadius: 8.0,
-                            buttonSize: 48.0,
-                            icon: Icon(
-                              Icons.settings_rounded,
-                              color:
-                                  FlutterFlowTheme.of(context).alternate,
-                              size: 24.0,
-                            ),
-                            onPressed: () async {
-                              context.pushNamed(
-                                'SettingsPage',
-                                extra: <String, dynamic>{
-                                  kTransitionInfoKey:
-                                      const TransitionInfo(
-                                    hasTransition: true,
-                                    transitionType: PageTransitionType.fade,
-                                    duration: Duration(milliseconds: 250),
-                                  ),
-                                },
-                              );
-                            },
-                          ),
-                        ],
-                        flexibleSpace: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final maxHeight = constraints.biggest.height;
-                            final minHeight = _toolbarHeight +
-                              (_searchActive ? _searchBarHeight : 0.0);
-                            final expandedHeight = _searchActive
-                              ? _toolbarHeight + _searchBarHeight
-                              : _expandedHeight;
-                            final collapseRange = expandedHeight - minHeight;
-                            final t = collapseRange <= 0
-                                ? 0.0
-                                : ((maxHeight - minHeight) / collapseRange)
-                                    .clamp(0.0, 1.0);
-                            final logoSize = lerpDouble(44.0, 210.0, t) ?? 44.0;
-                            final expandedLeft =
-                              (constraints.biggest.width - logoSize) / 2;
-                            // When collapsed and not searching, position logo to the right of menu button
-                            final collapsedLeft = 60.0;
-                            final leftPadding =
-                              lerpDouble(collapsedLeft, expandedLeft, t) ?? collapsedLeft;
-                            final collapsedTop = (_toolbarHeight - logoSize) / 2;
-                            final expandedTop = 120.0;
-                            final topPadding =
-                                lerpDouble(collapsedTop, expandedTop, t) ??
-                                    collapsedTop;
-                            final cornerRadius =  80.0;
-
-                            return Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        FlutterFlowTheme.of(context).primary,
-                                        const Color(0xFF3C010C)
-                                      ],
-                                      stops: const [0.0, 1.0],
-                                      begin:
-                                          const AlignmentDirectional(0.0, -1.0),
-                                      end: const AlignmentDirectional(0, 1.0),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  left: 16.0,
-                                  right: 16.0,
-                                  top: 56.0,
-                                  child: Opacity(
-                                    opacity: _searchPinned ? 0.0 : t,
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        AutoSizeText(
-                                          'Congregația Surorilor Maicii Domnului',
-                                          textAlign: TextAlign.center,
-                                          maxLines: 1,
-                                          minFontSize: 18.0,
-                                          style: FlutterFlowTheme.of(context)
-                                              .titleMedium
-                                              .override(
-                                                fontFamily: 'PlayBall',
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .alternate,
-                                                fontSize: 28.0,
-                                                letterSpacing: 0.0,
-                                                shadows: [
-                                                  const Shadow(
-                                                    color: Color(0xFF1C1200),
-                                                    offset: Offset(1.0, 1.0),
-                                                    blurRadius: 2.0,
-                                                  )
-                                                ],
-                                                useGoogleFonts: false,
-                                              ),
-                                        ),
-                                        Text(
-                                          dateTimeFormat(
-                                            "yMMMMEEEEd",
-                                            DateTime.fromMillisecondsSinceEpoch(
-                                                getCurrentTimestamp
-                                                    .millisecondsSinceEpoch),
-                                            locale: FFLocalizations.of(context)
-                                                .languageCode,
-                                          ),
-                                          style: FlutterFlowTheme.of(context)
-                                              .titleSmall
-                                              .override(
-                                                fontFamily: 'Inter',
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .alternate,
-                                                letterSpacing: 0.0,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                if(!_searchActive || _downloadManager.downloadStateNotifier.value != DownloadState.downloading)
-                                Positioned(
-                                  left: leftPadding,
-                                  top: topPadding,
-                                  child: Hero(
-                                    tag: 'homeLogo',
-                                    child: ClipRRect(
-                                      borderRadius:
-                                          BorderRadius.circular(cornerRadius),
-                                      child: Image.asset(
-                                        'assets/images/logo.jpg',
-                                        width: logoSize,
-                                        height: logoSize,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
+                      if (_searchActive) _buildSearchSliverAppBar(context),
                                             SliverToBoxAdapter(
                         child: Visibility(
                           visible: valueOrDefault<bool>(
                             !_searchActive &&
+                                _typeStack.isEmpty &&
                                 (FFAppState().savedPrayer.prayer != null) &&
                                 (FFAppState().savedPrayer.prayer?.id != '') &&
                                 (FFAppState().currentPrayerId.isEmpty),
@@ -949,6 +1198,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                   ? _buildPrayerSearchResults(prayerTypes, query)
                                   : const <_PrayerSearchItem>[];
 
+                              if (_typeStack.isNotEmpty && !_searchActive) {
+                                return _buildSelectedTypeList(context);
+                              }
+
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -1083,8 +1336,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                   type.prayers.isEmpty) {
                                                 return;
                                               }
-                                              _typeStack.add(type);
-                                              safeSetState(() {});
+                                              _enterPrayerType(type);
                                             },
                                           );
                                         },
@@ -1100,475 +1352,22 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           child: SizedBox(
                             height: _searchActive
                                 ? 16.0
-                                : (FFAppState().currentPrayerId.isNotEmpty ||
-                                        (FFAppState().savedPrayer.prayer != null &&
-                                            FFAppState().savedPrayer.prayer?.id != '' &&
-                                            FFAppState().currentPrayerId.isEmpty))
-                                    ? 100.0
-                                    : 24.0,
+                                : (_showAudioPlayer ? 8.0 : 24.0),
                           ),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
-                StreamBuilder(
-                  stream: _audioHandler.queue,
-                  builder: (context, snapshot) {
-                    var queue = snapshot.data;
-                    return Visibility(
-                      visible: snapshot.data != null &&
-                          FFAppState().currentPrayerId.isNotEmpty &&
-                          !_searchPinned &&
-                          _searchQuery.isEmpty,
-                      child: Positioned(
-                        left: 16.0,
-                        right: 16.0,
-                        bottom: 16.0,
-                        child: SafeArea(
-                          top: false,
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              GestureDetector(
-                            onTap: () async {
-                              _typeStack.clear();
-                              safeSetState(() {});
-                              await context.pushNamed('RosaryPage',
-                                  queryParameters: {
-                                    'prayerId': serializeParam(
-                                      valueOrDefault<String>(
-                                          FFAppState().currentPrayerId, ''),
-                                      ParamType.String,
-                                    ),
-                                    'continueAudio': serializeParam(
-                                      true,
-                                      ParamType.bool,
-                                    ).toString(),
-                                    'page': serializeParam(
-                                      valueOrDefault<int>(
-                                          _pageManager.trackIndexNotifier.value,
-                                          0),
-                                      ParamType.int,
-                                    ).toString(),
-                                    'initialAudioTime': serializeParam(
-                                      valueOrDefault<double>(
-                                          _pageManager.currentProgressNotifier
-                                              .value.inSeconds
-                                              .toDouble(),
-                                          0.0),
-                                      ParamType.double,
-                                    ).toString(),
-                                  }.withoutNulls);
-                            },
-                            child: Container(
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                  12.0, 12.0, 12.0, 12.0),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    FlutterFlowTheme.of(context).alternate,
-                                    FlutterFlowTheme.of(context).alternate.withOpacity(0.95),
-                                  ],
-                                  stops: const [0.0, 1.0],
-                                  begin: const AlignmentDirectional(-1.0, -1.0),
-                                  end: const AlignmentDirectional(1.0, 1.0),
-                                ),
-                                borderRadius: BorderRadius.circular(16.0),
-                                border: Border.all(
-                                  color: FlutterFlowTheme.of(context).primary.withOpacity(0.2),
-                                  width: 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: FlutterFlowTheme.of(context).primary.withOpacity(0.2),
-                                    blurRadius: 16.0,
-                                    offset: const Offset(0.0, 6.0),
-                                  ),
-                                ],
-                              ),
-                              child: StreamBuilder(
-                                  stream: _audioHandler.mediaItem,
-                                  builder: (context, snapshot) {
-                                    final mediaItem = queue != null &&
-                                            queue.length >
-                                                _pageManager
-                                                    .trackIndexNotifier.value
-                                        ? queue[_pageManager
-                                            .trackIndexNotifier.value]
-                                        : null;
-                                    return mediaItem != null
-                                        ? Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            mainAxisSize: MainAxisSize.max,
-                                            children: [
-                                              Flexible(
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    Hero(
-                                                      tag: 'sectionImageHero',
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                8.0),
-                                                        child: Image.network(
-                                                          mediaItem.artUri
-                                                                  .toString() ??
-                                                              '',
-                                                          width: 48,
-                                                          height: 48,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Flexible(
-                                                      child: Column(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
-                                                        children: [
-                                                          AutoSizeText(
-                                                            mediaItem.title ?? '',
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow.ellipsis,
-                                                            style: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .titleSmall
-                                                                .override(
-                                                                  fontFamily:
-                                                                      'Merriweather',
-                                                                  color: FlutterFlowTheme
-                                                                          .of(context)
-                                                                      .primary,
-                                                                  letterSpacing: 0.0,
-                                                                ),
-                                                          ),
-                                                          if (mediaItem.album != null &&
-                                                              mediaItem.album!
-                                                                  .isNotEmpty) 
-                                                          AutoSizeText(
-                                                            mediaItem.album ?? '',
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                            style: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .labelSmall
-                                                                .override(
-                                                                  fontFamily: 'Inter',
-                                                                  color: FlutterFlowTheme
-                                                                          .of(context)
-                                                                      .primary,
-                                                                  letterSpacing: 0.0,
-                                                                ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ].divide(
-                                                      const SizedBox(width: 8.0)),
-                                                ),
-                                              ),
-                                              if(mediaItem.extras!['url'].toString().isNotEmpty)
-                                              ValueListenableBuilder(
-                                                  valueListenable:
-                                                      _pageManager.playButtonNotifier,
-                                                  builder: (_, value, __) {
-                                                    switch (value) {
-                                                      case ButtonState.loading:
-                                                        return Container(
-                                                          width: 48,
-                                                          height: 48,
-                                                          padding:
-                                                              const EdgeInsets.all(
-                                                                  16),
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                            valueColor:
-                                                                AlwaysStoppedAnimation<
-                                                                    Color>(
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .primary,
-                                                            ),
-                                                          ),
-                                                        );
-                                                      case ButtonState.paused:
-                                                        return FlutterFlowIconButton(
-                                                            buttonSize: 48,
-                                                            icon: Icon(
-                                                                Icons.play_arrow_rounded,
-                                                                color:
-                                                                    FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .primary),
-                                                            onPressed:  
-                                                                _pageManager.play);
-                                                      case ButtonState.playing:
-                                                        return FlutterFlowIconButton(
-                                                          buttonSize: 48,
-                                                          icon: Icon(
-                                                              Icons.pause_rounded,
-                                                              color:
-                                                                  FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .primary),
-                                                          onPressed: 
-                                                              _pageManager.pause
-                                                        );
-                                                    }
-                                                  }),
-                                            ].divide(
-                                                const SizedBox(width: 8.0)),
-                                          )
-                                        : const SizedBox();
-                                  }),
-                            ),
-                              ),
-                              Positioned(
-                                top: -4,
-                                right: -4,
-                                child: Container(
-                                  width: 28.0,
-                                  height: 28.0,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .alternate,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: FlutterFlowTheme.of(context).primary.withOpacity(0.3),
-                                      width: 1,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: FlutterFlowTheme.of(context).primary.withOpacity(0.2),
-                                        blurRadius: 3.0,
-                                        offset: const Offset(0.0, 2.0),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: IconButton(
-                                      iconSize: 12.0,
-                                      icon: Icon(
-                                        Icons.close_rounded,
-                                        color: FlutterFlowTheme.of(context)
-                                            .primary,
-                                    
-                                      ),
-                                      onPressed: () async {
-                                        _pageManager.stop();
-                                        await _pageManager.clearQueue();
-                                        FFAppState().currentPrayerId = '';
-                                        safeSetState(() {});
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                  if (_showAudioPlayer)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
+                      child: HomeAudioMiniPlayer(
+                        pageManager: _pageManager,
+                        audioHandler: _audioHandler,
+                        onClose: _closeAudioPlayer,
+                        onOpenPrayer: _openCurrentPrayerWithAudio,
                       ),
-                    );
-                  },
-                ),
-                Positioned.fill(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 350),
-                    switchInCurve: Curves.easeOut,
-                    switchOutCurve: Curves.easeIn,
-                    transitionBuilder: (child, animation) {
-
-                        return FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        );
-                
-
-                    },
-                    child: _typeStack.isNotEmpty
-                        ? Container(
-                            key: ValueKey<String>(
-                              _typeStack.map((e) => e.id).join('-'),
-                            ),
-                            color: FlutterFlowTheme.of(context).primary,
-                            child: SafeArea(
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsetsDirectional.fromSTEB(
-                                        16.0, 8.0, 16.0, 8.0),
-                                    child: Row(
-                                      children: [
-                                        IconButton(
-                                          icon:
-                                              const Icon(Icons.arrow_back_rounded),
-                                          color:
-                                              FlutterFlowTheme.of(context).alternate,
-                                          onPressed: () {
-                                            _typeStack.removeLast();
-                                            safeSetState(() {});
-                                          },
-                                        ),
-                                        const SizedBox(width: 8.0),
-                                        Expanded(
-                                          child: Text(
-                                            _typeStack.last.type,
-                                            style: FlutterFlowTheme.of(context)
-                                                .titleMedium
-                                                .override(
-                                                  fontFamily: 'Merriweather',
-                                                  color: FlutterFlowTheme.of(context)
-                                                      .alternate,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: SingleChildScrollView(
-                                      padding:
-                                          const EdgeInsetsDirectional.fromSTEB(
-                                              16.0, 0.0, 16.0, 24.0),
-                                      child: AnimatedSize(
-                                        duration:
-                                            const Duration(milliseconds: 250),
-                                        curve: Curves.easeOut,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            if (_typeStack.last.prayers.isNotEmpty)
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-
-                                                  ..._typeStack.last.prayers.map(
-                                                    (prayer) {
-                                                      return Padding(
-                                                        padding:
-                                                            const EdgeInsetsDirectional
-                                                                .only(bottom: 12.0),
-                                                        child: PrayerTypeCardWidget(
-                                                          title: prayer.subtitle,
-                                                          trailingText: null,
-                                                          trailingIcons: prayer.mode != PrayerMode.audioAndText ? [prayer.mode == PrayerMode.audioOnly ? Icons.audiotrack_rounded : Icons.format_size_rounded, Icons.chevron_right_rounded] : const [Icons.chevron_right_rounded],
-                                                          onTap: () async {
-                                                            _typeStack.clear();
-                                                            safeSetState(() {});
-                                                            await context.pushNamed(
-                                                              'RosaryPage',
-                                                              queryParameters: {
-                                                                'prayerId':
-                                                                    serializeParam(
-                                                                  prayer.id,
-                                                                  ParamType.String,
-                                                                ),
-                                                              }.withoutNulls,
-                                                              extra:
-                                                                  <String, dynamic>{
-                                                                kTransitionInfoKey:
-                                                                    const TransitionInfo(
-                                                                  hasTransition: true,
-                                                                  transitionType:
-                                                                      PageTransitionType
-                                                                          .fade,
-                                                                  duration: Duration(
-                                                                      milliseconds: 250),
-                                                                ),
-                                                              },
-                                                            );
-                                                          },
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                          if (_typeStack.last.subtypes.isNotEmpty)
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  ..._typeStack.last.subtypes.map(
-                                                    (subtype) {
-                                                      var totalCount =
-                                                          subtype.subtypes.length +
-                                                              subtype.prayers.length;
-                                                      return Padding(
-                                                        padding:
-                                                            const EdgeInsetsDirectional
-                                                                .only(bottom: 12.0),
-                                                        child: PrayerTypeCardWidget(
-                                                          title: subtype.type,
-                                                          subtitle: null,
-                                                          trailingText:  null,
-                                                          trailingIcons: [Icons.chevron_right_rounded],
-                                                          onTap: () async {
-                                                            if (subtype
-                                                                    .subtypes.isEmpty &&
-                                                                subtype
-                                                                    .prayers.isEmpty) {
-                                                              return;
-                                                            }
-                                                            // If only one prayer and no subtypes, open it directly
-                                                            if (subtype.subtypes.isEmpty &&
-                                                                subtype.prayers.length == 1) {
-                                                              _typeStack.clear();
-                                                              safeSetState(() {});
-                                                              await context.pushNamed(
-                                                                'RosaryPage',
-                                                                queryParameters: {
-                                                                  'prayerId': serializeParam(
-                                                                    subtype.prayers.first.id,
-                                                                    ParamType.String,
-                                                                  ),
-                                                                }.withoutNulls,
-                                                                extra: <String, dynamic>{
-                                                                  kTransitionInfoKey:
-                                                                      const TransitionInfo(
-                                                                    hasTransition: true,
-                                                                    transitionType:
-                                                                        PageTransitionType.fade,
-                                                                    duration: Duration(
-                                                                        milliseconds: 250),
-                                                                  ),
-                                                                },
-                                                              );
-                                                              return;
-                                                            }
-                                                            _typeStack.add(subtype);
-                                                            safeSetState(() {});
-                                                          },
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ),
+                    ),
                 ],
               ),
             ),
@@ -1703,6 +1502,16 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
 
     return results;
+  }
+
+  void _enterSearch() {
+    _typeStack.clear();
+    _searchPinned = true;
+    safeSetState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchFocusNode.requestFocus();
+      _scrollHomeToTop();
+    });
   }
 
   void _exitSearch() {

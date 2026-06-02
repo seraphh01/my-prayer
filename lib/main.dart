@@ -1,5 +1,9 @@
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
+import 'package:my_prayer/custom_code/reminders/prayer_reminder_service.dart';
+import 'package:my_prayer/custom_code/reminders/reminder_navigation.dart';
+import 'package:my_prayer/custom_code/reminders/reminder_storage.dart';
 import 'package:my_prayer/service_locator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -29,7 +33,6 @@ void main() async {
   final appState = FFAppState(); // Initialize FFAppState
   await appState.initializePersistedState();
 
-  appState.isFirstTime = null;
   // Start final custom actions code
   await actions.checkInternetConnection();
   //await actions.initializeAudioHandler();
@@ -42,10 +45,22 @@ void main() async {
       print('Error requesting permissions: $e');
   }
 
+  if (!kIsWeb) {
+    await _initPrayerReminders();
+  }
+
   runApp(ChangeNotifierProvider(
     create: (context) => appState,
     child: const MyApp(),
   ));
+}
+
+Future<void> _initPrayerReminders() async {
+  await PrayerReminderService.instance.initialize(
+    onPrayerTap: navigateToPrayerFromReminder,
+  );
+  final reminders = await ReminderStorage.loadAll();
+  await PrayerReminderService.instance.rescheduleAll(reminders);
 }
 
 class MyApp extends StatefulWidget {

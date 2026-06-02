@@ -14,14 +14,12 @@ import '/backend/schema/structs/index.dart';
 import '/components/audio_page_widget.dart';
 import '/components/empty_list_component_widget.dart';
 import '/components/prayer_text_widget.dart';
-import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'sections_view_model.dart';
 export 'sections_view_model.dart';
@@ -46,8 +44,7 @@ class SectionsViewWidget extends StatefulWidget {
   State<SectionsViewWidget> createState() => _SectionsViewWidgetState();
 }
 
-class _SectionsViewWidgetState extends State<SectionsViewWidget>
-    with TickerProviderStateMixin {
+class _SectionsViewWidgetState extends State<SectionsViewWidget> {
   late SectionsViewModel _model;
   ScrollController? _primaryScrollController;
   int currentPlayingTextIndex = 0;
@@ -56,10 +53,23 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
   final GlobalKey pageKey = GlobalKey();
   final Map<int, List<GlobalKey>> _keys = {};
 
-  final animationsMap = <String, AnimationInfo>{};
   final _pageManager = getIt<PageManager>();
+  final ValueNotifier<bool> _isContentLoading = ValueNotifier(true);
 
   Timer? _debounce;
+  Timer? _scrollbarHideTimer;
+  bool _scrollbarThumbVisible = false;
+  static const Duration _scrollbarHideDelay = Duration(seconds: 1);
+
+  void _markContentReady() {
+    _model.isLoading = false;
+    if (_isContentLoading.value) {
+      _isContentLoading.value = false;
+    }
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   void setState(VoidCallback callback) {
@@ -74,6 +84,118 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
   }
 
   ScrollController? _getActiveScrollController() => _primaryScrollController;
+
+  void _onScrollbarActivity() {
+    _scrollbarHideTimer?.cancel();
+    if (!_scrollbarThumbVisible && mounted) {
+      setState(() => _scrollbarThumbVisible = true);
+    }
+    _scrollbarHideTimer = Timer(_scrollbarHideDelay, () {
+      if (mounted) {
+        setState(() => _scrollbarThumbVisible = false);
+      }
+    });
+  }
+
+  double _scrollbarTopPadding(BuildContext context) {
+    final topInset = MediaQuery.viewPaddingOf(context).top;
+    if (!_needsScrollOverlap) {
+      return topInset;
+    }
+    final handle = NestedScrollView.sliverOverlapAbsorberHandleFor(context);
+    final extent = handle.layoutExtent;
+    if (extent != null && extent > 0) {
+      return extent;
+    }
+    return topInset + 64.0;
+  }
+
+  Widget _buildTextScrollView({required List<Widget> slivers}) {
+    final controller = _getActiveScrollController();
+    final theme = FlutterFlowTheme.of(context);
+    final topPadding = _scrollbarTopPadding(context);
+
+    final scrollView = CustomScrollView(
+      primary: controller == null,
+      controller: controller,
+      scrollDirection: Axis.vertical,
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: slivers,
+    );
+
+    if (controller == null) {
+      return scrollView;
+    }
+
+    final thumbColor = theme.primary.withValues(alpha: 0.45);
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        scrollbarTheme: ScrollbarThemeData(
+          thumbColor: WidgetStateProperty.all(thumbColor),
+          trackColor: WidgetStateProperty.all(Colors.transparent),
+          trackBorderColor: WidgetStateProperty.all(Colors.transparent),
+          radius: const Radius.circular(8.0),
+          thickness: WidgetStateProperty.all(5.0),
+          crossAxisMargin: 2.0,
+          mainAxisMargin: 4.0,
+          interactive: true,
+        ),
+      ),
+      child: RawScrollbar(
+        controller: controller,
+        thumbVisibility: _scrollbarThumbVisible,
+        trackVisibility: false,
+        interactive: true,
+        thumbColor: thumbColor,
+        thickness: 5.0,
+        radius: const Radius.circular(8.0),
+        padding: EdgeInsets.fromLTRB(0.0, topPadding, 2.0, 4.0),
+        child: Listener(
+          onPointerDown: (_) => _onScrollbarActivity(),
+          onPointerMove: (_) => _onScrollbarActivity(),
+          onPointerSignal: (_) => _onScrollbarActivity(),
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollStartNotification ||
+                  notification is ScrollUpdateNotification) {
+                _onScrollbarActivity();
+              }
+              return false;
+            },
+            child: scrollView,
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool get _needsScrollOverlap {
+    if (FFAppState().isDisplayingAudio) {
+      return true;
+    }
+    return _controlBarVisibility.value;
+  }
+
+  void _syncScrollWithHeader() {
+    final controller = _getActiveScrollController();
+    if (controller == null || !controller.hasClients) {
+      return;
+    }
+    if (controller.offset != 0.0) {
+      controller.jumpTo(0.0);
+    }
+  }
+
+  void _onControlBarVisibilityChanged() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _syncScrollWithHeader();
+      setState(() {});
+    });
+  }
 
   void _setAllowScroll(bool allow) {
     if (widget.allowScrollNotifier == null) {
@@ -107,8 +229,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
         true) {
       _model.currentSection =
           _model.flattenedSections.elementAtOrNull(sectionIndex);
-
-      _model.isLoading = false;
     } else {
       _model.prayerSectionDataResult = await PrayerSectionContentCall.call(
         prayerSectionId:
@@ -120,12 +240,16 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
             (_model.prayerSectionDataResult?.jsonBody ?? ''));
         _model.flattenedSections.elementAtOrNull(sectionIndex)!.texts =
             _model.currentSection?.texts;
-        _model.isLoading = false;
-      } else {
-        _model.isLoading = false;
       }
     }
     currentSectionIndex = sectionIndex;
+    _markContentReady();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _syncScrollWithHeader();
+    });
   }
 
   GlobalKey getTextKey(int sectionIndex, int textIndex) {
@@ -156,9 +280,9 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
       controller.jumpTo(0.0);
     }
 
+    _isContentLoading.value = true;
     await setCurrentSection(_pageManager.trackIndexNotifier.value);
     currentPlayingTextIndex = 0;
-    safeSetState(() {});
   }
 
   void onCurrentAudioDurationChanged() {
@@ -269,6 +393,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     _model = createModel(context, () => SectionsViewModel());
     _controlBarVisibility =
         widget.controlBarVisibilityNotifier ?? ValueNotifier(true);
+    _controlBarVisibility.addListener(_onControlBarVisibilityChanged);
 
     _model.flattenedSections = functions
         .flattenSectionsList(widget.sections!.toList())!
@@ -277,15 +402,16 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     _model.chapterOptions =
         functions.convertPrayerSectionToChapterOption(widget.sections!);
         
-    Future.microtask(() async {
-      _model.isLoading = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        return;
+      }
+      _isContentLoading.value = true;
       await setCurrentSection(_pageManager.trackIndexNotifier.value);
-      safeSetState(() {});
     });
-    
+
     setTextKeys(valueOrDefault<int>(0, 0));
 
-    onTrackIndexChanged();
     onCurrentAudioTimeChanged();
     onCurrentAudioDurationChanged();
 
@@ -295,31 +421,19 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
     _pageManager.currentProgressNotifier.addListener(onCurrentAudioTimeChanged);
     _pageManager.totalDurationNotifier
         .addListener(onCurrentAudioDurationChanged);
-
-    animationsMap.addAll({
-      'pageViewOnPageLoadAnimation': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
-        effectsBuilder: () => [
-          FadeEffect(
-            curve: Curves.easeInOut,
-            delay: 0.0.ms,
-            duration: 600.0.ms,
-            begin: 0.0,
-            end: 1.0,
-          ),
-        ],
-      ),
-    });
   }
 
   @override
   void dispose() {
+    _scrollbarHideTimer?.cancel();
+    _isContentLoading.dispose();
     _model.maybeDispose();
     _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
     _pageManager.currentProgressNotifier
         .removeListener(onCurrentAudioTimeChanged);
     _pageManager.totalDurationNotifier
         .removeListener(onCurrentAudioDurationChanged);
+    _controlBarVisibility.removeListener(_onControlBarVisibilityChanged);
     if (widget.controlBarVisibilityNotifier == null) {
       _controlBarVisibility.dispose();
     }
@@ -383,17 +497,23 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                   return Container(
                                     height: double.infinity,
                                     decoration: const BoxDecoration(),
-                                    child: SingleChildScrollView(
-                                      primary: true,
-                                      scrollDirection: Axis.vertical,
-                                      physics:
-                                          const AlwaysScrollableScrollPhysics(),
-                                      child: Column(
+                                    child: _buildTextScrollView(
+                                      slivers: [
+                                        if (_needsScrollOverlap)
+                                          SliverOverlapInjector(
+                                            handle: NestedScrollView
+                                                .sliverOverlapAbsorberHandleFor(
+                                              context,
+                                            ),
+                                          ),
+                                        SliverToBoxAdapter(
+                                          child: Column(
                                         mainAxisSize: MainAxisSize.max,
                                         mainAxisAlignment:
                                             MainAxisAlignment.start,
                                         children: [
                                           Column(
+                                            spacing: 8.0,
                                             mainAxisSize: MainAxisSize.max,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
@@ -404,9 +524,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                   _model.currentSection
                                                           ?.showSubtitle ==
                                                       true)
-                                                SizedBox(
-                                                  height: 32.0,
-                                                ),
+                                               
                                               if (_model.currentSection
                                                       ?.showTitle ==
                                                   true)
@@ -456,8 +574,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                             FontStyle.italic,
                                                       ),
                                                 ),
-                                            ].divide(
-                                                const SizedBox(height: 8.0)),
+                                            ].addToStart(const SizedBox(height: 16.0))
+                                            ,
                                           ),
                                           Padding(
                                             padding: const EdgeInsetsDirectional
@@ -505,7 +623,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                           CrossAxisAlignment
                                                               .stretch,
                                                       children: [
-                                                        Align(
+                                                        if(textsItem.title.isNotEmpty) Align(
                                                           alignment:
                                                               const AlignmentDirectional(
                                                                   0.0, 0.0),
@@ -529,6 +647,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                               .startTime));
                                                             },
                                                             child: Row(
+
+                                                              spacing: 4.0,
                                                               mainAxisSize:
                                                                   MainAxisSize
                                                                       .max,
@@ -539,8 +659,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                   CrossAxisAlignment
                                                                       .center,
                                                               children: [
-                                                                if ((textsItem
-                                                                            .startTime <=
+                                                                if (textsItem.title.isNotEmpty &&(
+                                                                            textsItem.startTime <=
                                                                         _model
                                                                             .currentAudioTime) &&
                                                                     (textsItem
@@ -613,7 +733,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                     ),
                                                                   ),
                                                                 ),
-                                                                if ((textsItem
+                                                                if (textsItem.title.isNotEmpty && (textsItem
                                                                             .startTime <=
                                                                         _model
                                                                             .currentAudioTime) &&
@@ -629,33 +749,10 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                         .secondary,
                                                                     size: 16.0,
                                                                   ),
-                                                              ].divide(
-                                                                  const SizedBox(
-                                                                      width:
-                                                                          0.0)),
+                                                              ],
                                                             ),
                                                           ),
                                                         ),
-                                                        if (textsItem
-                                                            .textElements
-                                                            .isEmpty)
-                                                          Text(
-                                                            'Textul va fi adăugat curând.',
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .bodyMedium
-                                                                .override(
-                                                                  fontFamily:
-                                                                      'Inter',
-                                                                  letterSpacing:
-                                                                      0.0,
-                                                                  fontStyle:
-                                                                      FontStyle
-                                                                          .italic,
-                                                                ),
-                                                          ),
                                                         if ((textsItem
                                                                 .textElements
                                                                 .isNotEmpty) ==
@@ -668,6 +765,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                       .toList();
 
                                                               return Column(
+                                                                spacing: 4.0,
                                                                 mainAxisSize:
                                                                     MainAxisSize
                                                                         .max,
@@ -736,21 +834,13 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                                                       },
                                                                     ),
                                                                   );
-                                                                }).divide(
-                                                                    const SizedBox(
-                                                                        height:
-                                                                            24.0)),
+                                                                }),
                                                               );
                                                             },
                                                           ),
-                                                      ]
-                                                          .divide(
-                                                              const SizedBox(
-                                                                  height: 24.0))
-                                                          .addToStart(
-                                                              const SizedBox(
-                                                            height: 24,
-                                                          )),
+                                                      ].addToStart(textsItem.title.isNotEmpty ? const SizedBox(height: 8.0,) : const SizedBox.shrink())
+                                                          
+                                                          ,
                                                     );
                                                   },
                                                 );
@@ -758,11 +848,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                             ),
                                           ),
                                         ]
-                                            .divide(
-                                                const SizedBox(height: 16.0))
                                             .addToEnd(
                                                 const SizedBox(height: 16.0)),
                                         ),
+                                        ),
+                                      ],
                                     ),
                                   );
                                 } else {
@@ -791,7 +881,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                             _model.currentSection!.subtitle,
                                         imageUrl:
                                             _model.currentSection!.imageUrl,
-                                        texts: _model.currentSection?.texts,
                                         onAudioTimeChanged:
                                             (selectedAudioTime) async {
                                           getIt<PageManager>().seek(Duration(
@@ -801,16 +890,20 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                         imageUrls: _model.flattenedSections
                                             .map((section) => section.imageUrl)
                                             .toList(),
+                                        texts: _model.currentSection?.texts,
                                       ),
                                     ),
                                   );
                                 }
                               },
                             ),
-                            if (_model.isLoading)
-                              Visibility(
-                                visible: _model.isLoading,
-                                child: Container(
+                            ValueListenableBuilder<bool>(
+                              valueListenable: _isContentLoading,
+                              builder: (context, isLoading, _) {
+                                if (!isLoading) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Container(
                                   width: double.infinity,
                                   height: double.infinity,
                                   decoration: BoxDecoration(
@@ -832,12 +925,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
+                                );
+                              },
+                            ),
                           ],
-                        ))
-                    .animateOnPageLoad(
-                        animationsMap['pageViewOnPageLoadAnimation']!);
+                        ));
                 },
               ),
             ),
@@ -845,19 +937,22 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget>
               valueListenable: _controlBarVisibility,
               builder: (context, showControlBar, child) {
                 final bottomInset = MediaQuery.paddingOf(context).bottom;
+                final effectiveShowControlBar =
+                    _model.displayAudioPage || showControlBar;
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,
-                  height: showControlBar ? 80.0 + bottomInset : 0.0,
+                  height: effectiveShowControlBar ? 80.0 + bottomInset : 0.0,
                   child: AnimatedSlide(
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeInOut,
-                    offset:
-                        showControlBar ? Offset.zero : const Offset(0.0, 1.0),
+                    offset: effectiveShowControlBar
+                        ? Offset.zero
+                        : const Offset(0.0, 1.0),
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.easeInOut,
-                      opacity: showControlBar ? 1.0 : 0.0,
+                      opacity: effectiveShowControlBar ? 1.0 : 0.0,
                       child: SafeArea(
                         top: false,
                         child: Padding(

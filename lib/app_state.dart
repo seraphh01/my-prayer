@@ -84,6 +84,17 @@ class FFAppState extends ChangeNotifier {
         }
       }
     });
+    await _safeInitAsync(() async {
+      final stored = await secureStorage.getBool('ff_isFirstTime');
+      if (stored != null) {
+        _isFirstTime = stored;
+      } else {
+        // Existing installs: skip onboarding if user already has data.
+        final hasPriorUse = _favoritePrayers.isNotEmpty ||
+            (_savedPrayer.prayer?.id.isNotEmpty ?? false);
+        _isFirstTime = !hasPriorUse;
+      }
+    });
   }
 
   void update(VoidCallback callback) {
@@ -96,13 +107,19 @@ class FFAppState extends ChangeNotifier {
   bool _isDisplayingAudio = true;
   bool get isDisplayingAudio => _isDisplayingAudio;
   set isDisplayingAudio(bool value) {
+    if (_isDisplayingAudio == value) {
+      return;
+    }
     _isDisplayingAudio = value;
+    notifyListeners();
   }
 
-  bool? _isFirstTime = null;
-  bool? get isFirstTime => _isFirstTime;
-  set isFirstTime(bool? value) {
+  bool _isFirstTime = true;
+  bool get isFirstTime => _isFirstTime;
+  set isFirstTime(bool value) {
     _isFirstTime = value;
+    secureStorage.setBool('ff_isFirstTime', value);
+    notifyListeners();
   }
 
   double _audioSpeed = 1.0;
@@ -146,6 +163,7 @@ class FFAppState extends ChangeNotifier {
         jsonEncode(
       value.map((x) => x.toSerializableMap()).toList(),
     ));
+    notifyListeners();
   }
 
   void deleteFavoritePrayers() {
@@ -153,13 +171,43 @@ class FFAppState extends ChangeNotifier {
   }
 
   void addToFavoritePrayers(PrayerStruct value) {
-    favoritePrayers.add(value);
+    if (isFavoritePrayerId(value.id)) {
+      return;
+    }
+    favoritePrayers.add(_compactFavorite(value));
     favoritePrayers = favoritePrayers;
+    notifyListeners();
   }
 
   void removeFromFavoritePrayers(PrayerStruct value) {
-    favoritePrayers.remove(value);
-    favoritePrayers = favoritePrayers;
+    removeFavoriteById(value.id);
+  }
+
+  void removeFavoriteById(String prayerId) {
+    favoritePrayers =
+        favoritePrayers.where((p) => p.id != prayerId).toList();
+    notifyListeners();
+  }
+
+  bool isFavoritePrayerId(String prayerId) {
+    if (prayerId.isEmpty) {
+      return false;
+    }
+    return favoritePrayers.any((p) => p.id == prayerId);
+  }
+
+  bool isFavoritePrayer(PrayerStruct prayer) =>
+      isFavoritePrayerId(prayer.id);
+
+  /// Store minimal prayer data in favorites (no sections).
+  PrayerStruct _compactFavorite(PrayerStruct value) {
+    return PrayerStruct(
+      id: value.id,
+      title: value.title,
+      subtitle: value.subtitle,
+      mode: value.mode,
+      sequence: value.sequence,
+    );
   }
 
   void removeAtIndexFromFavoritePrayers(int index) {

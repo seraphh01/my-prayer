@@ -55,7 +55,7 @@
 
 
 	<key>PermissionGroupNotification</key>
-    <string>Acordă permisiunea pentru a putea afișa notificărea audio</string>
+    <string>Permite notificările pentru mementourile de rugăciune la orele setate de tine.</string>
 
 
 	<key>UILaunchStoryboardName</key>

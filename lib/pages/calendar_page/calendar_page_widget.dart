@@ -1,7 +1,9 @@
+import '/components/sub_types_view_widget.dart';
+import '/custom_code/calendar/merge_date_groups.dart';
 import '/flutter_flow/flutter_flow_calendar.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/custom_code/actions/index.dart' as actions;
+import '/backend/schema/structs/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'calendar_page_model.dart';
@@ -41,6 +43,71 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
     _model.dispose();
 
     super.dispose();
+  }
+
+  void _openPrayer(BuildContext context, PrayerStruct prayer) {
+    context.openPrayerWithHomeOnStack(prayer.id);
+  }
+
+  Widget _buildPrayerListTile(
+    BuildContext context, {
+    required PrayerStruct prayer,
+    required String title,
+    String? subtitle,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          splashColor: Colors.transparent,
+          focusColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          onTap: () => _openPrayer(context, prayer),
+          child: Material(
+            color: Colors.transparent,
+            child: ListTile(
+              title: Text(
+                title,
+                style: FlutterFlowTheme.of(context).titleLarge.override(
+                      fontFamily: 'Merriweather',
+                      letterSpacing: 0.0,
+                    ),
+              ),
+              subtitle: subtitle != null && subtitle.isNotEmpty
+                  ? Text(
+                      subtitle,
+                      style: FlutterFlowTheme.of(context).labelMedium.override(
+                            fontFamily: 'Inter',
+                            letterSpacing: 0.0,
+                          ),
+                    )
+                  : null,
+              trailing: Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: FlutterFlowTheme.of(context).secondaryText,
+                size: 16.0,
+              ),
+              dense: true,
+              contentPadding: const EdgeInsetsDirectional.fromSTEB(
+                12.0,
+                0.0,
+                12.0,
+                0.0,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            ),
+          ),
+        ),
+        Divider(
+          height: 1.0,
+          thickness: 1.0,
+          color: FlutterFlowTheme.of(context).secondary,
+        ),
+      ],
+    );
   }
 
   @override
@@ -101,7 +168,6 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                         dateTime: _model.calendarSelectedDay?.start,
                       );
                       safeSetState(() {});
-                      safeSetState(() {});
                     },
                     titleStyle:
                         FlutterFlowTheme.of(context).titleMedium.override(
@@ -148,34 +214,46 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                               const SizedBox(height: 8.0),
                           itemBuilder: (context, dateGroupIndex) {
                             final dateGroupItem = dateGroup[dateGroupIndex];
+                            final nestedPrayerTypes =
+                                _model.nestedTypesForDateGroup(dateGroupItem);
+
                             return Visibility(
-                              visible: valueOrDefault<bool>(
-                                dateGroupItem.prayers.isNotEmpty,
-                                false,
-                              ),
+                              visible: dateGroupItem.prayers.isNotEmpty ||
+                                  nestedPrayerTypes.isNotEmpty,
                               child: Column(
                                 mainAxisSize: MainAxisSize.max,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  if (valueOrDefault<bool>(
-                                    (dateGroupItem.name != '') &&
-                                        valueOrDefault<bool>(
-                                          dateGroupItem.description != '',
-                                          false,
-                                        ),
-                                    false,
-                                  ))
+                                  if (dateGroupItem.name.isNotEmpty)
                                     Text(
-                                      valueOrDefault<String>(
-                                        dateGroupItem.name,
-                                        'Rugăciuni',
-                                      ),
+                                      dateGroupItem.name,
+                                      textAlign: TextAlign.center,
                                       style: FlutterFlowTheme.of(context)
                                           .titleSmall
                                           .override(
                                             fontFamily: 'Merriweather',
                                             letterSpacing: 0.0,
                                           ),
+                                    ),
+                                  if (dateGroupItem.description.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: 4.0,
+                                        bottom: 4.0,
+                                      ),
+                                      child: Text(
+                                        dateGroupItem.description,
+                                        textAlign: TextAlign.center,
+                                        style: FlutterFlowTheme.of(context)
+                                            .labelMedium
+                                            .override(
+                                              fontFamily: 'Inter',
+                                              color: FlutterFlowTheme.of(
+                                                      context)
+                                                  .secondaryText,
+                                              letterSpacing: 0.0,
+                                            ),
+                                      ),
                                     ),
                                   Column(
                                     mainAxisSize: MainAxisSize.max,
@@ -188,92 +266,99 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                       ),
                                       Builder(
                                         builder: (context) {
-                                          final prayers = dateGroupItem.prayers
-                                              .sortedList(
+                                          if (nestedPrayerTypes.isNotEmpty) {
+                                            return SubTypesViewWidget(
+                                              prayerTypes: nestedPrayerTypes,
+                                              onSelectPrayer: (prayerId) async {
+                                                context
+                                                    .openPrayerWithHomeOnStack(
+                                                  prayerId,
+                                                );
+                                              },
+                                            );
+                                          }
+
+                                          final prayerGroups =
+                                              groupPrayersByTitle(
+                                            dateGroupItem.prayers
+                                                .sortedList(
                                                   keyOf: (e) => e.sequence,
-                                                  desc: false)
-                                              .toList();
+                                                  desc: false,
+                                                )
+                                                .toList(),
+                                          );
 
                                           return ListView.builder(
                                             padding: EdgeInsets.zero,
                                             primary: false,
                                             shrinkWrap: true,
                                             scrollDirection: Axis.vertical,
-                                            itemCount: prayers.length,
-                                            itemBuilder:
-                                                (context, prayersIndex) {
-                                              final prayersItem =
-                                                  prayers[prayersIndex];
+                                            itemCount: prayerGroups.length,
+                                            itemBuilder: (context, groupIndex) {
+                                              final prayerGroup =
+                                                  prayerGroups[groupIndex];
+
+                                              if (prayerGroup.prayers.length ==
+                                                  1) {
+                                                final prayer =
+                                                    prayerGroup.prayers.first;
+                                                return _buildPrayerListTile(
+                                                  context,
+                                                  prayer: prayer,
+                                                  title: prayer.title,
+                                                  subtitle: prayer.subtitle,
+                                                );
+                                              }
+
                                               return Column(
-                                                mainAxisSize: MainAxisSize.max,
+                                                mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  InkWell(
-                                                    splashColor:
-                                                        Colors.transparent,
-                                                    focusColor:
-                                                        Colors.transparent,
-                                                    hoverColor:
-                                                        Colors.transparent,
-                                                    highlightColor:
-                                                        Colors.transparent,
-                                                    onTap: () {
-                                                      context
-                                                          .pushReplacementNamed(
-                                                              'RosaryPage',
-                                                              queryParameters: {
-                                                                'prayerId':
-                                                                    prayersItem
-                                                                        .id,
-                                                              }.withoutNulls);
-                                                    },
-                                                    child: Material(
-                                                      color: Colors.transparent,
-                                                      child: ListTile(
-                                                        title: Text(
-                                                          prayersItem.title,
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .titleLarge
-                                                              .override(
-                                                                fontFamily:
-                                                                    'Merriweather',
-                                                                letterSpacing:
-                                                                    0.0,
-                                                              ),
-                                                        ),
-                                                        subtitle: Text(
-                                                          prayersItem.subtitle,
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .labelMedium
-                                                              .override(
-                                                                fontFamily:
-                                                                    'Inter',
-                                                                letterSpacing:
-                                                                    0.0,
-                                                              ),
-                                                        ),
-                                                        trailing: Icon(
-                                                          Icons
-                                                              .arrow_forward_ios_rounded,
-                                                          color: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .secondaryText,
-                                                          size: 16.0,
-                                                        ),
-                                                        dense: true,
-                                                        contentPadding:
-                                                            const EdgeInsetsDirectional
-                                                                .fromSTEB(12.0,
-                                                                0.0, 12.0, 0.0),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      8.0),
-                                                        ),
+                                                  Theme(
+                                                    data: Theme.of(context)
+                                                        .copyWith(
+                                                      dividerColor:
+                                                          Colors.transparent,
+                                                    ),
+                                                    child: ExpansionTile(
+                                                      tilePadding:
+                                                          const EdgeInsets
+                                                              .symmetric(
+                                                        horizontal: 4.0,
                                                       ),
+                                                      childrenPadding:
+                                                          EdgeInsets.zero,
+                                                      title: Text(
+                                                        prayerGroup.title,
+                                                        style: FlutterFlowTheme
+                                                                .of(context)
+                                                            .titleLarge
+                                                            .override(
+                                                              fontFamily:
+                                                                  'Merriweather',
+                                                              letterSpacing:
+                                                                  0.0,
+                                                            ),
+                                                      ),
+                                                      children: prayerGroup
+                                                          .prayers
+                                                          .map(
+                                                        (prayer) =>
+                                                            _buildPrayerListTile(
+                                                          context,
+                                                          prayer: prayer,
+                                                          title: prayer.title
+                                                                  .isNotEmpty
+                                                              ? prayer.title
+                                                              : prayer
+                                                                  .subtitle,
+                                                          subtitle: prayer
+                                                                  .title
+                                                                  .isNotEmpty
+                                                              ? prayer.subtitle
+                                                              : null,
+                                                        ),
+                                                      )
+                                                          .toList(),
                                                     ),
                                                   ),
                                                   Divider(

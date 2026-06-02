@@ -1,11 +1,14 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:collection/collection.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:my_prayer/components/download_progress_indicator.dart';
 import 'package:my_prayer/custom_code/actions/retrieve_audio_file.dart';
+import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
+import 'package:path_provider/path_provider.dart';
+import '/custom_code/journal/prayer_journal_storage.dart';
+import '/custom_code/reminders/prayer_reminder_flow.dart';
 import 'package:my_prayer/custom_code/download/download_manager.dart';
 import 'package:my_prayer/custom_code/download/notifiers/download_state_notifier.dart';
 import 'package:my_prayer/service_locator.dart';
@@ -24,6 +27,7 @@ import 'package:aligned_tooltip/aligned_tooltip.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'rosary_page_model.dart';
@@ -53,131 +57,257 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   final _pageManager = getIt<PageManager>();
   List<PrayerSectionStruct> flattenedSections = [];
   final ScrollController _scrollController = ScrollController();
-  final ValueNotifier<bool> _showControlBar = ValueNotifier(true);
-  final ValueNotifier<bool> _showTopInset = ValueNotifier(false);
+  /// When true, the app header and bottom audio/control bar are visible.
+  final ValueNotifier<bool> _chromeVisible = ValueNotifier(true);
   final ValueNotifier<bool> _allowScroll = ValueNotifier(true);
-  double _lastScrollOffset = 0.0;
-  double _scrollDownAccum = 0.0;
-  double _scrollUpAccum = 0.0;
+  bool _audioQueueReady = false;
+  static const double _appBarToolbarHeight = 64.0;
+  static const double _floatingBackgroundOpacityActive = 0.65;
+  static const double _floatingBackgroundOpacityIdle = 0.1;
+  static const Duration _floatingControlsIdleDelay = Duration(seconds: 1);
 
+  final ValueNotifier<double> _floatingControlsBackgroundOpacity =
+      ValueNotifier(_floatingBackgroundOpacityActive);
+  Timer? _floatingControlsIdleTimer;
+  bool? _wasInTextMode;
 
-  void _revealBars() {
-    _showControlBar.value = true;
+  void _toggleChrome() {
+    _onFloatingControlsInteraction();
+    _chromeVisible.value = !_chromeVisible.value;
+  }
 
-    final target = _scrollController.offset - 100.0;
+  void _setFloatingControlsActiveOpacity() {
+    if (_floatingControlsBackgroundOpacity.value !=
+        _floatingBackgroundOpacityActive) {
+      _floatingControlsBackgroundOpacity.value =
+          _floatingBackgroundOpacityActive;
+    }
+    _scheduleFloatingControlsIdleFade();
+  }
+
+  void _onFloatingControlsInteraction() {
+    _setFloatingControlsActiveOpacity();
+  }
+
+  void _onUserScrollActivity() {
+    _setFloatingControlsActiveOpacity();
+  }
+
+  void _scheduleFloatingControlsIdleFade() {
+    _floatingControlsIdleTimer?.cancel();
+    _floatingControlsIdleTimer = Timer(_floatingControlsIdleDelay, () {
+      if (!mounted) {
+        return;
+      }
+      _floatingControlsBackgroundOpacity.value =
+          _floatingBackgroundOpacityIdle;
+    });
+  }
+
+  bool _handleFloatingControlsScrollNotification(
+    ScrollNotification notification,
+  ) {
+    if (notification is UserScrollNotification ||
+        notification is ScrollUpdateNotification) {
+      _onUserScrollActivity();
+    }
+    return false;
+  }
+
+  void _onAllowScrollChanged() {
+    if (_allowScroll.value || !_scrollController.hasClients) {
+      return;
+    }
+
+    final target = (_scrollController.offset - 12.0).clamp(
+      0.0,
+      _scrollController.position.maxScrollExtent,
+    );
     _scrollController.animateTo(
-      target < 0.0 ? 0.0 : target,
-      duration: const Duration(milliseconds: 300),
+      target,
+      duration: const Duration(milliseconds: 120),
       curve: Curves.easeOut,
     );
   }
 
-  void _onAllowScrollChanged() {
-    if (_allowScroll.value) {
-      return;
+  bool _currentSectionHasAudio() {
+    if (flattenedSections.isEmpty) {
+      return false;
     }
-
-    _showControlBar.value = true;
-    _showTopInset.value = false;
-
-    if (_scrollController.hasClients) {
-      final target = (_scrollController.offset - 12.0).clamp(
-        0.0,
-        _scrollController.position.maxScrollExtent,
-      );
-      _scrollController.animateTo(
-        target,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
-      );
+    final index = _pageManager.trackIndexNotifier.value;
+    if (index < 0 || index >= flattenedSections.length) {
+      return false;
     }
+    return flattenedSections[index].audioUrl.isNotEmpty;
   }
 
-  bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification.metrics.axis != Axis.vertical) {
-      return false;
-    }
+  BoxDecoration _floatingControlDecoration(
+    BuildContext context,
+    double backgroundOpacity,
+  ) {
+    return BoxDecoration(
+      color: FlutterFlowTheme.of(context)
+          .secondaryBackground
+          .withOpacity(backgroundOpacity),
+      borderRadius: BorderRadius.circular(18.0),
+      border: Border.all(
+        color: FlutterFlowTheme.of(context)
+            .primary
+            .withOpacity(backgroundOpacity * 0.22),
+      ),
+    );
+  }
 
-    final offset = notification.metrics.pixels;
-    if (offset <= 0) {
-      if (!_showControlBar.value) {
-        _showControlBar.value = true;
-      }
-      if (_showTopInset.value) {
-        _showTopInset.value = false;
-      }
-      _lastScrollOffset = offset;
-      return false;
-    }
+  Widget _buildChromeToggleButton(
+    BuildContext context,
+    bool chromeVisible,
+    double backgroundOpacity,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _toggleChrome,
+        borderRadius: BorderRadius.circular(18.0),
+        child: Container(
+          width: 36.0,
+          height: 36.0,
+          decoration: _floatingControlDecoration(context, backgroundOpacity),
+          child: Icon(
+            chromeVisible
+                ? Icons.fullscreen_rounded
+                : Icons.fullscreen_exit_rounded,
+            color: FlutterFlowTheme.of(context).primary,
+            size: 22.0,
+          ),
+        ),
+      ),
+    );
+  }
 
-    final delta = offset - _lastScrollOffset;
-    if (delta > 0) {
-      _scrollDownAccum += delta;
-      _scrollUpAccum = 0.0;
-    } else if (delta < 0) {
-      _scrollUpAccum += -delta;
-      _scrollDownAccum = 0.0;
-    }
+  Widget _buildFloatingPlayPauseButton(
+    BuildContext context,
+    double backgroundOpacity,
+  ) {
+    return ValueListenableBuilder<ButtonState>(
+      valueListenable: _pageManager.playButtonNotifier,
+      builder: (context, state, _) {
+        if (state == ButtonState.loading) {
+          return Container(
+            width: 36.0,
+            height: 36.0,
+            decoration: _floatingControlDecoration(context, backgroundOpacity),
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: 20.0,
+              height: 20.0,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.0,
+                color: FlutterFlowTheme.of(context).primary,
+              ),
+            ),
+          );
+        }
 
-    if (_scrollDownAccum > 12.0 && _showControlBar.value) {
-      _showControlBar.value = false;
-      _scrollDownAccum = 0.0;
-    } else if (_scrollUpAccum > 16.0 && !_showControlBar.value) {
-      _showControlBar.value = true;
-      _scrollUpAccum = 0.0;
-    }
+        final isPlaying = state == ButtonState.playing;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              _onFloatingControlsInteraction();
+              if (isPlaying) {
+                _pageManager.pause();
+              } else {
+                _pageManager.play();
+              }
+            },
+            borderRadius: BorderRadius.circular(18.0),
+            child: Container(
+              width: 36.0,
+              height: 36.0,
+              decoration: _floatingControlDecoration(context, backgroundOpacity),
+              child: Icon(
+                isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                color: FlutterFlowTheme.of(context).primary,
+                size: 22.0,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-    if (_scrollDownAccum > 12.0 && !_showTopInset.value) {
-      _showTopInset.value = true;
-      _scrollDownAccum = 0.0;
-    } else if (_scrollUpAccum > 16.0 && _showTopInset.value) {
-      _showTopInset.value = false;
-      _scrollUpAccum = 0.0;
-    }
-
-    _lastScrollOffset = offset;
-    return false;
+  Widget _buildFloatingControlsOverlay(
+    BuildContext context, {
+    required bool chromeVisible,
+    required bool showPlayPause,
+  }) {
+    return ValueListenableBuilder<double>(
+      valueListenable: _floatingControlsBackgroundOpacity,
+      builder: (context, backgroundOpacity, _) {
+        return AnimatedOpacity(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeInOut,
+          opacity: backgroundOpacity / _floatingBackgroundOpacityActive,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _buildChromeToggleButton(
+                context,
+                chromeVisible,
+                backgroundOpacity,
+              ),
+              if (showPlayPause) ...[
+                const SizedBox(height: 8.0),
+                _buildFloatingPlayPauseButton(context, backgroundOpacity),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> setInitialMediaItems() async {
-    await _pageManager.clearQueue();
-
     if (flattenedSections.isEmpty) {
       return;
     }
 
-    final hasAudio = flattenedSections.any((section) => section.audioUrl.isNotEmpty);
+    final targetIndex = _pageManager.trackIndexNotifier.value
+        .clamp(0, flattenedSections.length - 1);
+    _pageManager.trackIndexNotifier.value = targetIndex;
 
-    final mediaItems = await Future.wait(flattenedSections.map((section) async {
+    final hasAudio =
+        flattenedSections.any((section) => section.audioUrl.isNotEmpty);
+    final documentsDir =
+        hasAudio ? await getApplicationDocumentsDirectory() : null;
+
+    final mediaItems = flattenedSections.map((section) {
       final artUri = section.imageUrl.isNotEmpty
           ? Uri.parse(section.imageUrl)
           : Uri.parse(
               'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo.jpg');
 
-      if(hasAudio == false) {
-              return MediaItem(
-              id: section.id,
-              album: section.subtitle,
-              artist: _model.currentPrayer?.title ?? '',
-              title: section.title,
-              artUri: artUri,
-              duration: const Duration(seconds: 0),
-              extras: {
-                'url': '',
-                'isDownloaded': false,
-                'filePath': '',
-              },
-            );
+      if (!hasAudio) {
+        return MediaItem(
+          id: section.id,
+          album: section.subtitle,
+          artist: _model.currentPrayer?.title ?? '',
+          title: section.title,
+          artUri: artUri,
+          duration: const Duration(seconds: 0),
+          extras: {
+            'url': '',
+            'isDownloaded': false,
+            'filePath': '',
+          },
+        );
       }
-      final filePath = await retrieveAudioFile(section.audioUrl);
 
-      final tempPlayer = AudioPlayer();
-      final source = filePath != null
-          ? AudioSource.uri(Uri.file(filePath))
-          : AudioSource.uri(Uri.parse(section.audioUrl));
-      await tempPlayer.setAudioSource(source);
-      final duration = tempPlayer.duration;
-      await tempPlayer.dispose();
+      final filePath = documentsDir != null && section.audioUrl.isNotEmpty
+          ? localAudioPathForUrl(section.audioUrl, documentsDir)
+          : null;
 
       return MediaItem(
         id: section.id,
@@ -185,18 +315,16 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
         artist: _model.currentPrayer?.title ?? '',
         title: section.title,
         artUri: artUri,
-        duration: duration,
+        duration: const Duration(seconds: 0),
         extras: {
           'url': section.audioUrl,
           'isDownloaded': filePath != null,
-          'filePath': filePath,
+          'filePath': filePath ?? '',
         },
       );
-    }).toList());
+    }).toList();
 
     await _pageManager.setQueue(mediaItems);
-    await _pageManager.skipToIndex(widget.page);
-    await _pageManager.seek(const Duration(seconds: 0));
   }
 
   @override
@@ -207,7 +335,6 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      var hasChangedPrayer = FFAppState().currentPrayerId != widget.prayerId;
       FFAppState().currentPrayerId = widget.prayerId ?? '';
 
       if (FFAppState()
@@ -237,11 +364,38 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
               _model.currentPrayer?.sections.toList() ?? []) ??
           [];
 
-      if (hasChangedPrayer) {
-        await setInitialMediaItems();
+      _pageManager.trackIndexNotifier.value = widget.page;
+
+      if (mounted) {
+        setState(() {});
       }
 
-      safeSetState(() {});
+      try {
+        await setInitialMediaItems();
+      } finally {
+        if (mounted) {
+          setState(() => _audioQueueReady = true);
+        }
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      if (!FFAppState().isDisplayingAudio) {
+        _scheduleFloatingControlsIdleFade();
+      }
+
+      final prayer = _model.currentPrayer;
+      if (prayer != null && prayer.id.isNotEmpty) {
+        unawaited(
+          PrayerJournalStorage.recordPrayerOpen(
+            prayerId: prayer.id,
+            prayerTitle: prayer.title,
+            prayerSubtitle: prayer.subtitle,
+          ),
+        );
+      }
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
@@ -249,46 +403,131 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
 
   @override
   void dispose() {
+    _floatingControlsIdleTimer?.cancel();
+    _floatingControlsBackgroundOpacity.dispose();
     _scrollController.dispose();
-    _showControlBar.dispose();
-    _showTopInset.dispose();
+    _chromeVisible.dispose();
     _allowScroll.removeListener(_onAllowScrollChanged);
     _allowScroll.dispose();
     _model.dispose();
     super.dispose();
   }
 
+  bool get _isTextMode => !FFAppState().isDisplayingAudio;
+
+  bool _showAppChrome(bool chromeVisible) =>
+      !_isTextMode || chromeVisible;
+
+  bool _usePrimaryStatusBarFill(bool chromeVisible) =>
+      _isTextMode || chromeVisible;
+
+  Widget _buildPrimaryStatusBarFill(
+    BuildContext context, {
+    required bool visible,
+  }) {
+    if (!visible) {
+      return const SizedBox.shrink();
+    }
+    final height = MediaQuery.viewPaddingOf(context).top;
+    if (height <= 0) {
+      return const SizedBox.shrink();
+    }
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      height: height,
+      child: ColoredBox(color: _isTextMode && !_chromeVisible.value? FlutterFlowTheme.of(context).primaryBackground : FlutterFlowTheme.of(context).primary),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+
+    final prayerLoaded = _model.currentPrayer?.id != null &&
+        _model.currentPrayer!.id.isNotEmpty;
+    final contentReady = prayerLoaded && _audioQueueReady;
+
+    if (!_isTextMode) {
+      _floatingControlsIdleTimer?.cancel();
+      if (_floatingControlsBackgroundOpacity.value !=
+          _floatingBackgroundOpacityActive) {
+        _floatingControlsBackgroundOpacity.value =
+            _floatingBackgroundOpacityActive;
+      }
+    } else if (_wasInTextMode != true) {
+      _setFloatingControlsActiveOpacity();
+    }
+    _wasInTextMode = _isTextMode;
+
+    if (!_isTextMode && !_chromeVisible.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _chromeVisible.value = true;
+        }
+      });
+    }
 
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
       },
-      child: Scaffold(
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _chromeVisible,
+        builder: (context, chromeVisible, child) {
+          final primaryStatusBar = _usePrimaryStatusBarFill(chromeVisible);
+          return AnnotatedRegion<SystemUiOverlayStyle>(
+            value: SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness:
+                  primaryStatusBar ? Brightness.light : Brightness.dark,
+              statusBarBrightness:
+                  primaryStatusBar ? Brightness.dark : Brightness.light,
+            ),
+            child: child!,
+          );
+        },
+        child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        body: ValueListenableBuilder<bool>(
-          valueListenable: _allowScroll,
-          builder: (context, allowScroll, child) {
-            return NestedScrollView(
-              controller: _scrollController,
-              physics: allowScroll
-                  ? const AlwaysScrollableScrollPhysics()
-                  : const NeverScrollableScrollPhysics(),
-              floatHeaderSlivers: true,
+        body: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            ValueListenableBuilder<bool>(
+              valueListenable: _allowScroll,
+              builder: (context, allowScroll, child) {
+                return NotificationListener<ScrollNotification>(
+                  onNotification: _handleFloatingControlsScrollNotification,
+                  child: NestedScrollView(
+                  controller: _scrollController,
+                  physics: allowScroll
+                      ? const AlwaysScrollableScrollPhysics()
+                      : const NeverScrollableScrollPhysics(),
+                  floatHeaderSlivers: false,
               headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                SliverAppBar(
+                ValueListenableBuilder<bool>(
+                  valueListenable: _chromeVisible,
+                  builder: (context, chromeVisible, _) {
+                    if (!_showAppChrome(chromeVisible)) {
+                      return const SliverToBoxAdapter(
+                        child: SizedBox.shrink(),
+                      );
+                    }
+                    return SliverOverlapAbsorber(
+                      handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                        context,
+                      ),
+                      sliver: SliverAppBar(
               backgroundColor: FlutterFlowTheme.of(context).primary,
               automaticallyImplyLeading: false,
-              floating: true,
-              snap: true,
-              
+              floating: false,
+              pinned: true,
+              snap: false,
               leading: IconButton(
-                onPressed: () async {
-                  Navigator.pop(context);
+                onPressed: () {
+                  context.goHomeReplacingStack();
                 },
                 icon: Icon(
                   Icons.home_rounded,
@@ -513,6 +752,14 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                   FFAppState().deleteSavedPrayer();
                                   FFAppState().savedPrayer =
                                       SavedPrayerDataStruct();
+                                } else if (_model.pressedButton == 'reminder') {
+                                  final prayer = _model.currentPrayer;
+                                  if (prayer != null) {
+                                    await openPrayerReminderFlow(
+                                      context,
+                                      prayer: prayer,
+                                    );
+                                  }
                                 }
 
                                 safeSetState(() {});
@@ -529,112 +776,100 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                 ),
               ],
               centerTitle: true,
-              toolbarHeight: 64.0,
+              toolbarHeight: _appBarToolbarHeight,
               elevation: 0.0,
             ),
-          ],
-          body: SafeArea(
-            top: false,
-            child: Stack(
-              children: [
-                Visibility(
-                  visible: valueOrDefault<bool>(
-                    _model.currentPrayer != null,
-                    false,
-                  ),
-                  child: SizedBox(
-                    height: double.infinity,
-                    child: Builder(
-                      builder: (context) {
-                        if (_model.currentPrayer?.id != null &&
-                            _model.currentPrayer?.id != '') {
-                          return NotificationListener<ScrollNotification>(
-                            onNotification: _handleScrollNotification,
-                            child: ValueListenableBuilder<bool>(
-                              valueListenable: _showTopInset,
-                              builder: (context, showTopInset, child) {
-                                return AnimatedPadding(
-                                  duration: const Duration(milliseconds: 200),
-                                  curve: Curves.easeInOut,
-                                  padding: EdgeInsets.only(
-                                    top: showTopInset
-                                        ? MediaQuery.paddingOf(context).top
-                                        : 0.0,
-                                  ),
-                                  child: child,
-                                );
-                              },
-                              child: SectionsViewWidget(
-                                sections: _model.currentPrayer?.sections,
-                                prayerTitle: _model.currentPrayer?.title,
-                                prayerSubtitle: _model.currentPrayer?.subtitle,
-                                controlBarVisibilityNotifier: _showControlBar,
-                                allowScrollNotifier: _allowScroll,
-                              ),
-                            ),
-                          );
-                        } else {
-                          return const Align(
-                            alignment: AlignmentDirectional(0.0, 0.0),
-                            child: SizedBox(
-                              width: 64.0,
-                              height: 64.0,
-                              child:
-                                  custom_widgets.CustomCircularProgressIndicator(
-                                width: 64.0,
-                                height: 64.0,
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
+                    );
+                  },
                 ),
-                ValueListenableBuilder(
-                  valueListenable: _showControlBar,
-                  builder: (context, value, child) {
-                    return Visibility(
-                      visible: !value,
-                      child: Positioned(
-                        right: 16.0,
-                        bottom: 16.0 + MediaQuery.paddingOf(context).bottom,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _revealBars,
-                            borderRadius: BorderRadius.circular(18.0),
-                            child: Container(
-                              width: 36.0,
-                              height: 36.0,
-                              decoration: BoxDecoration(
-                                color: FlutterFlowTheme.of(context)
-                                    .secondaryBackground
-                                    .withOpacity(0.6),
-                                borderRadius: BorderRadius.circular(18.0),
-                              ),
-                              child: RotatedBox(
-                                  quarterTurns: -1,
-                                child: Icon(
-                                  Icons.skip_next_rounded,
-                                  color: FlutterFlowTheme.of(context)
-                                      .secondary
-                                      .withOpacity(0.7),
-                                  size: 22.0,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ));
+          ],
+          body: ValueListenableBuilder<bool>(
+            valueListenable: _chromeVisible,
+            builder: (context, chromeVisible, child) {
+              return SafeArea(
+                top: _isTextMode && !chromeVisible,
+                bottom: false,
+                child: child!,
+              );
+            },
+            child: SizedBox(
+              height: double.infinity,
+              child: Builder(
+                builder: (context) {
+                  if (contentReady) {
+                    return SectionsViewWidget(
+                      sections: _model.currentPrayer?.sections,
+                      prayerTitle: _model.currentPrayer?.title,
+                      prayerSubtitle: _model.currentPrayer?.subtitle,
+                      controlBarVisibilityNotifier: _chromeVisible,
+                      allowScrollNotifier: _allowScroll,
+                    );
                   }
-                )
-              ],
+
+                  return Align(
+                    alignment: const AlignmentDirectional(0.0, 0.0),
+                    child: SizedBox(
+                      width: 64.0,
+                      height: 64.0,
+                      child: custom_widgets.CustomCircularProgressIndicator(
+                        width: 64.0,
+                        height: 64.0,
+                        color: FlutterFlowTheme.of(context).primary,
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
-            );
-          },
+                ),
+                );
+              },
+            ),
+            if (contentReady)
+              ValueListenableBuilder<bool>(
+                valueListenable: _chromeVisible,
+                builder: (context, chromeVisible, _) {
+                  return _buildPrimaryStatusBarFill(
+                    context,
+                    visible: _usePrimaryStatusBarFill(chromeVisible),
+                  );
+                },
+              ),
+            if (contentReady && _isTextMode)
+              ValueListenableBuilder<int>(
+                valueListenable: _pageManager.trackIndexNotifier,
+                builder: (context, trackIndex, _) {
+                  final sectionHasAudio = _currentSectionHasAudio();
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: _chromeVisible,
+                    builder: (context, chromeVisible, _) {
+
+                      final topInset = MediaQuery.viewPaddingOf(context).top;
+                      final top = topInset + (_chromeVisible.value ? 72.0 : 8.0);
+                      final showPlayPause = !chromeVisible && sectionHasAudio;
+                      return Positioned(
+                        top: top,
+                        right: 16.0,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          elevation: 4.0,
+                          shadowColor: Colors.black26,
+                          borderRadius: BorderRadius.circular(18.0),
+                          child: _buildFloatingControlsOverlay(
+                            context,
+                            chromeVisible: chromeVisible,
+                            showPlayPause: showPlayPause,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+          ],
         ),
+      ),
       ),
     );
   }

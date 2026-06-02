@@ -118,7 +118,11 @@ class _FlutterFlowCalendarState extends State<FlutterFlowCalendar> {
                   ? _nextWeek(focusedDay)
                   : _nextMonth(focusedDay),
             ),
-            onTodayButtonTap: () => setState(() => focusedDay = DateTime.now()),
+            onTodayButtonTap: () {
+              final now = DateTime.now();
+              setState(() => focusedDay = now);
+              setSelectedDay(now);
+            },
             titleStyle: widget.titleStyle,
             iconColor: widget.iconColor,
             locale: widget.locale,

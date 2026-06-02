@@ -17,20 +17,19 @@ import 'package:http/http.dart' as http;
 
 Future<String?> retrieveAudioFile(String url) async {
   try {
-    final fileName = extractFileName(url);
-
-    final sanitized = sanitizeFilename(fileName);
-
     final dir = await getApplicationDocumentsDirectory();
+    return localAudioPathForUrl(url, dir);
+  } catch (e) {
+    return null;
+  }
+}
 
-    final filePath = '${dir.path}/$sanitized';
-
-    final file = File(filePath);
-    if (await file.exists()) {
-      return file.path;
-    } else {
-      return null;
-    }
+String? localAudioPathForUrl(String url, Directory documentsDir) {
+  try {
+    final fileName = extractFileName(url);
+    final sanitized = sanitizeFilename(fileName);
+    final file = File('${documentsDir.path}/$sanitized');
+    return file.existsSync() ? file.path : null;
   } catch (e) {
     return null;
   }

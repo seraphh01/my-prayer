@@ -46,6 +46,102 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
     super.dispose();
   }
 
+  static const String _fallbackPrayerLabel = 'Rugăciune';
+
+  String _prayerTitle(PrayerStruct prayer) {
+    if (prayer.title.isNotEmpty) {
+      return prayer.title;
+    }
+    if (prayer.subtitle.isNotEmpty) {
+      return prayer.subtitle;
+    }
+    return _fallbackPrayerLabel;
+  }
+
+  String? _prayerSubtitle(PrayerStruct prayer) {
+    if (prayer.subtitle.isEmpty) {
+      return null;
+    }
+    if (prayer.title.isEmpty) {
+      return null;
+    }
+    if (prayer.subtitle.trim().toLowerCase() ==
+        prayer.title.trim().toLowerCase()) {
+      return null;
+    }
+    return prayer.subtitle;
+  }
+
+  String _typeRowTitle(PrayerTypeStruct type) {
+    if (type.prayers.length == 1 && type.subtypes.isEmpty) {
+      return _prayerTitle(type.prayers.first);
+    }
+    return type.type.isNotEmpty ? type.type : _fallbackPrayerLabel;
+  }
+
+  String? _typeRowSubtitle(PrayerTypeStruct type) {
+    if (type.prayers.length == 1 && type.subtypes.isEmpty) {
+      final prayer = type.prayers.first;
+      final prayerSubtitle = _prayerSubtitle(prayer);
+      if (prayerSubtitle != null) {
+        return prayerSubtitle;
+      }
+      if (type.type.isNotEmpty &&
+          type.type.trim().toLowerCase() !=
+              _prayerTitle(prayer).trim().toLowerCase()) {
+        return type.type;
+      }
+      return null;
+    }
+    return null;
+  }
+
+  Widget _buildNavListTile({
+    required BuildContext context,
+    required String title,
+    String? subtitle,
+    bool useCompactPrayerStyle = false,
+  }) {
+    final theme = FlutterFlowTheme.of(context);
+  final titleStyle = useCompactPrayerStyle
+        ? theme.titleSmall
+        : theme.titleMedium;
+
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        title: Text(
+          title.maybeHandleOverflow(maxChars: 80),
+          style: titleStyle.override(
+            fontFamily: 'Merriweather',
+            color: theme.primaryText,
+            letterSpacing: 0.0,
+          ),
+        ),
+        subtitle: subtitle == null || subtitle.isEmpty
+            ? null
+            : Text(
+                subtitle.maybeHandleOverflow(maxChars: 80),
+                style: theme.labelMedium.override(
+                  fontFamily: 'Inter',
+                  color: theme.secondaryText,
+                  letterSpacing: 0.0,
+                ),
+              ),
+        trailing: Icon(
+          Icons.keyboard_arrow_right_rounded,
+          color: useCompactPrayerStyle ? theme.secondaryText : theme.secondary,
+          size: 24.0,
+        ),
+        dense: true,
+        contentPadding: const EdgeInsetsDirectional.fromSTEB(12.0, 0.0, 12.0, 0.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(0.0),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Builder(
@@ -120,35 +216,10 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                 safeSetState(() {});
                               }
                             },
-                            child: Material(
-                              color: Colors.transparent,
-                              child: ListTile(
-                                title: Text(
-                                  subTypesItem.type.maybeHandleOverflow(
-                                    maxChars: 40,
-                                  ),
-                                  style: FlutterFlowTheme.of(context)
-                                      .titleMedium
-                                      .override(
-                                        fontFamily: 'Merriweather',
-                                        color: FlutterFlowTheme.of(context)
-                                            .alternate,
-                                        letterSpacing: 0.0,
-                                      ),
-                                ),
-                                trailing: Icon(
-                                  Icons.keyboard_arrow_right_rounded,
-                                  color: FlutterFlowTheme.of(context).alternate,
-                                  size: 24.0,
-                                ),
-                                dense: true,
-                                contentPadding:
-                                    const EdgeInsetsDirectional.fromSTEB(
-                                        12.0, 0.0, 12.0, 0.0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(0.0),
-                                ),
-                              ),
+                            child: _buildNavListTile(
+                              context: context,
+                              title: _typeRowTitle(subTypesItem),
+                              subtitle: _typeRowSubtitle(subTypesItem),
                             ),
                           ),
                         ),
@@ -198,41 +269,12 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
                                               prayersItem.id,
                                             );
                                           },
-                                          child: Material(
-                                            color: Colors.transparent,
-                                            child: ListTile(
-                                              title: Text(
-                                                prayersItem.subtitle,
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .titleSmall
-                                                        .override(
-                                                          fontFamily:
-                                                              'Merriweather',
-                                                          color: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .alternate,
-                                                          letterSpacing: 0.0,
-                                                        ),
-                                              ),
-                                              trailing: Icon(
-                                                Icons
-                                                    .keyboard_arrow_right_rounded,
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .alternate,
-                                                size: 24.0,
-                                              ),
-                                              dense: true,
-                                              contentPadding:
-                                                  const EdgeInsetsDirectional
-                                                      .fromSTEB(
-                                                      12.0, 0.0, 12.0, 0.0),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(0.0),
-                                              ),
-                                            ),
+                                          child: _buildNavListTile(
+                                            context: context,
+                                            title: _prayerTitle(prayersItem),
+                                            subtitle:
+                                                _prayerSubtitle(prayersItem),
+                                            useCompactPrayerStyle: true,
                                           ),
                                         ),
                                       );

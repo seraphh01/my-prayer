@@ -108,6 +108,21 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => const CalendarPageWidget(),
         ),
         FFRoute(
+          name: 'RemindersPage',
+          path: '/remindersPage',
+          builder: (context, params) => const RemindersPageWidget(),
+        ),
+        FFRoute(
+          name: 'OnboardingPage',
+          path: '/onboardingPage',
+          builder: (context, params) => const OnboardingPageWidget(),
+        ),
+        FFRoute(
+          name: 'PrayerJournalPage',
+          path: '/prayerJournalPage',
+          builder: (context, params) => const PrayerJournalPageWidget(),
+        ),
+        FFRoute(
           name: 'PrivacyPolicyPage',
           path: '/privacyPolicyPage',
           builder: (context, params) => const PrivacyPolicyPageWidget(),
@@ -132,6 +147,27 @@ extension NavigationExtensions on BuildContext {
     } else {
       go('/');
     }
+  }
+
+  /// Replaces the navigation stack with the home page.
+  void goHomeReplacingStack() {
+    go('/');
+  }
+
+  /// Opens [RosaryPage] with [HomePage] as the only route below it, so home
+  /// and system back skip intermediate pages (calendar, journal, etc.).
+  void openPrayerWithHomeOnStack(String prayerId) {
+    goHomeReplacingStack();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = appNavigatorKey.currentContext;
+      if (context == null || !context.mounted) {
+        return;
+      }
+      context.pushNamed(
+        'RosaryPage',
+        queryParameters: {'prayerId': prayerId}.withoutNulls,
+      );
+    });
   }
 }
 

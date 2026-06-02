@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'notifiers/play_button_notifier.dart';
 import 'notifiers/progress_notifier.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:my_prayer/service_locator.dart';
+
+import 'services/audio_handler.dart';
 
 class PageManager {
   // Listeners: Updates going to the UI
@@ -15,6 +19,7 @@ class PageManager {
   final bufferedTimeNotifier = ValueNotifier<Duration>(Duration.zero);
 
   final isFirstSongNotifier = ValueNotifier<bool>(true);
+  final isQueueReadyNotifier = ValueNotifier<bool>(false);
   final playButtonNotifier = PlayButtonNotifier();
   final isLastSongNotifier = ValueNotifier<bool>(true);
   final isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
@@ -22,6 +27,9 @@ class PageManager {
       ValueNotifier<AudioProcessingState>(AudioProcessingState.idle);
 
   final _audioHandler = getIt<AudioHandler>();
+  int? _pendingTrackIndex;
+  int _lastQueueLength = 0;
+
   // Events: Calls coming from the UI
   void init() {
     _listenToChangesInPlaylist();
@@ -36,10 +44,18 @@ class PageManager {
     _audioHandler.queue.listen((playlist) {
       if (playlist.isEmpty) {
         playlistNotifier.value = [];
-        trackIndexNotifier.value = 0;
+        _lastQueueLength = 0;
       } else {
         final newList = playlist.map((item) => item.title).toList();
         playlistNotifier.value = newList;
+        final wasEmpty = _lastQueueLength == 0;
+        _lastQueueLength = playlist.length;
+        if (wasEmpty) {
+          final targetIndex = trackIndexNotifier.value;
+          if (targetIndex >= 0 && targetIndex < playlist.length) {
+            unawaited(_audioHandler.skipToQueueItem(targetIndex));
+          }
+        }
       }
       _updateSkipButtons();
     });
@@ -83,6 +99,25 @@ class PageManager {
     });
   }
 
+  bool _shouldSyncTrackIndexFromPlayback({
+    required bool playing,
+    required AudioProcessingState processingState,
+  }) {
+    if (playing) {
+      return true;
+    }
+    switch (processingState) {
+      case AudioProcessingState.loading:
+      case AudioProcessingState.buffering:
+      case AudioProcessingState.ready:
+        return true;
+      case AudioProcessingState.idle:
+      case AudioProcessingState.completed:
+      case AudioProcessingState.error:
+        return false;
+    }
+  }
+
   void _listenToTrackIndexStateChanges() {
     _audioHandler.playbackState.listen((playbackState) {
       // Track index change only when it is a new item or a skip
@@ -90,6 +125,23 @@ class PageManager {
 
       if (playBackStateNotifier.value != playbackState.processingState) {
         playBackStateNotifier.value = playbackState.processingState;
+      }
+
+      // just_audio often reports queueIndex 0 while idle, even after skipToQueueItem.
+      // Keep the UI-driven index until playback is actually active.
+      if (_pendingTrackIndex != null && newIndex != _pendingTrackIndex) {
+        return;
+      }
+      if (_pendingTrackIndex != null && newIndex == _pendingTrackIndex) {
+        _pendingTrackIndex = null;
+      }
+
+      if (!_shouldSyncTrackIndexFromPlayback(
+            playing: playbackState.playing,
+            processingState: playbackState.processingState,
+          ) &&
+          newIndex != trackIndexNotifier.value) {
+        return;
       }
 
       if (trackIndexNotifier.value != newIndex) {
@@ -116,8 +168,10 @@ class PageManager {
     }
   }
 
-  void play() {
-    _audioHandler.play();
+  Future<void> play() async {
+    final index = trackIndexNotifier.value;
+    await skipToIndex(index);
+    await _audioHandler.play();
   }
 
   void pause() {
@@ -127,11 +181,37 @@ class PageManager {
   Future<void> seek(Duration position) async =>
       await _audioHandler.seek(position);
 
-  void previous() => _audioHandler.skipToPrevious();
-  void next() => _audioHandler.skipToNext();
+  void previous() {
+    final queue = _audioHandler.queue.value;
+    if (currentProgressNotifier.value.inSeconds > 3) {
+      unawaited(seek(Duration.zero));
+      return;
+    }
+    if (queue.isEmpty || trackIndexNotifier.value <= 0) {
+      return;
+    }
+    unawaited(skipToIndex(trackIndexNotifier.value - 1));
+  }
+
+  void next() {
+    final queue = _audioHandler.queue.value;
+    if (queue.isEmpty ||
+        trackIndexNotifier.value >= queue.length - 1) {
+      return;
+    }
+    unawaited(skipToIndex(trackIndexNotifier.value + 1));
+  }
 
   Future<void> skipToIndex(int index) async {
-    await _audioHandler.skipToQueueItem(index);
+    if (index < 0) {
+      return;
+    }
+    _pendingTrackIndex = index;
+    trackIndexNotifier.value = index;
+    final queue = _audioHandler.queue.value;
+    if (index < queue.length) {
+      await _audioHandler.skipToQueueItem(index);
+    }
   }
 
   Future<void> setPlaybackSpeed(double speed) async {
@@ -155,8 +235,28 @@ class PageManager {
   }
 
   Future<void> setQueue(List<MediaItem> mediaItems) async {
-    await _audioHandler.stop();
-    await _audioHandler.updateQueue(mediaItems);
+    isQueueReadyNotifier.value = false;
+    final index = trackIndexNotifier.value.clamp(
+      0,
+      mediaItems.isEmpty ? 0 : mediaItems.length - 1,
+    );
+
+    if (_audioHandler is MyAudioHandler) {
+      await (_audioHandler as MyAudioHandler)
+          .loadQueueAtIndex(mediaItems, initialIndex: index);
+      _pendingTrackIndex = null;
+      _lastQueueLength = mediaItems.length;
+      if (mediaItems.isNotEmpty) {
+        trackIndexNotifier.value = index;
+      }
+    } else {
+      await _audioHandler.stop();
+      await _audioHandler.updateQueue(mediaItems);
+      await skipToIndex(index);
+      _lastQueueLength = mediaItems.length;
+    }
+
+    isQueueReadyNotifier.value = true;
   }
 
   Future<void> clearQueue() async {

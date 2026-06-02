@@ -405,6 +405,21 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                           borderRadius: 20.0,
                           buttonSize: 40.0,
                           fillColor: FlutterFlowTheme.of(context).primary,
+                          icon: Icon(
+                            Icons.notifications_outlined,
+                            color: FlutterFlowTheme.of(context).alternate,
+                            size: 24.0,
+                          ),
+                          onPressed: () async {
+                            Navigator.pop(context, 'reminder');
+                          },
+                        ),
+                      if (!isWeb)
+                        FlutterFlowIconButton(
+                          borderColor: Colors.transparent,
+                          borderRadius: 20.0,
+                          buttonSize: 40.0,
+                          fillColor: FlutterFlowTheme.of(context).primary,
                           disabledColor:
                               FlutterFlowTheme.of(context).secondaryBackground,
                           disabledIconColor:
@@ -422,10 +437,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                         ),
                       Builder(
                         builder: (context) {
-                          if (FFAppState()
-                                  .favoritePrayers
-                                  .contains(widget.prayer) ==
-                              true) {
+                          if (FFAppState().isFavoritePrayerId(widget.prayer!.id)) {
                             return FlutterFlowIconButton(
                               borderColor: Colors.transparent,
                               borderRadius: 20.0,
@@ -438,7 +450,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                               ),
                               onPressed: () async {
                                 FFAppState()
-                                    .removeFromFavoritePrayers(widget.prayer!);
+                                    .removeFavoriteById(widget.prayer!.id);
                                 safeSetState(() {});
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).clearSnackBars();
