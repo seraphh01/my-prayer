@@ -1,5 +1,6 @@
 import '/backend/api_requests/api_calls.dart';
 import '/components/sub_types_view_widget.dart';
+import '/custom_code/recommended_prayer_picker.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'dart:async';
 import 'home_page_widget.dart' show HomePageWidget;
@@ -9,6 +10,7 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   ///  State fields for stateful widgets in this page.
 
   Completer<ApiCallResponse>? apiRequestCompleter;
+  Future<RecommendedPrayerResult?>? recommendedPrayerFuture;
   // Model for SubTypesView component.
   SubTypesViewModel? _subTypesViewModel;
   SubTypesViewModel get subTypesViewModel =>

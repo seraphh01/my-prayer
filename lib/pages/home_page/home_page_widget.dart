@@ -8,6 +8,7 @@ import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart'
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/download/download_manager.dart';
 import 'package:my_prayer/custom_code/download/notifiers/download_state_notifier.dart';
+import 'package:my_prayer/custom_code/recommended_prayer_picker.dart';
 import 'package:my_prayer/service_locator.dart';
 
 import '/backend/api_requests/api_calls.dart';
@@ -97,6 +98,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => HomePageModel());
+    _model.recommendedPrayerFuture = fetchRecommendedPrayer();
     _scrollController.addListener(() {
       if (!_searchActive || !_scrollController.hasClients || _isAutoScrolling) {
         return;
@@ -436,6 +438,23 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           : _expandedHeight,
                         elevation: 0.0,
                         automaticallyImplyLeading: false,
+                        centerTitle: true,
+                        title: _searchActive
+                            ? null
+                            : Text(
+                                'Rugăciuni și cântări',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: FlutterFlowTheme.of(context)
+                                    .titleMedium
+                                    .override(
+                                      fontFamily: 'Merriweather',
+                                      color: FlutterFlowTheme.of(context)
+                                          .alternate,
+                                      fontSize: 17.0,
+                                      letterSpacing: 0.0,
+                                    ),
+                              ),
                         bottom: _searchActive
                             ? PreferredSize(
                                 preferredSize: const Size.fromHeight(
@@ -565,18 +584,18 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         AutoSizeText(
-                                          'Congregația Surorilor Maicii Domnului',
+                                          'Rugăciuni și cântări',
                                           textAlign: TextAlign.center,
                                           maxLines: 1,
-                                          minFontSize: 18.0,
+                                          minFontSize: 16.0,
                                           style: FlutterFlowTheme.of(context)
                                               .titleMedium
                                               .override(
-                                                fontFamily: 'PlayBall',
+                                                fontFamily: 'Merriweather',
                                                 color:
                                                     FlutterFlowTheme.of(context)
                                                         .alternate,
-                                                fontSize: 28.0,
+                                                fontSize: 22.0,
                                                 letterSpacing: 0.0,
                                                 shadows: [
                                                   const Shadow(
@@ -585,7 +604,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                     blurRadius: 2.0,
                                                   )
                                                 ],
-                                                useGoogleFonts: false,
                                               ),
                                         ),
                                         Text(
@@ -795,6 +813,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             ),
                           ),
                         ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: _buildRecommendedPrayerSection(context),
                       ),
 
                       SliverPadding(
@@ -1575,6 +1596,101 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           ),
         ),
       ));
+  }
+
+
+  Widget _buildRecommendedPrayerSection(BuildContext context) {
+    if (_searchActive) {
+      return const SizedBox.shrink();
+    }
+
+    return FutureBuilder<RecommendedPrayerResult?>(
+      future: _model.recommendedPrayerFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
+            child: Container(
+              height: 72.0,
+              decoration: BoxDecoration(
+                color: FlutterFlowTheme.of(context).alternate,
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: 20.0,
+                height: 20.0,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.0,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    FlutterFlowTheme.of(context).primary,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final recommendation = snapshot.data;
+        if (recommendation == null) {
+          return const SizedBox.shrink();
+        }
+
+        final prayer = recommendation.prayer;
+        final cardTitle = recommendation.groupName.isNotEmpty
+            ? recommendation.groupName
+            : prayer.title;
+        final cardSubtitle = prayer.subtitle.isNotEmpty
+            ? prayer.subtitle
+            : (prayer.title.isNotEmpty ? prayer.title : null);
+
+        return Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Pentru astăzi',
+                style: FlutterFlowTheme.of(context).labelSmall.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context)
+                          .alternate
+                          .withOpacity(0.85),
+                      letterSpacing: 0.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 8.0),
+              PrayerTypeCardWidget(
+                title: cardTitle,
+                subtitle: cardSubtitle,
+                trailingIcons: const [Icons.chevron_right_rounded],
+                onTap: () async {
+                  _typeStack.clear();
+                  safeSetState(() {});
+                  await context.pushNamed(
+                    'RosaryPage',
+                    queryParameters: {
+                      'prayerId': serializeParam(
+                        prayer.id,
+                        ParamType.String,
+                      ),
+                    }.withoutNulls,
+                    extra: <String, dynamic>{
+                      kTransitionInfoKey: const TransitionInfo(
+                        hasTransition: true,
+                        transitionType: PageTransitionType.fade,
+                        duration: Duration(milliseconds: 250),
+                      ),
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildSearchField(BuildContext context) {
