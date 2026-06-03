@@ -1,10 +1,10 @@
 // ignore_for_file: unnecessary_getters_setters
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_prayer/backend/schema/enums/enums.dart';
 
 import '/backend/schema/util/firestore_util.dart';
 
+import 'index.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
 class TextElementStruct extends FFFirebaseStruct {
@@ -228,7 +228,7 @@ void addTextElementStructData(
     return;
   }
   if (textElement.firestoreUtilData.delete) {
-    firestoreData[fieldName] = FieldValue.delete();
+    firestoreData[fieldName] = fieldDeleteSentinel;
     return;
   }
   final clearFields =

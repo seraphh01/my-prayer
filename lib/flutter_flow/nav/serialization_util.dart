@@ -30,18 +30,6 @@ String placeToString(FFPlace place) => jsonEncode({
 String uploadedFileToString(FFUploadedFile uploadedFile) =>
     uploadedFile.serialize();
 
-const _kDocIdDelimeter = '|';
-String _serializeDocumentReference(DocumentReference ref) {
-  final docIds = <String>[];
-  DocumentReference? currentRef = ref;
-  while (currentRef != null) {
-    docIds.add(currentRef.id);
-    // Get the parent document (catching any errors that arise).
-    currentRef = safeGet<DocumentReference?>(() => currentRef?.parent.parent);
-  }
-  // Reverse the list to get the correct ordering.
-  return docIds.reversed.join(_kDocIdDelimeter);
-}
 dynamic serializeParam(
   dynamic param,
   ParamType paramType, {
@@ -77,11 +65,6 @@ dynamic serializeParam(
       return uploadedFileToString(param as FFUploadedFile);
     case ParamType.JSON:
       return param; // return Map/List directly
-    case ParamType.DocumentReference:
-      return _serializeDocumentReference(param as DocumentReference);
-    case ParamType.Document:
-      final reference = (param as FirestoreRecord).reference;
-      return _serializeDocumentReference(reference);
     case ParamType.DataStruct:
       return (param is BaseStruct) ? param.serialize() : null; // Map
     case ParamType.Enum:
@@ -147,18 +130,6 @@ FFPlace placeFromString(String placeStr) {
 FFUploadedFile uploadedFileFromString(String uploadedFileStr) =>
     FFUploadedFile.deserialize(uploadedFileStr);
 
-DocumentReference _deserializeDocumentReference(
-  String refStr,
-  List<String> collectionNamePath,
-) {
-  var path = '';
-  final docIds = refStr.split(_kDocIdDelimeter);
-  for (int i = 0; i < docIds.length && i < collectionNamePath.length; i++) {
-    path += '/${collectionNamePath[i]}/${docIds[i]}';
-  }
-  return FirebaseFirestore.instance.doc(path);
-}
-
 enum ParamType {
   int,
   double,
@@ -171,9 +142,6 @@ enum ParamType {
   FFPlace,
   FFUploadedFile,
   JSON,
-
-  Document,
-  DocumentReference,
   DataStruct,
   Enum,
   SupabaseRow,
@@ -229,8 +197,6 @@ dynamic deserializeParam<T>(
       return uploadedFileFromString(param.toString());
     case ParamType.JSON:
       return param; // Map/List already
-    case ParamType.DocumentReference:
-      return _deserializeDocumentReference(param, collectionNamePath ?? []);
     case ParamType.SupabaseRow:
       if (param is Map<String, dynamic>) {
         switch (T) {
@@ -267,56 +233,3 @@ dynamic deserializeParam<T>(
   }
 }
 
-
-T? _constructSupabaseRow<T>(Map<String, dynamic> data) {
-  switch (T) {
-    case TextElementsRow:
-      return TextElementsRow(data) as T;
-    case LiturgicalTextsRow:
-      return LiturgicalTextsRow(data) as T;
-    case PrayerTypeRow:
-      return PrayerTypeRow(data) as T;
-    case PrayersSectionsRow:
-      return PrayersSectionsRow(data) as T;
-    case LiturgicalTextsWithElementsRow:
-      return LiturgicalTextsWithElementsRow(data) as T;
-    case SectionsRow:
-      return SectionsRow(data) as T;
-    case PrayersRow:
-      return PrayersRow(data) as T;
-    case SectionTextsRow:
-      return SectionTextsRow(data) as T;
-    default:
-      return null;
-  }
-}
-
-
-Future<dynamic> Function(String) getDoc(
-  List<String> collectionNamePath,
-  RecordBuilder recordBuilder,
-) {
-  return (String ids) => _deserializeDocumentReference(ids, collectionNamePath)
-      .get()
-      .then((s) => recordBuilder(s));
-}
-
-Future<List<T>> Function(String) getDocList<T>(
-  List<String> collectionNamePath,
-  RecordBuilder<T> recordBuilder,
-) {
-  return (String idsList) {
-    List<String> docIds = [];
-    try {
-      final ids = json.decode(idsList) as Iterable;
-      docIds = ids.whereType<String>().map((d) => d).toList();
-    } catch (_) {}
-    return Future.wait(
-      docIds.map(
-        (ids) => _deserializeDocumentReference(ids, collectionNamePath)
-            .get()
-            .then((s) => recordBuilder(s)),
-      ),
-    ).then((docs) => docs.where((d) => d != null).map((d) => d!).toList());
-  };
-}

@@ -1,6 +1,5 @@
 // ignore_for_file: unnecessary_getters_setters
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_prayer/backend/schema/enums/enums.dart';
 
 import '/backend/schema/util/firestore_util.dart';
@@ -221,7 +220,7 @@ void addPrayerStructData(
     return;
   }
   if (prayer.firestoreUtilData.delete) {
-    firestoreData[fieldName] = FieldValue.delete();
+    firestoreData[fieldName] = fieldDeleteSentinel;
     return;
   }
   final clearFields =

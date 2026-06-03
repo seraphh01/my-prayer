@@ -257,12 +257,7 @@ class ApiPagingParams {
       'PagingParams(nextPageNumber: $nextPageNumber, numItems: $numItems, lastResponse: $lastResponse,)';
 }
 
-String _toEncodable(dynamic item) {
-  if (item is DocumentReference) {
-    return item.path;
-  }
-  return item;
-}
+String _toEncodable(dynamic item) => item;
 
 String _serializeList(List? list) {
   list ??= <String>[];
