@@ -241,22 +241,27 @@ class PageManager {
       mediaItems.isEmpty ? 0 : mediaItems.length - 1,
     );
 
-    if (_audioHandler is MyAudioHandler) {
-      await (_audioHandler as MyAudioHandler)
-          .loadQueueAtIndex(mediaItems, initialIndex: index);
-      _pendingTrackIndex = null;
-      _lastQueueLength = mediaItems.length;
-      if (mediaItems.isNotEmpty) {
-        trackIndexNotifier.value = index;
+    try {
+      if (_audioHandler is MyAudioHandler) {
+        await (_audioHandler as MyAudioHandler)
+            .loadQueueAtIndex(mediaItems, initialIndex: index)
+            .timeout(const Duration(seconds: 45));
+        _pendingTrackIndex = null;
+        _lastQueueLength = mediaItems.length;
+        if (mediaItems.isNotEmpty) {
+          trackIndexNotifier.value = index;
+        }
+      } else {
+        await _audioHandler.stop();
+        await _audioHandler.updateQueue(mediaItems);
+        await skipToIndex(index);
+        _lastQueueLength = mediaItems.length;
       }
-    } else {
-      await _audioHandler.stop();
-      await _audioHandler.updateQueue(mediaItems);
-      await skipToIndex(index);
-      _lastQueueLength = mediaItems.length;
+    } catch (error, stackTrace) {
+      debugPrint('Failed to set audio queue: $error\n$stackTrace');
+    } finally {
+      isQueueReadyNotifier.value = true;
     }
-
-    isQueueReadyNotifier.value = true;
   }
 
   Future<void> clearQueue() async {

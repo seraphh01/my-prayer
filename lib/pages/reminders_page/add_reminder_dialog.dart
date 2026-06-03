@@ -436,7 +436,6 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
                           );
                         }).toList(),
                       ),
-                      const SizedBox(height: 12.0),
                     ],
                     if (!widget.isPrayerLocked && !_hasPrayer)
                       ReminderPrayerPicker(

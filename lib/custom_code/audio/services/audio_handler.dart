@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
 Future<AudioHandler> initAudioService() async {
@@ -18,14 +21,14 @@ Future<AudioHandler> initAudioService() async {
 class MyAudioHandler extends BaseAudioHandler {
   final _player = AudioPlayer();
   final _playlist = ConcatenatingAudioSource(children: []);
+  late final Future<void> _playlistReady;
 
   MyAudioHandler() {
-    _loadEmptyPlaylist();
+    _playlistReady = _loadEmptyPlaylist();
     _notifyAudioHandlerAboutPlaybackEvents();
     _listenForDurationChanges();
     _listenForCurrentSongIndexChanges();
     _listenForSequenceStateChanges();
-
   }
 
   Future<void> _loadEmptyPlaylist() async {
@@ -120,6 +123,7 @@ class MyAudioHandler extends BaseAudioHandler {
     List<MediaItem> mediaItems, {
     int initialIndex = 0,
   }) async {
+    await _playlistReady;
     _playlist.clear();
     queue.value.clear();
 
@@ -134,11 +138,25 @@ class MyAudioHandler extends BaseAudioHandler {
     queue.add(mediaItems);
 
     final index = initialIndex.clamp(0, mediaItems.length - 1);
-    await _player.setAudioSource(
-      _playlist,
-      initialIndex: index,
-      preload: true,
-    );
+    // iOS often hangs when preloading long network concatenating playlists.
+    final shouldPreload = defaultTargetPlatform != TargetPlatform.iOS;
+
+    try {
+      await _player
+          .setAudioSource(
+            _playlist,
+            initialIndex: index,
+            preload: shouldPreload,
+          )
+          .timeout(const Duration(seconds: 30));
+    } on TimeoutException {
+      await _player.setAudioSource(
+        _playlist,
+        initialIndex: index,
+        preload: false,
+      );
+    }
+
     mediaItem.add(mediaItems[index]);
   }
 
@@ -164,13 +182,33 @@ class MyAudioHandler extends BaseAudioHandler {
     queue.add(newQueue);
   }
 
-  UriAudioSource _createAudioSource(MediaItem mediaItem) {
-    return AudioSource.uri(
-      mediaItem.extras!['isDownloaded']
-          ? Uri.file(mediaItem.extras!['filePath'] as String)
-          : Uri.parse(mediaItem.extras!['url'] as String),
-      tag: mediaItem,
-    ) ;
+  AudioSource _createAudioSource(MediaItem mediaItem) {
+    final isDownloaded = mediaItem.extras!['isDownloaded'] as bool? ?? false;
+    final filePath = mediaItem.extras!['filePath'] as String? ?? '';
+    final url = mediaItem.extras!['url'] as String? ?? '';
+
+    if (isDownloaded && filePath.isNotEmpty) {
+      return AudioSource.uri(Uri.file(filePath), tag: mediaItem);
+    }
+    if (url.isNotEmpty) {
+      return AudioSource.uri(Uri.parse(url), tag: mediaItem);
+    }
+
+    // Text-only section inside an audio prayer: zero-length clip so the queue
+    // index stays aligned without hitting invalid URIs on iOS.
+    final fallbackUrl = mediaItem.extras!['fallbackUrl'] as String? ?? '';
+    if (fallbackUrl.isNotEmpty) {
+      return ClippingAudioSource(
+        start: Duration.zero,
+        end: const Duration(milliseconds: 1),
+        child: AudioSource.uri(Uri.parse(fallbackUrl)),
+        tag: mediaItem,
+      );
+    }
+
+    throw StateError(
+      'No playable audio source for media item ${mediaItem.id}',
+    );
   }
 
   @override

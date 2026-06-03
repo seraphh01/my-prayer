@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -37,6 +38,9 @@ class PrayerReminderService {
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
     );
 
     await _plugin.initialize(
@@ -54,8 +58,12 @@ class PrayerReminderService {
 
     final launchDetails = await _plugin.getNotificationAppLaunchDetails();
     final launchPayload = launchDetails?.notificationResponse?.payload;
-    if (launchPayload != null && launchPayload.isNotEmpty) {
-      _onPrayerTap?.call(launchPayload);
+    if (launchDetails?.didNotificationLaunchApp == true &&
+        launchPayload != null &&
+        launchPayload.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _onPrayerTap?.call(launchPayload);
+      });
     }
 
     _initialized = true;
@@ -95,7 +103,7 @@ class PrayerReminderService {
 
     await cancelReminder(reminder);
 
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       'prayer_reminders',
       'Memento rugăciune',
       channelDescription: 'Reamintiri locale pentru rugăciuni programate',

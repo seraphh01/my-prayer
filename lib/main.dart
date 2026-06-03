@@ -104,6 +104,10 @@ class _MyAppState extends State<MyApp> {
     // Future.delayed(const Duration(milliseconds: 500),
     //     () => safeSetState(() => _appStateNotifier.stopShowingSplashImage()));
     _router = createRouter(_appStateNotifier);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      flushPendingReminderNavigation();
+    });
   }
 
   @override

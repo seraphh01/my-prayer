@@ -60,7 +60,6 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   /// When true, the app header and bottom audio/control bar are visible.
   final ValueNotifier<bool> _chromeVisible = ValueNotifier(true);
   final ValueNotifier<bool> _allowScroll = ValueNotifier(true);
-  bool _audioQueueReady = false;
   static const double _appBarToolbarHeight = 64.0;
   static const double _floatingBackgroundOpacityActive = 0.65;
   static const double _floatingBackgroundOpacityIdle = 0.1;
@@ -282,6 +281,9 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
         flattenedSections.any((section) => section.audioUrl.isNotEmpty);
     final documentsDir =
         hasAudio ? await getApplicationDocumentsDirectory() : null;
+    final fallbackAudioUrl = flattenedSections
+        .map((section) => section.audioUrl)
+        .firstWhere((url) => url.isNotEmpty, orElse: () => '');
 
     final mediaItems = flattenedSections.map((section) {
       final artUri = section.imageUrl.isNotEmpty
@@ -301,6 +303,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
             'url': '',
             'isDownloaded': false,
             'filePath': '',
+            'fallbackUrl': '',
           },
         );
       }
@@ -320,11 +323,20 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
           'url': section.audioUrl,
           'isDownloaded': filePath != null,
           'filePath': filePath ?? '',
+          'fallbackUrl': fallbackAudioUrl,
         },
       );
     }).toList();
 
     await _pageManager.setQueue(mediaItems);
+  }
+
+  Future<void> _initializeAudioQueue() async {
+    try {
+      await setInitialMediaItems().timeout(const Duration(seconds: 45));
+    } catch (error, stackTrace) {
+      debugPrint('Audio queue initialization failed: $error\n$stackTrace');
+    }
   }
 
   @override
@@ -370,13 +382,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
         setState(() {});
       }
 
-      try {
-        await setInitialMediaItems();
-      } finally {
-        if (mounted) {
-          setState(() => _audioQueueReady = true);
-        }
-      }
+      unawaited(_initializeAudioQueue());
 
       if (!mounted) {
         return;
@@ -447,7 +453,6 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
 
     final prayerLoaded = _model.currentPrayer?.id != null &&
         _model.currentPrayer!.id.isNotEmpty;
-    final contentReady = prayerLoaded && _audioQueueReady;
 
     if (!_isTextMode) {
       _floatingControlsIdleTimer?.cancel();
@@ -796,7 +801,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
               height: double.infinity,
               child: Builder(
                 builder: (context) {
-                  if (contentReady) {
+                  if (prayerLoaded) {
                     return SectionsViewWidget(
                       sections: _model.currentPrayer?.sections,
                       prayerTitle: _model.currentPrayer?.title,
@@ -826,7 +831,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                 );
               },
             ),
-            if (contentReady)
+            if (prayerLoaded)
               ValueListenableBuilder<bool>(
                 valueListenable: _chromeVisible,
                 builder: (context, chromeVisible, _) {
@@ -836,7 +841,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                   );
                 },
               ),
-            if (contentReady && _isTextMode)
+            if (prayerLoaded && _isTextMode)
               ValueListenableBuilder<int>(
                 valueListenable: _pageManager.trackIndexNotifier,
                 builder: (context, trackIndex, _) {
