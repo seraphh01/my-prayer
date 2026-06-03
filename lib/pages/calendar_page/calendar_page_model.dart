@@ -1,10 +1,10 @@
-import '/backend/api_requests/api_calls.dart';
-import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
 import '/custom_code/calendar/filter_prayer_types.dart';
-import '/custom_code/calendar/merge_date_groups.dart';
+import '/custom_code/prayer/calendar_prayers_cache.dart';
+import '/custom_code/prayer/prayer_types_cache.dart';
 import '/flutter_flow/flutter_flow_calendar.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import 'package:my_prayer/service_locator.dart';
 import 'calendar_page_widget.dart' show CalendarPageWidget;
 import 'package:flutter/material.dart';
 
@@ -26,6 +26,9 @@ class CalendarPageModel extends FlutterFlowModel<CalendarPageWidget> {
   // State field(s) for Calendar widget.
   DateTimeRange? calendarSelectedDay;
 
+  final _calendarCache = getIt<CalendarPrayersCache>();
+  final _typesCache = getIt<PrayerTypesCache>();
+
   @override
   void initState(BuildContext context) {
     calendarSelectedDay = DateTimeRange(
@@ -42,46 +45,10 @@ class CalendarPageModel extends FlutterFlowModel<CalendarPageWidget> {
     BuildContext context, {
     required DateTime? dateTime,
   }) async {
-    ApiCallResponse? dateGroupsResponseAfterSelectedDayCopy;
-
     final selectedDate = DateTime(dateTime!.year, dateTime.month, dateTime.day);
 
-    dateGroupsResponseAfterSelectedDayCopy =
-        await SuapabaseQueriesGroup.getPrayersByDateGroupsCall.call(
-      dayOfWeek: selectedDate.weekday,
-      month: selectedDate.month,
-      day: selectedDate.day,
-      specificDate: dateTimeFormat('yyyy-MM-dd', selectedDate),
-      hour: -1,
-    );
-
-    if ((dateGroupsResponseAfterSelectedDayCopy.succeeded ?? true)) {
-      final rawGroups = ((dateGroupsResponseAfterSelectedDayCopy.jsonBody ?? '')
-              .toList()
-              .map<DateGroupStruct?>(DateGroupStruct.maybeFromMap)
-              .toList() as Iterable<DateGroupStruct?>)
-          .withoutNulls
-          .toList()
-          .cast<DateGroupStruct>();
-      dateGroups = mergeSimilarDateGroups(rawGroups);
-    }
-
-    await _ensurePrayerTypesCatalogLoaded();
-  }
-
-  Future<void> _ensurePrayerTypesCatalogLoaded() async {
-    if (prayerTypesCatalog.isNotEmpty) {
-      return;
-    }
-
-    final typesResponse =
-        await SuapabaseQueriesGroup.getPrayerTypesCall.call();
-    if ((typesResponse.succeeded ?? true) && typesResponse.jsonBody is List) {
-      prayerTypesCatalog = (typesResponse.jsonBody as List)
-          .map(PrayerTypeStruct.maybeFromMap)
-          .whereType<PrayerTypeStruct>()
-          .toList();
-    }
+    dateGroups = await _calendarCache.loadForDate(selectedDate);
+    prayerTypesCatalog = await _typesCache.load();
   }
 
   List<PrayerTypeStruct> nestedTypesForDateGroup(DateGroupStruct group) {

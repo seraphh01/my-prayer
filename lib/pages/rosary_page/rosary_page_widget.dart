@@ -11,10 +11,15 @@ import '/custom_code/journal/prayer_journal_storage.dart';
 import '/custom_code/reminders/prayer_reminder_flow.dart';
 import 'package:my_prayer/custom_code/download/download_manager.dart';
 import 'package:my_prayer/custom_code/download/notifiers/download_state_notifier.dart';
+import 'package:my_prayer/custom_code/prayer/downloaded_prayer_repository.dart';
+import 'package:my_prayer/custom_code/prayer/media_items_cache.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_content_cache.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_section_content_cache.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_typography.dart';
 import 'package:my_prayer/service_locator.dart';
 
-import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
+import '/backend/schema/enums/enums.dart';
 import '/backend/schema/structs/index.dart';
 import '/components/prayer_options_widget.dart';
 import '/components/sections_view_widget.dart';
@@ -28,7 +33,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'rosary_page_model.dart';
 export 'rosary_page_model.dart';
@@ -41,10 +45,14 @@ class RosaryPageWidget extends StatefulWidget {
     bool? clearSavedPrayer,
     int? initialAudioTime,
     bool? continueAudio,
-  }) : page = page ?? 0;
+  })  : page = page ?? 0,
+        initialAudioTime = initialAudioTime ?? 0,
+        continueAudio = continueAudio ?? false;
 
   final String? prayerId;
   final int page;
+  final int initialAudioTime;
+  final bool continueAudio;
 
   @override
   State<RosaryPageWidget> createState() => _RosaryPageWidgetState();
@@ -53,6 +61,7 @@ class RosaryPageWidget extends StatefulWidget {
 class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   late RosaryPageModel _model;
   final _downloadManager = getIt<DownloadManager>();
+  final _prayerCache = getIt<PrayerContentCache>();
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _pageManager = getIt<PageManager>();
   List<PrayerSectionStruct> flattenedSections = [];
@@ -69,6 +78,188 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       ValueNotifier(_floatingBackgroundOpacityActive);
   Timer? _floatingControlsIdleTimer;
   bool? _wasInTextMode;
+  bool _displayingAudio = true;
+  bool _audioQueueInitialized = false;
+  bool _pageReady = false;
+
+  Future<void> _preloadInitialSection() async {
+    if (flattenedSections.isEmpty) {
+      return;
+    }
+
+    final maxIndex = flattenedSections.length - 1;
+    final index = _pageManager.trackIndexNotifier.value.clamp(0, maxIndex);
+    final section = flattenedSections[index];
+    if (section.texts.isNotEmpty) {
+      return;
+    }
+
+    final sectionCache = getIt<PrayerSectionContentCache>();
+    final cached = sectionCache.cachedTexts(section.sectionId);
+    if (cached != null) {
+      section.texts = cached;
+      return;
+    }
+
+    section.texts = await sectionCache.loadTexts(section.sectionId);
+    sectionCache.prefetchAdjacent(flattenedSections, index);
+  }
+
+  bool _shouldForceAudioMode() {
+    final prayer = _model.currentPrayer;
+    if (prayer == null) {
+      return false;
+    }
+    if (prayer.mode == PrayerMode.audioOnly) {
+      return true;
+    }
+    if (prayer.mode == PrayerMode.textOnly) {
+      return false;
+    }
+
+    final hasAudio =
+        flattenedSections.any((section) => section.audioUrl.isNotEmpty);
+    if (!hasAudio) {
+      return false;
+    }
+
+    return !flattenedSections.any((section) => section.texts.isNotEmpty);
+  }
+
+  void _syncDisplayModeForPrayer({required bool continuingExistingAudio}) {
+    if (continuingExistingAudio) {
+      _displayingAudio = FFAppState().isDisplayingAudio;
+      return;
+    }
+
+    if (_shouldForceAudioMode()) {
+      FFAppState().isDisplayingAudio = true;
+      _displayingAudio = true;
+      return;
+    }
+
+    _displayingAudio = FFAppState().isDisplayingAudio;
+  }
+
+  bool _isAudioActivelyPlaying() {
+    return _pageManager.playButtonNotifier.value == ButtonState.playing;
+  }
+
+  Future<void> _prepareAudioForOpen({
+    required bool continuingExistingAudio,
+  }) async {
+    final hasAudio =
+        flattenedSections.any((section) => section.audioUrl.isNotEmpty);
+    if (!hasAudio) {
+      return;
+    }
+
+    final needsAudioQueue =
+        FFAppState().isDisplayingAudio || _shouldForceAudioMode();
+    if (!needsAudioQueue) {
+      return;
+    }
+
+    if (continuingExistingAudio) {
+      _audioQueueInitialized = true;
+      if (!_isAudioActivelyPlaying() && widget.initialAudioTime > 0) {
+        await _pageManager.seek(Duration(seconds: widget.initialAudioTime));
+      }
+      return;
+    }
+    if (!flattenedSections.any((section) => section.audioUrl.isNotEmpty)) {
+      return;
+    }
+
+    await _ensureAudioQueueInitialized();
+    final maxIndex = flattenedSections.isEmpty ? 0 : flattenedSections.length - 1;
+    _pageManager.setTrackIndex(widget.page.clamp(0, maxIndex));
+    if (widget.continueAudio && widget.initialAudioTime > 0) {
+      await _pageManager.seek(Duration(seconds: widget.initialAudioTime));
+    } else {
+      _pageManager.pause();
+      _pageManager.playButtonNotifier.value = ButtonState.paused;
+    }
+  }
+
+  void _onAppStateChanged() {
+    if (!mounted) {
+      return;
+    }
+    final isAudio = FFAppState().isDisplayingAudio;
+    if (isAudio) {
+      unawaited(_ensureAudioQueueInitialized());
+    }
+    if (_displayingAudio != isAudio) {
+      setState(() => _displayingAudio = isAudio);
+    }
+  }
+
+  Future<void> _ensureAudioQueueInitialized() async {
+    if (_audioQueueInitialized || flattenedSections.isEmpty) {
+      return;
+    }
+    if (!flattenedSections.any((section) => section.audioUrl.isNotEmpty)) {
+      return;
+    }
+    _audioQueueInitialized = true;
+    await _initializeAudioQueue();
+  }
+
+  bool _canContinueExistingAudio({String? previousPrayerId}) {
+    if (!widget.continueAudio) {
+      return false;
+    }
+    final prayerId = widget.prayerId;
+    if (prayerId == null || prayerId.isEmpty) {
+      return false;
+    }
+    if (previousPrayerId != prayerId) {
+      return false;
+    }
+    if (flattenedSections.isEmpty) {
+      return false;
+    }
+    return _pageManager.isQueueReadyForSectionCount(flattenedSections.length);
+  }
+
+  Future<void> _stopPreviousPrayerAudioIfNeeded() async {
+    if (widget.continueAudio) {
+      return;
+    }
+    if (!_pageManager.hasActiveQueue &&
+        _pageManager.playButtonNotifier.value != ButtonState.playing) {
+      return;
+    }
+
+    await _pageManager.stop();
+    if (_pageManager.hasActiveQueue) {
+      await _pageManager.clearQueue();
+    }
+    _audioQueueInitialized = false;
+    _pageManager.setTrackIndex(widget.page);
+    _pageManager.currentProgressNotifier.value = Duration.zero;
+  }
+
+  void _applyTrackIndexForOpen({required bool continuingExistingAudio}) {
+    final maxIndex = flattenedSections.isEmpty
+        ? 0
+        : flattenedSections.length - 1;
+    if (continuingExistingAudio && _pageManager.hasActiveQueue) {
+      if (_isAudioActivelyPlaying()) {
+        return;
+      }
+      final currentIndex = _pageManager.trackIndexNotifier.value
+          .clamp(0, maxIndex);
+      if (_pageManager.trackIndexNotifier.value != currentIndex) {
+        _pageManager.setTrackIndex(currentIndex);
+      }
+      return;
+    }
+
+    final targetIndex = widget.page.clamp(0, maxIndex);
+    _pageManager.setTrackIndex(targetIndex);
+  }
 
   void _toggleChrome() {
     _onFloatingControlsInteraction();
@@ -268,14 +459,48 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     );
   }
 
+  Duration? _sectionMediaDuration(PrayerSectionStruct section) {
+    if (section.duration > 0) {
+      return Duration(seconds: section.duration);
+    }
+    return null;
+  }
+
+  List<MediaItem> _hydrateMediaItemDurations(List<MediaItem> items) {
+    if (flattenedSections.length != items.length) {
+      return items;
+    }
+
+    return List.generate(items.length, (index) {
+      final knownDuration = _sectionMediaDuration(flattenedSections[index]);
+      if (knownDuration == null) {
+        return items[index];
+      }
+
+      final currentDuration = items[index].duration;
+      if (currentDuration != null && currentDuration > Duration.zero) {
+        return items[index];
+      }
+
+      return items[index].copyWith(duration: knownDuration);
+    });
+  }
+
   Future<void> setInitialMediaItems() async {
     if (flattenedSections.isEmpty) {
       return;
     }
 
-    final targetIndex = _pageManager.trackIndexNotifier.value
-        .clamp(0, flattenedSections.length - 1);
-    _pageManager.trackIndexNotifier.value = targetIndex;
+    final targetIndex = widget.page.clamp(0, flattenedSections.length - 1);
+    _pageManager.setTrackIndex(targetIndex);
+
+    final prayerId = _model.currentPrayer?.id ?? widget.prayerId ?? '';
+    final mediaCache = getIt<MediaItemsCache>();
+    final cachedItems = mediaCache.get(prayerId, flattenedSections.length);
+    if (cachedItems != null) {
+      await _pageManager.setQueue(_hydrateMediaItemDurations(cachedItems));
+      return;
+    }
 
     final hasAudio =
         flattenedSections.any((section) => section.audioUrl.isNotEmpty);
@@ -298,7 +523,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
           artist: _model.currentPrayer?.title ?? '',
           title: section.title,
           artUri: artUri,
-          duration: const Duration(seconds: 0),
+          duration: _sectionMediaDuration(section),
           extras: {
             'url': '',
             'isDownloaded': false,
@@ -318,7 +543,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
         artist: _model.currentPrayer?.title ?? '',
         title: section.title,
         artUri: artUri,
-        duration: const Duration(seconds: 0),
+        duration: _sectionMediaDuration(section),
         extras: {
           'url': section.audioUrl,
           'isDownloaded': filePath != null,
@@ -328,6 +553,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       );
     }).toList();
 
+    mediaCache.put(prayerId, flattenedSections.length, mediaItems);
     await _pageManager.setQueue(mediaItems);
   }
 
@@ -344,49 +570,54 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     super.initState();
     _model = createModel(context, () => RosaryPageModel());
     _allowScroll.addListener(_onAllowScrollChanged);
+    _displayingAudio = FFAppState().isDisplayingAudio;
+    FFAppState().addListener(_onAppStateChanged);
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
+      final previousPrayerId = FFAppState().currentPrayerId;
+      await _stopPreviousPrayerAudioIfNeeded();
       FFAppState().currentPrayerId = widget.prayerId ?? '';
 
       if (FFAppState()
           .downloadedPrayers
-          .map((e) => e.id)
-          .toList()
-          .contains((widget.prayerId!))) {
-        _model.currentPrayer = FFAppState()
-            .downloadedPrayers
-            .firstWhereOrNull((e) => valueOrDefault<bool>(
-                  e.id == widget.prayerId,
-                  false,
-                ));
-      } else {
-        _model.prayerResponse =
-            await SuapabaseQueriesGroup.getPrayerWithSectionsRecursiveCall.call(
-          requestPrayerId: widget.prayerId,
+          .any((e) => e.id == widget.prayerId)) {
+        _model.currentPrayer =
+            await getIt<DownloadedPrayerRepository>().loadFullPrayer(
+          widget.prayerId!,
         );
-
-        if ((_model.prayerResponse?.succeeded ?? true)) {
-          _model.currentPrayer = PrayerStruct.maybeFromMap(
-              (_model.prayerResponse?.jsonBody ?? ''));
+        if (_model.currentPrayer != null) {
+          _prayerCache.seed(widget.prayerId!, _model.currentPrayer!);
         }
+      } else {
+        _model.currentPrayer =
+            await _prayerCache.loadPrayer(widget.prayerId!);
       }
 
       flattenedSections = functions.flattenSectionsList(
               _model.currentPrayer?.sections.toList() ?? []) ??
           [];
 
-      _pageManager.trackIndexNotifier.value = widget.page;
+      final continuingExistingAudio =
+          _canContinueExistingAudio(previousPrayerId: previousPrayerId);
+      _applyTrackIndexForOpen(
+        continuingExistingAudio: continuingExistingAudio,
+      );
 
-      if (mounted) {
-        setState(() {});
-      }
+      _syncDisplayModeForPrayer(
+        continuingExistingAudio: continuingExistingAudio,
+      );
 
-      unawaited(_initializeAudioQueue());
+      await _prepareAudioForOpen(
+        continuingExistingAudio: continuingExistingAudio,
+      );
+      await _preloadInitialSection();
 
       if (!mounted) {
         return;
       }
+
+      setState(() => _pageReady = true);
 
       if (!FFAppState().isDisplayingAudio) {
         _scheduleFloatingControlsIdleFade();
@@ -409,6 +640,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
 
   @override
   void dispose() {
+    FFAppState().removeListener(_onAppStateChanged);
     _floatingControlsIdleTimer?.cancel();
     _floatingControlsBackgroundOpacity.dispose();
     _scrollController.dispose();
@@ -419,7 +651,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     super.dispose();
   }
 
-  bool get _isTextMode => !FFAppState().isDisplayingAudio;
+  bool get _isTextMode => !_displayingAudio;
 
   bool _showAppChrome(bool chromeVisible) =>
       !_isTextMode || chromeVisible;
@@ -449,10 +681,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<FFAppState>();
-
-    final prayerLoaded = _model.currentPrayer?.id != null &&
-        _model.currentPrayer!.id.isNotEmpty;
+    final prayerLoaded = _pageReady;
 
     if (!_isTextMode) {
       _floatingControlsIdleTimer?.cancel();
@@ -474,12 +703,13 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       });
     }
 
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: ValueListenableBuilder<bool>(
+    return PrayerTypographyScope(
+      child: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: ValueListenableBuilder<bool>(
         valueListenable: _chromeVisible,
         builder: (context, chromeVisible, child) {
           final primaryStatusBar = _usePrimaryStatusBarFill(chromeVisible);
@@ -543,20 +773,30 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
               ),
               iconTheme:
                   IconThemeData(color: FlutterFlowTheme.of(context).alternate),
-              title: AutoSizeText(
-                valueOrDefault<String>(
-                  _model.currentPrayer?.title,
-                  '',
-                ),
-                textAlign: TextAlign.start,
-                maxLines: 1,
-                minFontSize: 16.0,
-                style: FlutterFlowTheme.of(context).headlineMedium.override(
-                      fontFamily: 'Merriweather',
-                      color: FlutterFlowTheme.of(context).alternate,
-                      fontSize: 20.0,
-                      letterSpacing: 0.0,
+              title: Builder(
+                builder: (context) {
+                  final typography = PrayerTypography.of(context);
+                  final theme = FlutterFlowTheme.of(context);
+                  return AutoSizeText(
+                    valueOrDefault<String>(
+                      _model.currentPrayer?.title,
+                      '',
                     ),
+                    textAlign: TextAlign.start,
+                    maxLines: 1,
+                    minFontSize: 16.0,
+                    style: typography
+                        .style(
+                          theme.headlineMedium,
+                          fontSize: 20.0,
+                          scaleFontSize: false,
+                        )
+                        .copyWith(
+                          color: theme.alternate,
+                          letterSpacing: 0.0,
+                        ),
+                  );
+                },
               ),
               actions: [
                 Row(
@@ -581,11 +821,14 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                               )
                                   ? 'Disponibilă în mod offline.'
                                   : 'Nedisponibilă în mod offline.',
-                              style: FlutterFlowTheme.of(context)
-                                  .bodyLarge
-                                  .override(
-                                    fontFamily: 'Inter',
-                                    color: FlutterFlowTheme.of(context).primary,
+                              style: PrayerTypography.of(context)
+                                  .style(
+                                    FlutterFlowTheme.of(context).bodyLarge,
+                                    scaleFontSize: false,
+                                  )
+                                  .copyWith(
+                                    color:
+                                        FlutterFlowTheme.of(context).primary,
                                     letterSpacing: 0.0,
                                   ),
                             ),
@@ -726,10 +969,13 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                     SnackBar(
                                       content: Text(
                                         'Semnul de carte către ${_model.currentPrayer!.title.isNotEmpty ? '„${_model.currentPrayer!.title}” - ' : ''}„${flattenedSections.elementAtOrNull(_pageManager.trackIndexNotifier.value)?.title}” a fost salvat!',
-                                        style: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .override(
-                                              fontFamily: 'Inter',
+                                        style: PrayerTypography.of(context)
+                                            .style(
+                                              FlutterFlowTheme.of(context)
+                                                  .labelMedium,
+                                              scaleFontSize: false,
+                                            )
+                                            .copyWith(
                                               color:
                                                   FlutterFlowTheme.of(context)
                                                       .alternate,
@@ -876,6 +1122,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
         ),
       ),
       ),
+    ),
     );
   }
 }

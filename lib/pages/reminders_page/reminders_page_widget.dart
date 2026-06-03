@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '/backend/api_requests/api_calls.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_types_cache.dart';
+import 'package:my_prayer/service_locator.dart';
 import '/backend/schema/structs/index.dart';
 import '/custom_code/reminders/prayer_reminder.dart';
 import '/custom_code/reminders/prayer_reminder_service.dart';
@@ -46,13 +47,7 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
     _reminders = await ReminderStorage.loadAll();
 
     try {
-      final response = await SuapabaseQueriesGroup.getPrayerTypesCall.call();
-      if (response.succeeded) {
-        _prayerTypes = (response.jsonBody as List? ?? [])
-            .map(PrayerTypeStruct.maybeFromMap)
-            .whereType<PrayerTypeStruct>()
-            .toList();
-      }
+      _prayerTypes = await getIt<PrayerTypesCache>().load();
     } catch (_) {
       _prayerTypes = [];
     }

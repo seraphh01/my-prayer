@@ -1,26 +1,24 @@
 import 'dart:async';
 
-import 'package:audio_service/audio_service.dart';
 import 'package:collection/collection.dart';
 import 'package:my_prayer/components/choose_chapter_widget.dart';
-import 'package:my_prayer/custom_code/actions/retrieve_audio_file.dart';
 import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_section_content_cache.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_typography.dart';
 import 'package:my_prayer/service_locator.dart';
 
-import '/backend/api_requests/api_calls.dart';
-import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
 import '/components/audio_page_widget.dart';
 import '/components/empty_list_component_widget.dart';
-import '/components/prayer_text_widget.dart';
+import '/components/section_text/prayer_text_styles.dart';
+import '/components/section_text/section_header_widget.dart';
+import '/components/section_text/section_text_block_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'sections_view_model.dart';
 export 'sections_view_model.dart';
 
@@ -50,24 +48,44 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
   int currentPlayingTextIndex = 0;
   int currentSectionIndex = 0;
   late final ValueNotifier<bool> _controlBarVisibility;
-  final GlobalKey pageKey = GlobalKey();
   final Map<int, List<GlobalKey>> _keys = {};
 
   final _pageManager = getIt<PageManager>();
-  final ValueNotifier<bool> _isContentLoading = ValueNotifier(true);
+  final _sectionCache = getIt<PrayerSectionContentCache>();
+  final ValueNotifier<bool> _isContentLoading = ValueNotifier(false);
+  bool _hasInitialContent = false;
 
-  Timer? _debounce;
+  Timer? _scrollDebounce;
   Timer? _scrollbarHideTimer;
   bool _scrollbarThumbVisible = false;
   static const Duration _scrollbarHideDelay = Duration(seconds: 1);
 
   void _markContentReady() {
     _model.isLoading = false;
+    _hasInitialContent = true;
     if (_isContentLoading.value) {
       _isContentLoading.value = false;
     }
     if (mounted) {
       setState(() {});
+    }
+  }
+
+  void _hydrateInitialSectionFromCache() {
+    final index = _pageManager.trackIndexNotifier.value;
+    final section = _model.flattenedSections.elementAtOrNull(index);
+    if (section == null) {
+      return;
+    }
+
+    final cached = _sectionCache.cachedTexts(section.sectionId);
+    if (cached != null) {
+      section.texts = cached;
+      _model.currentSection = section;
+      currentSectionIndex = index;
+      setTextKeys(index, section.texts.length);
+      _updatePlaybackHighlight();
+      _markContentReady();
     }
   }
 
@@ -212,37 +230,44 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     });
   }
 
-  void setTextKeys(int sectionIndex) {
-    if (!_keys.containsKey(sectionIndex) || _keys[sectionIndex]!.isEmpty) {
-      _keys[sectionIndex] = List.generate(
-        _model.flattenedSections[sectionIndex].texts.length,
-        (_) => GlobalKey(),
-      );
+  void setTextKeys(int sectionIndex, int textCount) {
+    final existing = _keys[sectionIndex];
+    if (existing != null && existing.length == textCount) {
+      return;
     }
+    _keys[sectionIndex] = List.generate(textCount, (_) => GlobalKey());
   }
 
   Future<void> setCurrentSection(int sectionIndex) async {
-    if ((_model.flattenedSections.elementAtOrNull(sectionIndex)?.texts !=
-                null &&
-            (_model.flattenedSections.elementAtOrNull(sectionIndex)?.texts)!
-                .isNotEmpty) ==
-        true) {
-      _model.currentSection =
-          _model.flattenedSections.elementAtOrNull(sectionIndex);
-    } else {
-      _model.prayerSectionDataResult = await PrayerSectionContentCall.call(
-        prayerSectionId:
-            _model.flattenedSections.elementAtOrNull(sectionIndex)?.sectionId,
-      );
+    final section = _model.flattenedSections.elementAtOrNull(sectionIndex);
+    if (section == null) {
+      return;
+    }
 
-      if ((_model.prayerSectionDataResult?.succeeded ?? true)) {
-        _model.currentSection = PrayerSectionStruct.maybeFromMap(
-            (_model.prayerSectionDataResult?.jsonBody ?? ''));
-        _model.flattenedSections.elementAtOrNull(sectionIndex)!.texts =
-            _model.currentSection?.texts;
+    final switchingSection =
+        _hasInitialContent && sectionIndex != currentSectionIndex;
+    if (switchingSection) {
+      _isContentLoading.value = true;
+    }
+
+    if (section.texts.isNotEmpty) {
+      _model.currentSection = section;
+    } else {
+      final cached = _sectionCache.cachedTexts(section.sectionId);
+      if (cached != null) {
+        section.texts = cached;
+        _model.currentSection = section;
+      } else {
+        final texts = await _sectionCache.loadTexts(section.sectionId);
+        section.texts = texts;
+        _model.currentSection = section;
       }
     }
+
     currentSectionIndex = sectionIndex;
+    setTextKeys(sectionIndex, _model.currentSection?.texts.length ?? 0);
+    _updatePlaybackHighlight();
+    _sectionCache.prefetchAdjacent(_model.flattenedSections, sectionIndex);
     _markContentReady();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -257,18 +282,28 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
       return GlobalKey();
     }
 
-    if (textIndex >= _model.flattenedSections[sectionIndex].texts.length) {
+    final texts = _model.flattenedSections[sectionIndex].texts;
+    if (textIndex >= texts.length) {
       return GlobalKey();
     }
 
-    if (!_keys.containsKey(sectionIndex) || _keys[sectionIndex]!.isEmpty) {
-      _keys[sectionIndex] = List.generate(
-        _model.flattenedSections[sectionIndex].texts.length,
-        (_) => GlobalKey(),
-      );
-    }
-
+    setTextKeys(sectionIndex, texts.length);
     return _keys[sectionIndex]![textIndex];
+  }
+
+  bool get _isAudioSynced {
+    final section = _model.currentSection;
+    return section != null && section.audioUrl.isNotEmpty;
+  }
+
+  void _updatePlaybackHighlight() {
+    final texts = _model.currentSection?.texts ?? const <SectionTextStruct>[];
+    final audioTime = _pageManager.currentProgressNotifier.value.inSeconds;
+    _pageManager.playbackHighlightNotifier.updateFromTexts(
+      texts: texts,
+      audioTimeSeconds: audioTime,
+      isAudioSynced: _isAudioSynced,
+    );
   }
 
   void onTrackIndexChanged() async {
@@ -282,37 +317,18 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
 
     _isContentLoading.value = true;
     await setCurrentSection(_pageManager.trackIndexNotifier.value);
-    currentPlayingTextIndex = 0;
+    currentPlayingTextIndex =
+        _pageManager.playbackHighlightNotifier.value.activeTextIndex;
   }
 
-  void onCurrentAudioDurationChanged() {
-    _model.currentAudioDuration =
-        _pageManager.totalDurationNotifier.value.inSeconds;
-    safeSetState(() {});
+  void _scheduleScrollToActiveText() {
+    _scrollDebounce?.cancel();
+    _scrollDebounce = Timer(const Duration(milliseconds: 300), _scrollToActiveText);
   }
 
-  void handleScrolling() {
+  void _scrollToActiveText() {
     if (_pageManager.playButtonNotifier.value != ButtonState.playing ||
         _model.displayAudioPage) {
-      return;
-    }
-
-    var visibleTextIndex = _model.currentSection?.texts.indexWhere((element) =>
-        element.startTime <= _model.currentAudioTime &&
-        element.endTime > _model.currentAudioTime);
-
-    if (visibleTextIndex == null ||
-        visibleTextIndex == -1 ||
-        currentPlayingTextIndex == visibleTextIndex) {
-      return;
-    }
-
-    currentPlayingTextIndex = visibleTextIndex;
-
-    if (_keys.isEmpty ||
-        _keys[currentSectionIndex] == null ||
-        _keys[currentSectionIndex]!.isEmpty ||
-        _keys[currentSectionIndex]!.length <= currentPlayingTextIndex) {
       return;
     }
 
@@ -321,70 +337,41 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
       return;
     }
 
-    final remaining =
-        controller.position.maxScrollExtent - controller.position.pixels;
-    if (remaining <= 32.0) {
-      return;
-    }
-
-    if (currentPlayingTextIndex == 0) {
+    if (currentPlayingTextIndex <= 0) {
       controller.animateTo(
         0.0,
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeOut,
       );
-      
       return;
     }
 
-    var text = _model.currentSection!.texts[currentPlayingTextIndex];
-
-    var currentTextScrollExtent = (_model.currentAudioTime - text.startTime) /
-        _model.currentAudioDuration *
-        controller.position.maxScrollExtent;
-
-    var additionalOffset = 0.0;
-    if (currentTextScrollExtent > 200) {
-      additionalOffset = currentTextScrollExtent;
+    final blockContext =
+        getTextKey(currentSectionIndex, currentPlayingTextIndex).currentContext;
+    if (blockContext != null) {
+      Scrollable.ensureVisible(
+        blockContext,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.ease,
+        alignment: 0.15,
+      );
     }
-
-    var textContext =
-        _keys[currentSectionIndex]?[currentPlayingTextIndex].currentContext;
-
-    var pageContext = pageKey.currentContext;
-
-    var relativeTextPosition = 0.0;
-    if (textContext != null && pageContext != null) {
-      final renderBox = textContext.findRenderObject() as RenderBox;
-      final pageRenderBox = pageContext.findRenderObject() as RenderBox;
-      final position =
-          renderBox.localToGlobal(Offset.zero, ancestor: pageRenderBox);
-
-      relativeTextPosition = position.dy;
-    }
-
-    var absoluteTextPosition =
-        controller.position.pixels + relativeTextPosition;
-    if (additionalOffset.isFinite && !additionalOffset.isNaN) {
-      absoluteTextPosition += additionalOffset;
-    }
-
-    controller.animateTo(absoluteTextPosition,
-        duration: const Duration(milliseconds: 500), curve: Curves.ease);
   }
 
   void onCurrentAudioTimeChanged() {
-    _model.currentAudioTime =
-        _pageManager.currentProgressNotifier.value.inSeconds;
-    if (_debounce == null || !_debounce!.isActive) {
-      _debounce = Timer(const Duration(milliseconds: 500), () {
-        safeSetState(() {});
-      });
-    } else {
+    _updatePlaybackHighlight();
+
+    if (_pageManager.playButtonNotifier.value != ButtonState.playing ||
+        _model.displayAudioPage) {
       return;
     }
 
-    handleScrolling();
+    final activeIndex =
+        _pageManager.playbackHighlightNotifier.value.activeTextIndex;
+    if (activeIndex != currentPlayingTextIndex) {
+      currentPlayingTextIndex = activeIndex;
+      _scheduleScrollToActiveText();
+    }
   }
 
   @override
@@ -401,38 +388,38 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
         .cast<PrayerSectionStruct>();
     _model.chapterOptions =
         functions.convertPrayerSectionToChapterOption(widget.sections!);
-        
+
+    _hydrateInitialSectionFromCache();
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) {
         return;
       }
-      _isContentLoading.value = true;
+      if (_model.currentSection != null) {
+        _sectionCache.prefetchAdjacent(
+          _model.flattenedSections,
+          currentSectionIndex,
+        );
+        return;
+      }
       await setCurrentSection(_pageManager.trackIndexNotifier.value);
     });
-
-    setTextKeys(valueOrDefault<int>(0, 0));
-
-    onCurrentAudioTimeChanged();
-    onCurrentAudioDurationChanged();
 
     _model.displayAudioPage = FFAppState().isDisplayingAudio;
 
     _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
     _pageManager.currentProgressNotifier.addListener(onCurrentAudioTimeChanged);
-    _pageManager.totalDurationNotifier
-        .addListener(onCurrentAudioDurationChanged);
   }
 
   @override
   void dispose() {
+    _scrollDebounce?.cancel();
     _scrollbarHideTimer?.cancel();
     _isContentLoading.dispose();
     _model.maybeDispose();
     _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
     _pageManager.currentProgressNotifier
         .removeListener(onCurrentAudioTimeChanged);
-    _pageManager.totalDurationNotifier
-        .removeListener(onCurrentAudioDurationChanged);
     _controlBarVisibility.removeListener(_onControlBarVisibilityChanged);
     if (widget.controlBarVisibilityNotifier == null) {
       _controlBarVisibility.dispose();
@@ -440,581 +427,281 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     super.dispose();
   }
 
+  List<Widget> _buildTextSlivers(
+    BuildContext context,
+    PrayerSectionStruct section,
+    PrayerTextStyles styles,
+  ) {
+    final texts = section.texts;
+    final highlightListenable = _pageManager.playbackHighlightNotifier;
+    final isAudioSynced = _isAudioSynced;
+
+    return [
+      if (_needsScrollOverlap)
+        SliverOverlapInjector(
+          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+        ),
+      SliverToBoxAdapter(
+        child: SectionHeaderWidget(section: section),
+      ),
+      if (texts.isEmpty)
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: SizedBox(
+              width: double.infinity,
+              height: 300.0,
+              child: EmptyListComponentWidget(
+                title: 'Textul nu a putut fi încărcat!',
+                subtitle: 'Vă rugăm încercați mai târziu.',
+              ),
+            ),
+          ),
+        )
+      else
+        SliverPadding(
+          padding: const EdgeInsetsDirectional.fromSTEB(12.0, 0.0, 12.0, 0.0),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, textIndex) {
+                final text = texts[textIndex];
+                return SectionTextBlockWidget(
+                  blockKey: getTextKey(currentSectionIndex, textIndex),
+                  text: text,
+                  textIndex: textIndex,
+                  highlightListenable: highlightListenable,
+                  isAudioSynced: isAudioSynced,
+                  styles: styles,
+                  onSeekBlock: () async {
+                    currentPlayingTextIndex = textIndex;
+                    await _pageManager.seek(Duration(seconds: text.startTime));
+                    _updatePlaybackHighlight();
+                  },
+                  onSeekElement: (elementStartTime) async {
+                    currentPlayingTextIndex = textIndex;
+                    final seekTime = text.startTime + elementStartTime;
+                    await _pageManager.seek(Duration(seconds: seekTime));
+                    _updatePlaybackHighlight();
+                  },
+                );
+              },
+              childCount: texts.length,
+            ),
+          ),
+        ),
+      const SliverPadding(padding: EdgeInsets.only(bottom: 16.0)),
+    ];
+  }
+
+  Widget _buildTextContent(
+    BuildContext context,
+    PrayerSectionStruct section,
+  ) {
+    final styles = PrayerTextStyles.of(context);
+    return Container(
+      height: double.infinity,
+      decoration: const BoxDecoration(),
+      child: _buildTextScrollView(
+        slivers: _buildTextSlivers(context, section, styles),
+      ),
+    );
+  }
+
+  Widget _buildAudioContent(PrayerSectionStruct section) {
+    return Container(
+      height: double.infinity,
+      decoration: const BoxDecoration(),
+      child: wrapWithModel(
+        model: _model.audioPageModels.getModel(
+          section.id,
+          currentSectionIndex,
+        ),
+        updateCallback: () {
+          safeSetState(() {});
+        },
+        updateOnChange: true,
+        child: AudioPageWidget(
+          key: const Key('Keyvha_audioPage'),
+          title: valueOrDefault<String>(section.title, 'Titlu'),
+          audioUrl: section.audioUrl,
+          subtitle: section.subtitle,
+          imageUrl: section.imageUrl,
+          onAudioTimeChanged: (selectedAudioTime) async {
+            await getIt<PageManager>()
+                .seek(Duration(seconds: selectedAudioTime));
+            _updatePlaybackHighlight();
+          },
+          imageUrls:
+              _model.flattenedSections.map((s) => s.imageUrl).toList(),
+          texts: section.texts,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    context.watch<FFAppState>();
-
-    return Container(
+    return PrayerTypographyScope(
+      child: Container(
         height: double.infinity,
         decoration: BoxDecoration(
           color: FlutterFlowTheme.of(context).primaryBackground,
         ),
         child: Column(
-          key: pageKey,
           mainAxisSize: MainAxisSize.min,
           children: [
             Expanded(
               child: Builder(
-                builder: (context) {
-                final prayerSection = _model.flattenedSections.toList();
-                if (prayerSection.isEmpty) {
-                  return const SizedBox(
-                    width: double.infinity,
-                    height: double.infinity,
-                    child: CircularProgressIndicator(),
-                  );
+              builder: (context) {
+                if (_model.flattenedSections.isEmpty) {
+                  return const SizedBox.shrink();
                 }
 
                 return SizedBox(
-                        width: double.infinity,
-                        height: double.infinity,
-                        child: Stack(
-                          children: [
-                            Builder(
-                              builder: (context) {
-                                if (_model.currentSection == null) {
-                                  _setAllowScroll(true);
-                                  return const Center(
-                                    child: CircularProgressIndicator(),
-                                  );
-                                }
-                                final hasAudioContent =
-                                    _model.currentSection?.audioUrl != null &&
-                                        _model.currentSection!.audioUrl
-                                            .isNotEmpty;
-                                final isAudioPage =
-                                    _model.displayAudioPage && hasAudioContent;
-                                _setAllowScroll(!isAudioPage);
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Stack(
+                    children: [
+                      Builder(
+                        builder: (context) {
+                          if (_model.currentSection == null) {
+                            _setAllowScroll(true);
+                            return const SizedBox.shrink();
+                          }
 
-                                if ((!_model.displayAudioPage ||
-                                        _model.currentSection?.audioUrl ==
-                                            null ||
-                                        _model.currentSection!
-                                            .audioUrl.isEmpty) &&
-                                    (_model.currentSection?.texts != null &&
-                                        _model.currentSection!.texts
-                                            .isNotEmpty)) {
-                                  return Container(
-                                    height: double.infinity,
-                                    decoration: const BoxDecoration(),
-                                    child: _buildTextScrollView(
-                                      slivers: [
-                                        if (_needsScrollOverlap)
-                                          SliverOverlapInjector(
-                                            handle: NestedScrollView
-                                                .sliverOverlapAbsorberHandleFor(
-                                              context,
-                                            ),
-                                          ),
-                                        SliverToBoxAdapter(
-                                          child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Column(
-                                            spacing: 8.0,
-                                            mainAxisSize: MainAxisSize.max,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              if (_model.currentSection
-                                                          ?.showTitle ==
-                                                      true ||
-                                                  _model.currentSection
-                                                          ?.showSubtitle ==
-                                                      true)
-                                               
-                                              if (_model.currentSection
-                                                      ?.showTitle ==
-                                                  true)
-                                                Text(
-                                                  valueOrDefault<String>(
-                                                    _model
-                                                        .currentSection?.title,
-                                                    '',
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .titleMedium
-                                                      .override(
-                                                        fontFamily:
-                                                            FFAppState()
-                                                                .fontFamily,
-                                                        fontSize: 18.0 *
-                                                            FFAppState()
-                                                                .fontSizeMultiplier,
-                                                        letterSpacing: 0.0,
-                                                      ),
-                                                ),
-                                              if (_model.currentSection
-                                                          ?.showSubtitle ==
-                                                      true &&
-                                                  _model.currentSection!
-                                                          .subtitle !=
-                                                      '')
-                                                Text(
-                                                  valueOrDefault<String>(
-                                                    _model.currentSection
-                                                        ?.subtitle,
-                                                    '',
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .labelMedium
-                                                      .override(
-                                                        fontFamily: 'Inter',
-                                                        fontSize: 16 *
-                                                            FFAppState()
-                                                                .fontSizeMultiplier,
-                                                        letterSpacing: 0.0,
-                                                        fontStyle:
-                                                            FontStyle.italic,
-                                                      ),
-                                                ),
-                                            ].addToStart(const SizedBox(height: 16.0))
-                                            ,
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsetsDirectional
-                                                .fromSTEB(12.0, 0.0, 12.0, 0.0),
-                                            child: Builder(
-                                              builder: (context) {
-                                                final texts = _model
-                                                        .currentSection?.texts
-                                                        .toList() ??
-                                                    [];
-                                                if (texts.isEmpty) {
-                                                  return const Center(
-                                                    child: SizedBox(
-                                                      width: double.infinity,
-                                                      height: 300.0,
-                                                      child:
-                                                          EmptyListComponentWidget(
-                                                        title:
-                                                            'Textul nu a putut fi încărcat!',
-                                                        subtitle:
-                                                            'Vă rugăm încercați mai târziu.',
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                                return ListView.builder(
-                                                  padding: EdgeInsets.zero,
-                                                  primary: false,
-                                                  shrinkWrap: true,
-                                                  scrollDirection:
-                                                      Axis.vertical,
-                                                  itemCount: texts.length,
-                                                  itemBuilder:
-                                                      (context, textIndex) {
-                                                    final textsItem =
-                                                        texts[textIndex];
-                                                    final textKey = getTextKey(
-                                                        currentSectionIndex,
-                                                        textIndex);
-                                                    return Column(
-                                                      key: textKey,
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .stretch,
-                                                      children: [
-                                                        if(textsItem.title.isNotEmpty) Align(
-                                                          alignment:
-                                                              const AlignmentDirectional(
-                                                                  0.0, 0.0),
-                                                          child: InkWell(
-                                                            splashColor: Colors
-                                                                .transparent,
-                                                            focusColor: Colors
-                                                                .transparent,
-                                                            hoverColor: Colors
-                                                                .transparent,
-                                                            highlightColor:
-                                                                Colors
-                                                                    .transparent,
-                                                            onTap: () async {
-                                                              currentPlayingTextIndex =
-                                                                  textIndex;
-                                                              await _pageManager
-                                                                  .seek(Duration(
-                                                                      seconds:
-                                                                          textsItem
-                                                                              .startTime));
-                                                            },
-                                                            child: Row(
+                          final section = _model.currentSection!;
+                          final hasAudioContent = section.audioUrl.isNotEmpty;
+                          final isAudioPage =
+                              _model.displayAudioPage && hasAudioContent;
+                          _setAllowScroll(!isAudioPage);
 
-                                                              spacing: 4.0,
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .max,
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .center,
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .center,
-                                                              children: [
-                                                                if (textsItem.title.isNotEmpty &&(
-                                                                            textsItem.startTime <=
-                                                                        _model
-                                                                            .currentAudioTime) &&
-                                                                    (textsItem
-                                                                            .endTime >
-                                                                        _model
-                                                                            .currentAudioTime))
-                                                                  Icon(
-                                                                    Icons
-                                                                        .chevron_right,
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .secondary,
-                                                                    size: 16.0,
-                                                                  ),
-                                                                Flexible(
-                                                                  child:
-                                                                      Container(
-                                                                    decoration:
-                                                                        const BoxDecoration(),
-                                                                    child:
-                                                                        Builder(
-                                                                      builder:
-                                                                          (context) {
-                                                                        if ((textsItem.startTime <= _model.currentAudioTime) &&
-                                                                            (textsItem.endTime >
-                                                                                _model.currentAudioTime)) {
-                                                                          return Text(
-                                                                            '${textsItem.repetition != 1 && textsItem.title.isNotEmpty ? textsItem.repetition.toString() : ''}${textsItem.repetition != 1 ? ' ' : ''}${textsItem.title}',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style:
-                                                                                FlutterFlowTheme.of(context).titleSmall.override(
-                                                                              fontFamily: FFAppState().fontFamily,
-                                                                              fontStyle: textsItem.italic ? FontStyle.italic : FontStyle.normal,
-                                                                              color: FlutterFlowTheme.of(context).secondary,
-                                                                              fontSize: FFAppState().fontSizeMultiplier * 18,
-                                                                              letterSpacing: 0.0,
-                                                                              shadows: [
-                                                                                Shadow(
-                                                                                  color: FlutterFlowTheme.of(context).secondary,
-                                                                                  offset: const Offset(0.0, 0.0),
-                                                                                  blurRadius: 0.5,
-                                                                                )
-                                                                              ],
-                                                                            ),
-                                                                          );
-                                                                        } else {
-                                                                          return Text(
-                                                                            '${textsItem.repetition > 1 && textsItem.title.isNotEmpty ? textsItem.repetition.toString() : ''}${textsItem.repetition > 1 ? ' ' : ''}${textsItem.title}',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style: FlutterFlowTheme.of(context).titleMedium.override(
-                                                                                  fontFamily: FFAppState().fontFamily,
-                                                                                  fontStyle: textsItem.italic ? FontStyle.italic : FontStyle.normal,
-                                                                                  color: FlutterFlowTheme.of(context).secondary,
-                                                                                  fontSize: valueOrDefault<double>(
-                                                                                    valueOrDefault<double>(
-                                                                                          FFAppState().fontSizeMultiplier,
-                                                                                          1.0,
-                                                                                        ) *
-                                                                                        18,
-                                                                                    32.0,
-                                                                                  ),
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.w500,
-                                                                                ),
-                                                                          );
-                                                                        }
-                                                                      },
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                if (textsItem.title.isNotEmpty && (textsItem
-                                                                            .startTime <=
-                                                                        _model
-                                                                            .currentAudioTime) &&
-                                                                    (textsItem
-                                                                            .endTime >
-                                                                        _model
-                                                                            .currentAudioTime))
-                                                                  Icon(
-                                                                    Icons
-                                                                        .chevron_left,
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .secondary,
-                                                                    size: 16.0,
-                                                                  ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        if ((textsItem
-                                                                .textElements
-                                                                .isNotEmpty) ==
-                                                            true)
-                                                          Builder(
-                                                            builder: (context) {
-                                                              final textElement =
-                                                                  textsItem
-                                                                      .textElements
-                                                                      .toList();
+                          final showTextPage = (!_model.displayAudioPage ||
+                                  !hasAudioContent) &&
+                              section.texts.isNotEmpty;
 
-                                                              return Column(
-                                                                spacing: 4.0,
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .max,
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .start,
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
-                                                                children: List.generate(
-                                                                    textElement
-                                                                        .length,
-                                                                    (textElementIndex) {
-                                                                  final textElementItem =
-                                                                      textElement[
-                                                                          textElementIndex];
-                                                                  return wrapWithModel(
-                                                                    model: _model
-                                                                        .prayerTextModels
-                                                                        .getModel(
-                                                                      textElementItem
-                                                                          .text,
-                                                                      textElementIndex,
-                                                                    ),
-                                                                    updateCallback:
-                                                                        () {},
-                                                                    child:
-                                                                        PrayerTextWidget(
-                                                                      key: Key(
-                                                                        'Keywwi_${textElementItem.text}',
-                                                                      ),
-                                                                      type: textElementItem
-                                                                          .type,
-                                                                      quoteSource:
-                                                                          textElementItem
-                                                                              .quoteSource,
-                                                                      isHighlighted: textElementItem
-                                                                              .highlight ||
-                                                                          textElementIndex ==
-                                                                              0,
-                                                                      textInput:
-                                                                          textElementItem
-                                                                              .text,
-                                                                      isPlaying: (textsItem.startTime + textElementItem.startTime <=
-                                                                              _model
-                                                                                  .currentAudioTime) &&
-                                                                          (textsItem.startTime + textElementItem.endTime >
-                                                                              _model.currentAudioTime),
-                                                                              hasPassed: _model.currentAudioTime >= (textsItem.startTime + textElementItem.endTime),
-                                                                        isSynced: _model.currentSection!.audioUrl.isNotEmpty,
-                                                                      onTextPressed:
-                                                                          () async {
-                                                                        currentPlayingTextIndex =
-                                                                            textIndex;
-                                                                        final newAudioTime =
-                                                                            (textsItem.startTime +
-                                                                                textElementItem.startTime);
-
-                                                                        getIt<PageManager>().seek(Duration(
-                                                                            seconds:
-                                                                                newAudioTime));
-                                                                        _model.currentAudioTime =
-                                                                            newAudioTime;
-                                                                        safeSetState(
-                                                                            () {});
-                                                                      },
-                                                                    ),
-                                                                  );
-                                                                }),
-                                                              );
-                                                            },
-                                                          ),
-                                                      ].addToStart(textsItem.title.isNotEmpty ? const SizedBox(height: 8.0,) : const SizedBox.shrink())
-                                                          
-                                                          ,
-                                                    );
-                                                  },
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        ]
-                                            .addToEnd(
-                                                const SizedBox(height: 16.0)),
-                                        ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                } else {
-                                  return Container(
-                                    height: double.infinity,
-                                    decoration: const BoxDecoration(),
-                                    child: wrapWithModel(
-                                      model: _model.audioPageModels.getModel(
-                                        _model.currentSection?.id ?? '',
-                                        currentSectionIndex,
-                                      ),
-                                      updateCallback: () {
-                                        safeSetState(() {});
-                                      },
-                                      updateOnChange: true,
-                                      child: AudioPageWidget(
-                                        key: const Key(
-                                          'Keyvha_audioPage',
-                                        ),
-                                        title: valueOrDefault<String>(
-                                          _model.currentSection!.title,
-                                          'Titlu',
-                                        ),
-                                        audioUrl: _model.currentSection!.audioUrl,
-                                        subtitle:
-                                            _model.currentSection!.subtitle,
-                                        imageUrl:
-                                            _model.currentSection!.imageUrl,
-                                        onAudioTimeChanged:
-                                            (selectedAudioTime) async {
-                                          getIt<PageManager>().seek(Duration(
-                                              seconds: selectedAudioTime));
-                                          safeSetState(() {});
-                                        },
-                                        imageUrls: _model.flattenedSections
-                                            .map((section) => section.imageUrl)
-                                            .toList(),
-                                        texts: _model.currentSection?.texts,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
+                          if (showTextPage) {
+                            return _buildTextContent(context, section);
+                          }
+                          return _buildAudioContent(section);
+                        },
+                      ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _isContentLoading,
+                        builder: (context, isLoading, _) {
+                          if (!isLoading || !_hasInitialContent) {
+                            return const SizedBox.shrink();
+                          }
+                          return Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            decoration: BoxDecoration(
+                              color: FlutterFlowTheme.of(context)
+                                  .primaryBackground,
                             ),
-                            ValueListenableBuilder<bool>(
-                              valueListenable: _isContentLoading,
-                              builder: (context, isLoading, _) {
-                                if (!isLoading) {
-                                  return const SizedBox.shrink();
-                                }
-                                return Container(
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .primaryBackground,
-                                  ),
-                                  child: Align(
-                                    alignment:
-                                        const AlignmentDirectional(0.0, 0.0),
-                                    child: SizedBox(
-                                      width: 64.0,
-                                      height: 64.0,
-                                      child: custom_widgets
-                                          .CustomCircularProgressIndicator(
-                                        width: 64.0,
-                                        height: 64.0,
-                                        color: FlutterFlowTheme.of(context)
-                                            .primary,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
+                            child: Align(
+                              child: SizedBox(
+                                width: 64.0,
+                                height: 64.0,
+                                child: custom_widgets
+                                    .CustomCircularProgressIndicator(
+                                  width: 64.0,
+                                  height: 64.0,
+                                  color:
+                                      FlutterFlowTheme.of(context).primary,
+                                ),
+                              ),
                             ),
-                          ],
-                        ));
-                },
-              ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            ValueListenableBuilder<bool>(
-              valueListenable: _controlBarVisibility,
-              builder: (context, showControlBar, child) {
-                final bottomInset = MediaQuery.paddingOf(context).bottom;
-                final effectiveShowControlBar =
-                    _model.displayAudioPage || showControlBar;
-                return AnimatedContainer(
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _controlBarVisibility,
+            builder: (context, showControlBar, child) {
+              final bottomInset = MediaQuery.paddingOf(context).bottom;
+              final effectiveShowControlBar =
+                  _model.displayAudioPage || showControlBar;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                height: effectiveShowControlBar ? 80.0 + bottomInset : 0.0,
+                child: AnimatedSlide(
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,
-                  height: effectiveShowControlBar ? 80.0 + bottomInset : 0.0,
-                  child: AnimatedSlide(
-                    duration: const Duration(milliseconds: 250),
+                  offset: effectiveShowControlBar
+                      ? Offset.zero
+                      : const Offset(0.0, 1.0),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
                     curve: Curves.easeInOut,
-                    offset: effectiveShowControlBar
-                        ? Offset.zero
-                        : const Offset(0.0, 1.0),
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
-                      opacity: effectiveShowControlBar ? 1.0 : 0.0,
-                      child: SafeArea(
-                        top: false,
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: bottomInset),
-                          child: SizedBox(
+                    opacity: effectiveShowControlBar ? 1.0 : 0.0,
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: bottomInset),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 80.0,
+                          child: custom_widgets.SectionsControlBar(
                             width: double.infinity,
-                            height: 80.0,
-                            child: custom_widgets.SectionsControlBar(
-                              width: double.infinity,
-                              height: double.infinity,
-                              showingTextContent: !_model.displayAudioPage,
-                              playbackRate: valueOrDefault<double>(
-                                FFAppState().audioSpeed,
-                                1.0,
-                              ),
-                              hasAudioContent:
-                                  _model.currentSection?.audioUrl != null &&
-                                      _model.currentSection!.audioUrl
-                                          .isNotEmpty,
-                              hasTextContent:
-                                  _model.currentSection?.texts != null &&
-                                      _model.currentSection!.texts.isNotEmpty,
-                              switchContent: () async {
-                                currentPlayingTextIndex = -1;
-                                _model.displayAudioPage =
-                                    !_model.displayAudioPage;
-                                FFAppState().isDisplayingAudio =
-                                    _model.displayAudioPage;
-                                safeSetState(() {});
-                              },
-                              chooseChapter: () async {
-                                final index =
-                                    await showModalBottomSheet<int>(
-                                        isDismissible: true,
-                                        useSafeArea: true,
-                                        context: context,
-                                        builder: (context) {
-                                          return ChooseChapterWidget(
-                                              title:
-                                                  "${widget.prayerTitle}${widget.prayerTitle!.isNotEmpty ? ' - ' : ''}${widget.prayerSubtitle}",
-                                              currentChapterIndex: _pageManager
-                                                  .trackIndexNotifier.value,
-                                              chapterOptions:
-                                                  _model.chapterOptions);
-                                        });
-                                if (index == null) {
-                                  return;
-                                }
-
-                                await _pageManager.skipToIndex(index);
-                              },
+                            height: double.infinity,
+                            showingTextContent: !_model.displayAudioPage,
+                            playbackRate: valueOrDefault<double>(
+                              FFAppState().audioSpeed,
+                              1.0,
                             ),
+                            hasAudioContent:
+                                _model.currentSection?.audioUrl.isNotEmpty ??
+                                    false,
+                            hasTextContent:
+                                _model.currentSection?.texts.isNotEmpty ??
+                                    false,
+                            switchContent: () async {
+                              currentPlayingTextIndex = -1;
+                              _model.displayAudioPage =
+                                  !_model.displayAudioPage;
+                              FFAppState().isDisplayingAudio =
+                                  _model.displayAudioPage;
+                              safeSetState(() {});
+                            },
+                            chooseChapter: () async {
+                              final index =
+                                  await showModalBottomSheet<int>(
+                                isDismissible: true,
+                                useSafeArea: true,
+                                context: context,
+                                builder: (context) {
+                                  return ChooseChapterWidget(
+                                    title:
+                                        "${widget.prayerTitle}${widget.prayerTitle!.isNotEmpty ? ' - ' : ''}${widget.prayerSubtitle}",
+                                    currentChapterIndex: _pageManager
+                                        .trackIndexNotifier.value,
+                                    chapterOptions: _model.chapterOptions,
+                                  );
+                                },
+                              );
+                              if (index == null) {
+                                return;
+                              }
+                              await _pageManager.skipToIndex(index);
+                            },
                           ),
                         ),
                       ),
                     ),
                   ),
-                );
-              },
-            ),
-          ],
-        ),
-      );
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    ),
+    );
   }
 }

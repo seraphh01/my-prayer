@@ -1,4 +1,5 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '/custom_code/audio/notifiers/play_button_notifier.dart';
@@ -47,12 +48,20 @@ class HomeAudioMiniPlayer extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8.0),
-      child: Image.network(
-        artUri,
+      child: CachedNetworkImage(
+        imageUrl: artUri,
         width: 44.0,
         height: 44.0,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        memCacheWidth: 88,
+        memCacheHeight: 88,
+        placeholder: (_, __) => Container(
+          width: 44.0,
+          height: 44.0,
+          color: theme.primary.withValues(alpha: 0.12),
+          child: Icon(Icons.music_note_rounded, color: theme.primary, size: 22),
+        ),
+        errorWidget: (_, __, ___) => Container(
           width: 44.0,
           height: 44.0,
           color: theme.primary.withValues(alpha: 0.12),

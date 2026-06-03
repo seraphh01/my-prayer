@@ -55,18 +55,18 @@ class _HomeTopFavoriteTileState extends State<HomeTopFavoriteTile> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<FFAppState>();
-    final favorites = FFAppState().favoritePrayers;
+    return Selector<FFAppState, List<PrayerStruct>>(
+      selector: (_, state) => state.favoritePrayers,
+      builder: (context, favorites, _) {
+        if (favorites.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
-    if (favorites.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    if (!_loading &&
-        _prayer != null &&
-        favorites.none((p) => p.id == _prayer!.id)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _resolve());
-    }
+        if (!_loading &&
+            _prayer != null &&
+            favorites.none((p) => p.id == _prayer!.id)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _resolve());
+        }
 
     if (_loading || _prayer == null) {
       return const SizedBox.shrink();
@@ -116,6 +116,8 @@ class _HomeTopFavoriteTileState extends State<HomeTopFavoriteTile> {
           );
         },
       ),
+    );
+      },
     );
   }
 }

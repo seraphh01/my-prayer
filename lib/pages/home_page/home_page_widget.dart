@@ -6,9 +6,10 @@ import 'package:my_prayer/components/download_progress_indicator.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/download/download_manager.dart';
 import 'package:my_prayer/custom_code/download/notifiers/download_state_notifier.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_search_index.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_types_cache.dart';
 import 'package:my_prayer/service_locator.dart';
 
-import '/backend/api_requests/api_calls.dart';
 import '/components/home_audio_mini_player.dart';
 import '/components/prayer_type_card_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -31,23 +32,14 @@ class HomePageWidget extends StatefulWidget {
   State<HomePageWidget> createState() => _HomePageWidgetState();
 }
 
-class _PrayerSearchItem {
-  _PrayerSearchItem({
-    required this.prayer,
-    required this.path,
-  });
-
-  final PrayerStruct prayer;
-  final String path;
-}
-
 class _HomePageWidgetState extends State<HomePageWidget> {
   late HomePageModel _model;
 
   static const double _toolbarHeight = 60.0;
   static const double _searchBarHeight = 72.0;
   double _headerExpandedHeightCache = 320.0;
- final _downloadManager = getIt<DownloadManager>();
+  final _downloadManager = getIt<DownloadManager>();
+  final _typesCache = getIt<PrayerTypesCache>();
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final _pageManager = getIt<PageManager>();
   final _audioHandler = getIt<AudioHandler>();
@@ -57,15 +49,41 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   final _searchFocusNode = FocusNode();
   final _searchFieldKey = GlobalKey();
   String _searchQuery = '';
+  String _debouncedSearchQuery = '';
+  Timer? _searchDebounce;
+  List<PrayerTypeStruct>? _prayerTypes;
+  PrayerSearchIndex? _searchIndex;
+  bool _typesLoading = true;
+  bool _typesLoadFailed = false;
   bool _searchPinned = false;
   bool _isAutoScrolling = false;
 
   bool get _searchActive => _searchPinned || _searchQuery.isNotEmpty;
 
   bool get _showAudioPlayer =>
-      FFAppState().currentPrayerId.isNotEmpty &&
-      !_searchPinned &&
-      _searchQuery.isEmpty;
+      !_searchPinned && _searchQuery.isEmpty;
+
+  Future<void> _loadPrayerTypes({bool forceRefresh = false}) async {
+    if (mounted) {
+      setState(() {
+        _typesLoading = true;
+        _typesLoadFailed = false;
+      });
+    }
+
+    try {
+      final types = await _typesCache.load(forceRefresh: forceRefresh);
+      _prayerTypes = types;
+      _searchIndex = PrayerSearchIndex.build(types);
+      _typesLoadFailed = types.isEmpty && forceRefresh;
+    } catch (_) {
+      _typesLoadFailed = true;
+    } finally {
+      if (mounted) {
+        setState(() => _typesLoading = false);
+      }
+    }
+  }
 
   double _headerExpandedHeight(BuildContext context) {
     return _toolbarHeight + _searchBarHeight;
@@ -477,18 +495,15 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           ParamType.int,
         ).toString(),
         'initialAudioTime': serializeParam(
-          valueOrDefault<double>(
-            _pageManager.currentProgressNotifier.value.inSeconds.toDouble(),
-            0.0,
-          ),
-          ParamType.double,
+          _pageManager.currentProgressNotifier.value.inSeconds,
+          ParamType.int,
         ).toString(),
       }.withoutNulls,
     );
   }
 
   Future<void> _closeAudioPlayer() async {
-    _pageManager.stop();
+    await _pageManager.stop();
     await _pageManager.clearQueue();
     FFAppState().currentPrayerId = '';
     safeSetState(() {});
@@ -498,6 +513,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => HomePageModel());
+    unawaited(_loadPrayerTypes());
     _scrollController.addListener(() {
       if (!_searchActive || !_scrollController.hasClients || _isAutoScrolling) {
         return;
@@ -563,6 +579,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _scrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -573,20 +590,23 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<FFAppState>();
     _headerExpandedHeightCache = _headerExpandedHeight(context);
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: !_searchActive &&
+          _searchFocusNode.hasFocus == false &&
+          _typeStack.isEmpty,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
         if (_searchActive || _searchFocusNode.hasFocus) {
           _exitSearch();
-          return false;
+          return;
         }
         if (_typeStack.isNotEmpty) {
           _popTypeNav();
-          return false;
         }
-        return true;
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -882,31 +902,38 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       if (_searchActive) _buildSearchSliverAppBar(context),
-                                            SliverToBoxAdapter(
-                        child: Visibility(
-                          visible: valueOrDefault<bool>(
-                            !_searchActive &&
-                                _typeStack.isEmpty &&
-                                (FFAppState().savedPrayer.prayer != null) &&
-                                (FFAppState().savedPrayer.prayer?.id != '') &&
-                                (FFAppState().currentPrayerId.isEmpty),
-                            false,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                                16.0, 8.0, 16.0, 0.0),
-                            child: InkWell(
+                      Selector<FFAppState, (SavedPrayerDataStruct, String)>(
+                        selector: (_, state) =>
+                            (state.savedPrayer, state.currentPrayerId),
+                        builder: (context, bookmarkState, _) {
+                          final savedPrayer = bookmarkState.$1;
+                          final currentPrayerId = bookmarkState.$2;
+                          final showBookmark = !_searchActive &&
+                              _typeStack.isEmpty &&
+                              savedPrayer.prayer != null &&
+                              savedPrayer.prayer!.id.isNotEmpty &&
+                              currentPrayerId.isEmpty;
+                          if (!showBookmark) {
+                            return const SliverToBoxAdapter(
+                              child: SizedBox.shrink(),
+                            );
+                          }
+                          return SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                  16.0, 8.0, 16.0, 0.0),
+                              child: InkWell(
                               splashColor: Colors.transparent,
                               focusColor: Colors.transparent,
                               hoverColor: Colors.transparent,
                               highlightColor: Colors.transparent,
                               onTap: () async {
-                                var prayerId =
-                                    FFAppState().savedPrayer.prayer?.id;
-                                var page = FFAppState().savedPrayer.page;
+                                final prayerId = savedPrayer.prayer?.id;
+                                final page = savedPrayer.page;
 
                                 FFAppState().deleteSavedPrayer();
-                                FFAppState().savedPrayer = SavedPrayerDataStruct();
+                                FFAppState().savedPrayer =
+                                    SavedPrayerDataStruct();
 
                                 safeSetState(() {});
 
@@ -1018,7 +1045,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                           ),
                                           const SizedBox(height: 2.0),
                                           Text(
-                                            '${FFAppState().savedPrayer.prayer?.title}',
+                                            savedPrayer.prayer?.title ?? '',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: FlutterFlowTheme.of(context)
@@ -1043,309 +1070,18 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               ),
                             ),
                           ),
-                        ),
+                        );
+                        },
                       ),
 
                       SliverPadding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
                           16.0,
                           16.0,
                           16.0,
                           0.0,
                         ),
-                        
-                        sliver: SliverToBoxAdapter(
-                          child: FutureBuilder<ApiCallResponse>(
-                            future: (_model.apiRequestCompleter ??=
-                                    Completer<ApiCallResponse>()
-                                      ..complete(SuapabaseQueriesGroup
-                                          .getPrayerTypesCall
-                                          .call()))
-                                .future,
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return Center(
-                                  child: SizedBox(
-                                    width: 24.0,
-                                    height: 24.0,
-                                    child: CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        FlutterFlowTheme.of(context).primary,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              } else if (snapshot.data!.succeeded ==
-                                  false) {
-                                return Column(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsetsDirectional.only(
-                                          top: 12.0),
-                                      child: Text(
-                                        'Rugăciunile nu au putut fi încărcate. Vă rugăm să încercați din nou mai târziu sau verificați conexiunea la internet.',
-                                        style: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color: FlutterFlowTheme.of(context)
-                                                  .alternate,
-                                              letterSpacing: 0.0,
-                                            ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12.0),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            FlutterFlowTheme.of(context)
-                                                .alternate,
-                                      ),
-                                      onPressed: () {
-                                        _model.apiRequestCompleter = null;
-                                        safeSetState(() {});
-                                      },
-
-                                      child: Text(
-                                        'Reîncearcă',
-                                        style: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color: FlutterFlowTheme.of(context)
-                                                  .primary,
-                                              letterSpacing: 0.0,
-                                            ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 16.0),
-                                    Text(
-                                        'Verifică rugăciunile descărcate pe telefon:',
-                                        style: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color: FlutterFlowTheme.of(context)
-                                                  .alternate,
-                                              letterSpacing: 0.0,
-                                            ),
-                                      ),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          FlutterFlowTheme.of(context)
-                                              .alternate,
-                                    ),
-                                    onPressed: () {
-                                      context.pushNamed(
-                                        'DownloadedPrayersPage',
-                                        extra: <String, dynamic>{
-                                          kTransitionInfoKey:
-                                              const TransitionInfo(
-                                            hasTransition: true,
-                                            transitionType:
-                                                PageTransitionType.fade,
-                                            duration:
-                                                Duration(milliseconds: 250),
-                                          ),
-                                        },
-                                      );
-                                    },
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          'Rugăciuni descărcate',
-                                          style: FlutterFlowTheme.of(context)
-                                              .labelMedium
-                                              .override(
-                                                fontFamily: 'Inter',
-                                                color: FlutterFlowTheme.of(context)
-                                                    .primary,
-                                                letterSpacing: 0.0,
-                                              ),
-                                        ),
-                                        const SizedBox(width: 8.0),
-                                        Icon(
-                                          Icons.download_rounded,
-                                          color: FlutterFlowTheme.of(context)
-                                              .primary,
-                                          size: 20.0,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                    ]);
-                              }
-
-                              final listViewGetPrayerTypesResponse =
-                                  snapshot.data!;
-                              final prayerTypes =
-                                  (listViewGetPrayerTypesResponse.jsonBody
-                                          .toList()
-                                          .map<PrayerTypeStruct?>(
-                                            PrayerTypeStruct.maybeFromMap,
-                                          )
-                                          .toList()
-                                      as Iterable<PrayerTypeStruct?>)
-                                      .withoutNulls
-                                      .toList();
-                              prayerTypes.sort(
-                                  (a, b) => a.sequence.compareTo(b.sequence));
-
-                              final query = _searchQuery.toLowerCase().trim();
-                              final searchResults = query.isNotEmpty
-                                  ? _buildPrayerSearchResults(prayerTypes, query)
-                                  : const <_PrayerSearchItem>[];
-
-                              if (_typeStack.isNotEmpty && !_searchActive) {
-                                return _buildSelectedTypeList(context);
-                              }
-
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (query.isNotEmpty)
-                                    const SizedBox(height: 8.0),
-                                  if (listViewGetPrayerTypesResponse.succeeded)
-                                    if (query.isNotEmpty)
-                                      if (searchResults.isNotEmpty)
-                                        ListView.separated(
-                                          padding: EdgeInsets.zero,
-                                          primary: false,
-                                          shrinkWrap: true,
-                                          physics:
-                                              const NeverScrollableScrollPhysics(),
-                                          itemCount: searchResults.length,
-                                          separatorBuilder: (_, __) =>
-                                              const SizedBox(height: 12.0),
-                                          itemBuilder: (context, index) {
-                                            final result = searchResults[index];
-                                            return PrayerTypeCardWidget(
-                                              title: result.prayer.subtitle,
-                                              subtitle: result.prayer.title,
-                                              trailingText: null,
-                                              trailingIcons: result.prayer.mode != PrayerMode.audioAndText ? [result.prayer.mode == PrayerMode.audioOnly ? Icons.audiotrack_rounded : Icons.text_snippet_rounded, Icons.chevron_right_rounded] : const [Icons.chevron_right_rounded],
-                                              onTap: () async {
-                                                _typeStack.clear();
-                                                _exitSearch();
-                                                safeSetState(() {});
-                                                await context.pushNamed(
-                                                  'RosaryPage',
-                                                  queryParameters: {
-                                                    'prayerId': serializeParam(
-                                                      result.prayer.id,
-                                                      ParamType.String,
-                                                    ),
-                                                  }.withoutNulls,
-                                                  extra: <String, dynamic>{
-                                                    kTransitionInfoKey:
-                                                        const TransitionInfo(
-                                                      hasTransition: true,
-                                                      transitionType:
-                                                          PageTransitionType.fade,
-                                                      duration: Duration(
-                                                          milliseconds: 250),
-                                                    ),
-                                                  },
-                                                );
-                                              },
-                                            );
-                                          },
-                                        )
-                                      else
-                                        Padding(
-
-                                          padding:
-                                              const EdgeInsetsDirectional.only(
-                                                  top: 12.0),
-                                          child: Text(
-                                            'Nu există rugăciuni cu acest nume.',
-                                            style: FlutterFlowTheme.of(context)
-                                                .labelMedium
-                                                .override(
-                                                  fontFamily: 'Inter',
-                                                  color:
-                                                      FlutterFlowTheme.of(context)
-                                                          .alternate,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                          ),
-                                        )
-                                    else
-                                      ListView.separated(
-                                        padding: EdgeInsets.zero,
-                                        primary: false,
-                                        shrinkWrap: true,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        itemCount: prayerTypes.length,
-                                        separatorBuilder: (_, __) =>
-                                            const SizedBox(height: 12.0),
-                                        itemBuilder: (context, index) {
-                                          final type = prayerTypes[index % prayerTypes.length];
-                                          final totalCount =
-                                              type.subtypes.length +
-                                                  type.prayers.length;
-                                          if (totalCount == 0) {
-                                            // Skip types with no subtypes or prayers
-                                            return const SizedBox.shrink();
-                                          }
-
-                                          if(type.subtypes.isEmpty &&
-                                             type.prayers.length == 1) {
-                                            final prayer = type.prayers.first;
-                                             return PrayerTypeCardWidget(
-                                            title: prayer.subtitle,
-                                            subtitle: null,
-                                            trailingText: null,
-                                            trailingIcons: prayer.mode != PrayerMode.audioAndText ? [prayer.mode == PrayerMode.audioOnly ? Icons.audiotrack_rounded : Icons.text_snippet_rounded, Icons.chevron_right_rounded] : const [Icons.chevron_right_rounded],
-                                            onTap: () async {
-                                              // only one prayer and no subtypes, open it directly
-             
-                                                await context.pushNamed(
-                                                  'RosaryPage',
-                                                  queryParameters: {
-                                                    'prayerId': serializeParam(
-                                                      prayer.id,
-                                                      ParamType.String,
-                                                    ),
-                                                  }.withoutNulls,
-                                                  extra: <String, dynamic>{
-                                                    kTransitionInfoKey:
-                                                        const TransitionInfo(
-                                                      hasTransition: true,
-                                                      transitionType:
-                                                          PageTransitionType.fade,
-                                                      duration: Duration(
-                                                          milliseconds: 250),
-                                                    ),
-                                                  },
-                                                );
-                                            },
-                                          );
-                                          }
-
-                                          return PrayerTypeCardWidget(
-                                            title: type.type,
-                                            subtitle: null,
-                                            trailingText: null,
-                                            trailingIcons: [Icons.chevron_right_rounded],
-                                            onTap: () async {
-                                              if (type.subtypes.isEmpty &&
-                                                  type.prayers.isEmpty) {
-                                                return;
-                                              }
-                                              _enterPrayerType(type);
-                                            },
-                                          );
-                                        },
-                                      ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
+                        sliver: _buildPrayerTypesSliver(context),
                       ),
 
                         SliverToBoxAdapter(
@@ -1358,16 +1094,24 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       ],
                     ),
                   ),
-                  if (_showAudioPlayer)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
-                      child: HomeAudioMiniPlayer(
-                        pageManager: _pageManager,
-                        audioHandler: _audioHandler,
-                        onClose: _closeAudioPlayer,
-                        onOpenPrayer: _openCurrentPrayerWithAudio,
-                      ),
-                    ),
+                  Selector<FFAppState, String>(
+                    selector: (_, state) => state.currentPrayerId,
+                    builder: (context, currentPrayerId, _) {
+                      if (!_showAudioPlayer || currentPrayerId.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
+                        child: HomeAudioMiniPlayer(
+                          pageManager: _pageManager,
+                          audioHandler: _audioHandler,
+                          onClose: _closeAudioPlayer,
+                          onOpenPrayer: _openCurrentPrayerWithAudio,
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -1384,6 +1128,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       focusNode: _searchFocusNode,
       onChanged: (value) {
         _searchQuery = value;
+        _searchDebounce?.cancel();
+        _searchDebounce = Timer(const Duration(milliseconds: 250), () {
+          if (mounted) {
+            setState(() => _debouncedSearchQuery = value);
+          }
+        });
         safeSetState(() {});
       },
       style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -1465,58 +1215,173 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     );
   }
 
-  List<_PrayerSearchItem> _buildPrayerSearchResults(
-    List<PrayerTypeStruct> types,
-    String query,
-  ) {
-    final lower = query.toLowerCase().trim();
-    if (lower.isEmpty) {
-      return [];
+  Widget _buildPrayerTypesSliver(BuildContext context) {
+    if (_typesLoading && (_prayerTypes == null || _prayerTypes!.isEmpty)) {
+      return SliverToBoxAdapter(
+        child: Center(
+          child: SizedBox(
+            width: 24.0,
+            height: 24.0,
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(
+                FlutterFlowTheme.of(context).primary,
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
-    final results = <_PrayerSearchItem>[];
-
-    void walkType(PrayerTypeStruct type, String prefix) {
-      final currentPath = prefix.isEmpty ? type.type : '$prefix > ${type.type}';
-
-      for (final prayer in type.prayers) {
-        final haystack =
-            '${prayer.title} ${prayer.subtitle} $currentPath'.toLowerCase();
-        if (haystack.contains(lower)) {
-          results.add(
-            _PrayerSearchItem(
-              prayer: prayer,
-              path: currentPath,
+    if (_typesLoadFailed || _prayerTypes == null || _prayerTypes!.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.only(top: 12.0),
+              child: Text(
+                'Rugăciunile nu au putut fi încărcate. Vă rugăm să încercați din nou mai târziu sau verificați conexiunea la internet.',
+                style: FlutterFlowTheme.of(context).labelMedium.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).alternate,
+                      letterSpacing: 0.0,
+                    ),
+              ),
             ),
+            const SizedBox(height: 12.0),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FlutterFlowTheme.of(context).alternate,
+              ),
+              onPressed: () => unawaited(_loadPrayerTypes(forceRefresh: true)),
+              child: Text(
+                'Reîncearcă',
+                style: FlutterFlowTheme.of(context).labelMedium.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).primary,
+                      letterSpacing: 0.0,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_typeStack.isNotEmpty && !_searchActive) {
+      return SliverToBoxAdapter(child: _buildSelectedTypeList(context));
+    }
+
+    final query = _debouncedSearchQuery.toLowerCase().trim();
+    if (query.isNotEmpty) {
+      final searchResults = _searchIndex?.search(query) ?? const [];
+      if (searchResults.isEmpty) {
+        return SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(top: 12.0),
+            child: Text(
+              'Nu există rugăciuni cu acest nume.',
+              style: FlutterFlowTheme.of(context).labelMedium.override(
+                    fontFamily: 'Inter',
+                    color: FlutterFlowTheme.of(context).alternate,
+                    letterSpacing: 0.0,
+                  ),
+            ),
+          ),
+        );
+      }
+
+      return SliverList.separated(
+        itemCount: searchResults.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12.0),
+        itemBuilder: (context, index) {
+          final result = searchResults[index];
+          return _buildSearchResultCard(context, result);
+        },
+      );
+    }
+
+    final visibleTypes = _prayerTypes!
+        .where((type) => type.subtypes.isNotEmpty || type.prayers.isNotEmpty)
+        .toList();
+
+    return SliverList.separated(
+      itemCount: visibleTypes.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12.0),
+      itemBuilder: (context, index) {
+        final type = visibleTypes[index];
+        if (type.subtypes.isEmpty && type.prayers.length == 1) {
+          final prayer = type.prayers.first;
+          return PrayerTypeCardWidget(
+            title: prayer.subtitle,
+            subtitle: null,
+            trailingText: null,
+            trailingIcons: _trailingIconsForPrayer(prayer),
+            onTap: () => _openPrayer(context, prayer.id),
           );
         }
-      }
 
-      for (final subtype in type.subtypes) {
-        walkType(subtype, currentPath);
-      }
-    }
-
-    for (final type in types) {
-      walkType(type, '');
-    }
-
-    return results;
+        return PrayerTypeCardWidget(
+          title: type.type,
+          subtitle: null,
+          trailingText: null,
+          trailingIcons: const [Icons.chevron_right_rounded],
+          onTap: () => _enterPrayerType(type),
+        );
+      },
+    );
   }
 
-  void _enterSearch() {
-    _typeStack.clear();
-    _searchPinned = true;
-    safeSetState(() {});
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _searchFocusNode.requestFocus();
-      _scrollHomeToTop();
-    });
+  List<IconData> _trailingIconsForPrayer(PrayerStruct prayer) {
+    if (prayer.mode == PrayerMode.audioAndText) {
+      return const [Icons.chevron_right_rounded];
+    }
+    return [
+      prayer.mode == PrayerMode.audioOnly
+          ? Icons.audiotrack_rounded
+          : Icons.text_snippet_rounded,
+      Icons.chevron_right_rounded,
+    ];
+  }
+
+  Widget _buildSearchResultCard(BuildContext context, PrayerSearchEntry result) {
+    return PrayerTypeCardWidget(
+      title: result.prayer.subtitle,
+      subtitle: result.prayer.title,
+      trailingText: null,
+      trailingIcons: _trailingIconsForPrayer(result.prayer),
+      onTap: () async {
+        _typeStack.clear();
+        _exitSearch();
+        safeSetState(() {});
+        await _openPrayer(context, result.prayer.id);
+      },
+    );
+  }
+
+  Future<void> _openPrayer(BuildContext context, String prayerId) async {
+    await context.pushNamed(
+      'RosaryPage',
+      queryParameters: {
+        'prayerId': serializeParam(
+          prayerId,
+          ParamType.String,
+        ),
+      }.withoutNulls,
+      extra: <String, dynamic>{
+        kTransitionInfoKey: const TransitionInfo(
+          hasTransition: true,
+          transitionType: PageTransitionType.fade,
+          duration: Duration(milliseconds: 250),
+        ),
+      },
+    );
   }
 
   void _exitSearch() {
     _searchController.clear();
     _searchQuery = '';
+    _debouncedSearchQuery = '';
+    _searchDebounce?.cancel();
     _searchPinned = false;
     _searchFocusNode.unfocus();
     if (_scrollController.hasClients) {
@@ -1527,5 +1392,15 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       );
     }
     safeSetState(() {});
+  }
+
+  void _enterSearch() {
+    _typeStack.clear();
+    _searchPinned = true;
+    safeSetState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchFocusNode.requestFocus();
+      _scrollHomeToTop();
+    });
   }
 }

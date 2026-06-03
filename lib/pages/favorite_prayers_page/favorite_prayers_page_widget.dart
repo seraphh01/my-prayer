@@ -1,4 +1,5 @@
 import '/app_state.dart';
+import '/backend/schema/structs/index.dart';
 import '/components/empty_favorite_prayers_list_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -51,9 +52,10 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<FFAppState>();
-
-    return GestureDetector(
+    return Selector<FFAppState, List<PrayerStruct>>(
+      selector: (_, state) => state.favoritePrayers,
+      builder: (context, favoritePrayers, _) {
+        return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
@@ -124,8 +126,7 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                 decoration: const BoxDecoration(),
                 child: Builder(
                   builder: (context) {
-                    final favorites = FFAppState().favoritePrayers.toList();
-                    if (favorites.isEmpty) {
+                    if (favoritePrayers.isEmpty) {
                       return Center(
                         child: SizedBox(
                           width: double.infinity,
@@ -137,10 +138,10 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
 
                     return ReorderableListView.builder(
                       padding: EdgeInsets.zero,
-                      itemCount: favorites.length,
+                      itemCount: favoritePrayers.length,
                       onReorder: _onReorder,
                       itemBuilder: (context, index) {
-                        final item = favorites[index];
+                        final item = favoritePrayers[index];
                         final downloaded = FFAppState()
                             .downloadedPrayers
                             .any((p) => p.id == item.id);
@@ -253,6 +254,8 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 }

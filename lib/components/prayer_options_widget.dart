@@ -53,10 +53,12 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<FFAppState>();
-    _model.themeMode ??= FlutterFlowTheme.themeMode;
+    return ListenableBuilder(
+      listenable: FFAppState(),
+      builder: (context, _) {
+        _model.themeMode ??= FlutterFlowTheme.themeMode;
 
-    return Material(
+        return Material(
       color: Colors.transparent,
       elevation: 0.0,
       shape: const RoundedRectangleBorder(
@@ -577,6 +579,8 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

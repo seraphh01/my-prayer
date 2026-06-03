@@ -1,3 +1,4 @@
+import '/backend/schema/structs/index.dart';
 import '/components/empty_downloaded_prayers_list_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -40,9 +41,10 @@ class _DownloadedPrayersPageWidgetState
 
   @override
   Widget build(BuildContext context) {
-    context.watch<FFAppState>();
-
-    return GestureDetector(
+    return Selector<FFAppState, List<PrayerStruct>>(
+      selector: (_, state) => state.downloadedPrayers,
+      builder: (context, downloadedPrayer, _) {
+        return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
         FocusManager.instance.primaryFocus?.unfocus();
@@ -112,28 +114,21 @@ class _DownloadedPrayersPageWidgetState
                 width: 400.0,
                 height: double.infinity,
                 decoration: const BoxDecoration(),
-                child: Builder(
-                  builder: (context) {
-                    final downloadedPrayer =
-                        FFAppState().downloadedPrayers.toList();
-                    if (downloadedPrayer.isEmpty) {
-                      return Center(
+                child: downloadedPrayer.isEmpty
+                    ? Center(
                         child: SizedBox(
                           width: double.infinity,
                           height: MediaQuery.sizeOf(context).height * 0.5,
                           child: const EmptyDownloadedPrayersListWidget(),
                         ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      scrollDirection: Axis.vertical,
-                      itemCount: downloadedPrayer.length,
-                      itemBuilder: (context, downloadedPrayerIndex) {
-                        final downloadedPrayerItem =
-                            downloadedPrayer[downloadedPrayerIndex];
+                      )
+                    : ListView.builder(
+                        padding: EdgeInsets.zero,
+                        scrollDirection: Axis.vertical,
+                        itemCount: downloadedPrayer.length,
+                        itemBuilder: (context, downloadedPrayerIndex) {
+                          final downloadedPrayerItem =
+                              downloadedPrayer[downloadedPrayerIndex];
                         return Column(
                           mainAxisSize: MainAxisSize.max,
                           children: [
@@ -218,14 +213,14 @@ class _DownloadedPrayersPageWidgetState
                           ],
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
               ),
             ),
           ),
         ),
       ),
+    );
+      },
     );
   }
 }

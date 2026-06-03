@@ -145,12 +145,10 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
           top: true,
           child: Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(8.0, 0.0, 8.0, 0.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FlutterFlowCalendar(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FlutterFlowCalendar(
                     color: FlutterFlowTheme.of(context).secondary,
                     iconColor: FlutterFlowTheme.of(context).primaryText,
                     weekFormat: false,
@@ -200,197 +198,143 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                     locale: FFLocalizations.of(context).languageCode,
                   ),
                   if (_model.dateGroups.isNotEmpty)
-                    Builder(
-                      builder: (context) {
-                        final dateGroup = _model.dateGroups.toList();
+                    Expanded(
+                      child: ListView.separated(
+                        padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+                        itemCount: _model.dateGroups.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8.0),
+                        itemBuilder: (context, dateGroupIndex) {
+                          final dateGroupItem = _model.dateGroups[dateGroupIndex];
+                          final nestedPrayerTypes =
+                              _model.nestedTypesForDateGroup(dateGroupItem);
 
-                        return ListView.separated(
-                          padding: EdgeInsets.zero,
-                          primary: false,
-                          shrinkWrap: true,
-                          scrollDirection: Axis.vertical,
-                          itemCount: dateGroup.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 8.0),
-                          itemBuilder: (context, dateGroupIndex) {
-                            final dateGroupItem = dateGroup[dateGroupIndex];
-                            final nestedPrayerTypes =
-                                _model.nestedTypesForDateGroup(dateGroupItem);
+                          if (dateGroupItem.prayers.isEmpty &&
+                              nestedPrayerTypes.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
 
-                            return Visibility(
-                              visible: dateGroupItem.prayers.isNotEmpty ||
-                                  nestedPrayerTypes.isNotEmpty,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.max,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  if (dateGroupItem.name.isNotEmpty)
-                                    Text(
-                                      dateGroupItem.name,
-                                      textAlign: TextAlign.center,
-                                      style: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .override(
-                                            fontFamily: 'Merriweather',
-                                            letterSpacing: 0.0,
-                                          ),
-                                    ),
-                                  if (dateGroupItem.description.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: 4.0,
-                                        bottom: 4.0,
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              if (dateGroupItem.name.isNotEmpty)
+                                Text(
+                                  dateGroupItem.name,
+                                  textAlign: TextAlign.center,
+                                  style: FlutterFlowTheme.of(context)
+                                      .titleSmall
+                                      .override(
+                                        fontFamily: 'Merriweather',
+                                        letterSpacing: 0.0,
                                       ),
-                                      child: Text(
-                                        dateGroupItem.description,
-                                        textAlign: TextAlign.center,
-                                        style: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color: FlutterFlowTheme.of(
-                                                      context)
-                                                  .secondaryText,
-                                              letterSpacing: 0.0,
-                                            ),
-                                      ),
-                                    ),
-                                  Column(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Divider(
-                                        height: 1.0,
-                                        thickness: 1.0,
-                                        color: FlutterFlowTheme.of(context)
-                                            .secondary,
-                                      ),
-                                      Builder(
-                                        builder: (context) {
-                                          if (nestedPrayerTypes.isNotEmpty) {
-                                            return SubTypesViewWidget(
-                                              prayerTypes: nestedPrayerTypes,
-                                              onSelectPrayer: (prayerId) async {
-                                                context
-                                                    .openPrayerWithHomeOnStack(
-                                                  prayerId,
-                                                );
-                                              },
-                                            );
-                                          }
-
-                                          final prayerGroups =
-                                              groupPrayersByTitle(
-                                            dateGroupItem.prayers
-                                                .sortedList(
-                                                  keyOf: (e) => e.sequence,
-                                                  desc: false,
-                                                )
-                                                .toList(),
-                                          );
-
-                                          return ListView.builder(
-                                            padding: EdgeInsets.zero,
-                                            primary: false,
-                                            shrinkWrap: true,
-                                            scrollDirection: Axis.vertical,
-                                            itemCount: prayerGroups.length,
-                                            itemBuilder: (context, groupIndex) {
-                                              final prayerGroup =
-                                                  prayerGroups[groupIndex];
-
-                                              if (prayerGroup.prayers.length ==
-                                                  1) {
-                                                final prayer =
-                                                    prayerGroup.prayers.first;
-                                                return _buildPrayerListTile(
-                                                  context,
-                                                  prayer: prayer,
-                                                  title: prayer.title,
-                                                  subtitle: prayer.subtitle,
-                                                );
-                                              }
-
-                                              return Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Theme(
-                                                    data: Theme.of(context)
-                                                        .copyWith(
-                                                      dividerColor:
-                                                          Colors.transparent,
-                                                    ),
-                                                    child: ExpansionTile(
-                                                      tilePadding:
-                                                          const EdgeInsets
-                                                              .symmetric(
-                                                        horizontal: 4.0,
-                                                      ),
-                                                      childrenPadding:
-                                                          EdgeInsets.zero,
-                                                      title: Text(
-                                                        prayerGroup.title,
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .titleLarge
-                                                            .override(
-                                                              fontFamily:
-                                                                  'Merriweather',
-                                                              letterSpacing:
-                                                                  0.0,
-                                                            ),
-                                                      ),
-                                                      children: prayerGroup
-                                                          .prayers
-                                                          .map(
-                                                        (prayer) =>
-                                                            _buildPrayerListTile(
-                                                          context,
-                                                          prayer: prayer,
-                                                          title: prayer.title
-                                                                  .isNotEmpty
-                                                              ? prayer.title
-                                                              : prayer
-                                                                  .subtitle,
-                                                          subtitle: prayer
-                                                                  .title
-                                                                  .isNotEmpty
-                                                              ? prayer.subtitle
-                                                              : null,
-                                                        ),
-                                                      )
-                                                          .toList(),
-                                                    ),
-                                                  ),
-                                                  Divider(
-                                                    height: 1.0,
-                                                    thickness: 1.0,
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .secondary,
-                                                  ),
-                                                ],
-                                              );
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ],
+                                ),
+                              if (dateGroupItem.description.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 4.0,
+                                    bottom: 4.0,
                                   ),
-                                ].divide(const SizedBox(height: 8.0)),
+                                  child: Text(
+                                    dateGroupItem.description,
+                                    textAlign: TextAlign.center,
+                                    style: FlutterFlowTheme.of(context)
+                                        .labelMedium
+                                        .override(
+                                          fontFamily: 'Inter',
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryText,
+                                          letterSpacing: 0.0,
+                                        ),
+                                  ),
+                                ),
+                              Divider(
+                                height: 1.0,
+                                thickness: 1.0,
+                                color:
+                                    FlutterFlowTheme.of(context).secondary,
                               ),
-                            );
-                          },
-                        );
-                      },
+                              if (nestedPrayerTypes.isNotEmpty)
+                                SubTypesViewWidget(
+                                  prayerTypes: nestedPrayerTypes,
+                                  onSelectPrayer: (prayerId) async {
+                                    context.openPrayerWithHomeOnStack(
+                                      prayerId,
+                                    );
+                                  },
+                                )
+                              else
+                                ..._buildPrayerGroupTiles(context, dateGroupItem),
+                            ],
+                          );
+                        },
+                      ),
                     ),
-                ]
-                    .divide(const SizedBox(height: 16.0))
-                    .addToEnd(const SizedBox(height: 16.0)),
-              ),
+              ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> _buildPrayerGroupTiles(
+    BuildContext context,
+    DateGroupStruct dateGroupItem,
+  ) {
+    final prayerGroups = groupPrayersByTitle(
+      dateGroupItem.prayers
+          .sortedList(
+            keyOf: (e) => e.sequence,
+            desc: false,
+          )
+          .toList(),
+    );
+
+    return prayerGroups.map((prayerGroup) {
+      if (prayerGroup.prayers.length == 1) {
+        final prayer = prayerGroup.prayers.first;
+        return _buildPrayerListTile(
+          context,
+          prayer: prayer,
+          title: prayer.title,
+          subtitle: prayer.subtitle,
+        );
+      }
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Theme(
+            data: Theme.of(context).copyWith(
+              dividerColor: Colors.transparent,
+            ),
+            child: ExpansionTile(
+              tilePadding: const EdgeInsets.symmetric(horizontal: 4.0),
+              childrenPadding: EdgeInsets.zero,
+              title: Text(
+                prayerGroup.title,
+                style: FlutterFlowTheme.of(context).titleLarge.override(
+                      fontFamily: 'Merriweather',
+                      letterSpacing: 0.0,
+                    ),
+              ),
+              children: prayerGroup.prayers
+                  .map(
+                    (prayer) => _buildPrayerListTile(
+                      context,
+                      prayer: prayer,
+                      title: prayer.title.isNotEmpty
+                          ? prayer.title
+                          : prayer.subtitle,
+                      subtitle:
+                          prayer.title.isNotEmpty ? prayer.subtitle : null,
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ],
+      );
+    }).toList();
   }
 }

@@ -10,6 +10,9 @@ import '/backend/schema/structs/index.dart';
 import './notifiers/download_state_notifier.dart';
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
 import 'package:my_prayer/custom_code/extensions/string_extensions.dart';
+import 'package:my_prayer/custom_code/prayer/downloaded_prayer_repository.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_section_content_cache.dart';
+import 'package:my_prayer/service_locator.dart';
 
 class DownloadManager {
   final ValueNotifier<int> downloadedSizeNotifier = ValueNotifier<int>(0);
@@ -81,8 +84,8 @@ class DownloadManager {
       }
     }
 
-    FFAppState().removeFromDownloadedPrayers(prayer);
-    FFAppState().addToDownloadedPrayers(prayer);
+    FFAppState().removeDownloadedById(prayer.id);
+    await getIt<DownloadedPrayerRepository>().registerDownload(prayer);
     downloadStateNotifier.value = DownloadState.completed;
   }
 
@@ -107,16 +110,8 @@ class DownloadManager {
         }
       }
 
-      final response = await PrayerSectionContentCall.call(
-          prayerSectionId: section.sectionId);
-      final texts = (getJsonField(response.jsonBody, r'$.texts', true)
-                  ?.toList()
-                  .map<SectionTextStruct?>(SectionTextStruct.maybeFromMap)
-                  .toList() as Iterable<SectionTextStruct?>?)
-              ?.withoutNulls
-              ?.toList() ??
-          [];
-
+      final texts = await getIt<PrayerSectionContentCache>()
+          .loadTexts(section.sectionId);
       section.texts = texts;
 
       if (section.subsections?.isNotEmpty ?? false) {

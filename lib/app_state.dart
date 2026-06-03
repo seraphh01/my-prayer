@@ -136,8 +136,12 @@ class FFAppState extends ChangeNotifier {
   String _fontFamily = 'Crimson Pro';
   String get fontFamily => _fontFamily;
   set fontFamily(String value) {
+    if (_fontFamily == value) {
+      return;
+    }
     _fontFamily = value;
     secureStorage.setString('ff_fontFamily', value);
+    notifyListeners();
   }
 
   void deleteFontFamily() {
@@ -147,8 +151,12 @@ class FFAppState extends ChangeNotifier {
   double _fontSizeMultiplier = 1;
   double get fontSizeMultiplier => _fontSizeMultiplier;
   set fontSizeMultiplier(double value) {
+    if (_fontSizeMultiplier == value) {
+      return;
+    }
     _fontSizeMultiplier = value;
     secureStorage.setDouble('ff_fontSizeMultiplier', value);
+    notifyListeners();
   }
 
   void deleteFontSizeMultiplier() {
@@ -233,7 +241,10 @@ class FFAppState extends ChangeNotifier {
   set downloadedPrayers(List<PrayerStruct> value) {
     _downloadedPrayers = value;
     secureStorage.setString(
-        'ff_downloadedPrayers', jsonEncode(value.map((x) => x.serialize()).toList()));
+      'ff_downloadedPrayers',
+      jsonEncode(value.map((x) => _compactDownloaded(x).toSerializableMap()).toList()),
+    );
+    notifyListeners();
   }
 
   void deleteDownloadedPrayers() {
@@ -241,13 +252,30 @@ class FFAppState extends ChangeNotifier {
   }
 
   void addToDownloadedPrayers(PrayerStruct value) {
-    downloadedPrayers.add(value);
-    downloadedPrayers = downloadedPrayers;
+    removeDownloadedById(value.id);
+    downloadedPrayers = [...downloadedPrayers, _compactDownloaded(value)];
   }
 
   void removeFromDownloadedPrayers(PrayerStruct value) {
-    downloadedPrayers.remove(value);
-    downloadedPrayers = downloadedPrayers;
+    removeDownloadedById(value.id);
+  }
+
+  void removeDownloadedById(String prayerId) {
+    if (prayerId.isEmpty) {
+      return;
+    }
+    downloadedPrayers =
+        downloadedPrayers.where((p) => p.id != prayerId).toList();
+  }
+
+  PrayerStruct _compactDownloaded(PrayerStruct value) {
+    return PrayerStruct(
+      id: value.id,
+      title: value.title,
+      subtitle: value.subtitle,
+      mode: value.mode,
+      sequence: value.sequence,
+    );
   }
 
   void removeAtIndexFromDownloadedPrayers(int index) {

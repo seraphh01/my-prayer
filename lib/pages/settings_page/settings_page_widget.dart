@@ -56,9 +56,11 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<FFAppState>();
-
-    return Scaffold(
+    return Selector<FFAppState, (String, double, double)>(
+      selector: (_, state) =>
+          (state.fontFamily, state.fontSizeMultiplier, state.audioSpeed),
+      builder: (context, _, __) {
+        return Scaffold(
       key: scaffoldKey,
       backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
       appBar: PreferredSize(
@@ -824,7 +826,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                         maxLines: 1,
                         minFontSize: 12.0,
                         style: FlutterFlowTheme.of(context).titleSmall.override(
-                              fontFamily: FFAppState().fontFamily,
+                              fontFamily: 'Merriweather',
                               letterSpacing: 0.0,
                             ),
                       ),
@@ -879,6 +881,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
           ),
         ),
       ),
+    );
+      },
     );
   }
 }

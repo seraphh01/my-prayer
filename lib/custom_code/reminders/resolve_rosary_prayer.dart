@@ -1,7 +1,8 @@
-import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/structs/index.dart';
 import '/custom_code/calendar/fetch_date_group_prayers.dart';
+import '/custom_code/prayer/prayer_types_cache.dart';
 import '/custom_code/reminders/prayer_catalog_helper.dart';
+import 'package:my_prayer/service_locator.dart';
 
 /// Catholic rosary mystery schedule (Romanian keyword hints for catalog match).
 const Map<int, List<String>> rosaryMysteryKeywordsByWeekday = {
@@ -83,15 +84,11 @@ PrayerStruct? _matchPrayerByWeekday(
 
 Future<String?> _fetchRosaryFromCatalog(int weekday) async {
   try {
-    final response = await SuapabaseQueriesGroup.getPrayerTypesCall.call();
-    if (response.succeeded != true || response.jsonBody is! List) {
+    final types = await getIt<PrayerTypesCache>().load();
+    if (types.isEmpty) {
       return null;
     }
 
-    final types = (response.jsonBody as List)
-        .map(PrayerTypeStruct.maybeFromMap)
-        .whereType<PrayerTypeStruct>()
-        .toList();
     final catalog = flattenPrayerCatalog(types);
 
     final candidates = catalog

@@ -1,4 +1,5 @@
-import '/backend/api_requests/api_calls.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_types_cache.dart';
+import 'package:my_prayer/service_locator.dart';
 import '/backend/schema/structs/index.dart';
 import '/custom_code/calendar/filter_prayer_types.dart';
 
@@ -23,16 +24,9 @@ Future<List<PrayerTypeStruct>> fetchPrayerTypesCatalog() async {
     return _cachedPrayerTypesCatalog!;
   }
 
-  final response = await SuapabaseQueriesGroup.getPrayerTypesCall.call();
-  if (response.succeeded != true || response.jsonBody is! List) {
-    return const [];
-  }
-
-  _cachedPrayerTypesCatalog = (response.jsonBody as List)
-      .map(PrayerTypeStruct.maybeFromMap)
-      .whereType<PrayerTypeStruct>()
-      .toList();
-  return _cachedPrayerTypesCatalog!;
+  final types = await getIt<PrayerTypesCache>().load();
+  _cachedPrayerTypesCatalog = types;
+  return types;
 }
 
 PrayerTypeStruct? findPrayerTypeById(

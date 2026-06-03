@@ -1,10 +1,9 @@
-import '/backend/api_requests/api_calls.dart';
-import '/backend/backend.dart';
-import '/backend/schema/structs/index.dart';
 import '/components/sub_types_view_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/custom_code/actions/index.dart' as actions;
+import '/backend/schema/structs/index.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_types_cache.dart';
+import 'package:my_prayer/service_locator.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'all_prayers_page_model.dart';
@@ -19,6 +18,9 @@ class AllPrayersPageWidget extends StatefulWidget {
 
 class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
   late AllPrayersPageModel _model;
+  final _typesCache = getIt<PrayerTypesCache>();
+  List<PrayerTypeStruct>? _prayerTypes;
+  bool _loading = true;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -26,14 +28,20 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => AllPrayersPageModel());
+    unawaited(_loadTypes());
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
+  Future<void> _loadTypes({bool forceRefresh = false}) async {
+    setState(() => _loading = true);
+    _prayerTypes = await _typesCache.load(forceRefresh: forceRefresh);
+    if (mounted) {
+      setState(() => _loading = false);
+    }
   }
 
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -70,85 +78,40 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
         ),
         body: SafeArea(
           top: true,
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(),
-            child: Padding(
-              padding:
-                  const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 8.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    FutureBuilder<ApiCallResponse>(
-                      future: (_model.apiRequestCompleter ??=
-                              Completer<ApiCallResponse>()
-                                ..complete(SuapabaseQueriesGroup
-                                    .getPrayerTypesCall
-                                    .call()))
-                          .future,
-                      builder: (context, snapshot) {
-                        // Customize what your widget looks like when it's loading.
-                        if (!snapshot.hasData) {
-                          return Center(
-                            child: SizedBox(
-                              width: 24.0,
-                              height: 24.0,
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  FlutterFlowTheme.of(context).primary,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                        final listViewGetPrayerTypesResponse = snapshot.data!;
-
-                        return RefreshIndicator(
-                          color: FlutterFlowTheme.of(context).primary,
-                          onRefresh: () async {
-                            safeSetState(
-                                () => _model.apiRequestCompleter = null);
-                            await _model.waitForApiRequestCompleted();
-                          },
-                          child: ListView(
-                            padding: EdgeInsets.zero,
-                            primary: false,
-                            shrinkWrap: true,
-                            scrollDirection: Axis.vertical,
-                            children: [
-                              if (listViewGetPrayerTypesResponse.succeeded)
-                                wrapWithModel(
-                                  model: _model.subTypesViewModel,
-                                  updateCallback: () => safeSetState(() {}),
-                                  child: SubTypesViewWidget(
-                                    prayerTypes:
-                                        (listViewGetPrayerTypesResponse.jsonBody
-                                                    .toList()
-                                                    .map<PrayerTypeStruct?>(
-                                                        PrayerTypeStruct
-                                                            .maybeFromMap)
-                                                    .toList()
-                                                as Iterable<PrayerTypeStruct?>)
-                                            .withoutNulls,
-                                    onSelectPrayer: (prayerId) async {
-                                      context.pushReplacementNamed('RosaryPage',
-                                          queryParameters: {
-                                            'prayerId': prayerId,
-                                          }.withoutNulls);
-                                    },
-                                  ),
-                                ),
-                            ].divide(const SizedBox(height: 8.0)),
-                          ),
-                        );
-                      },
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 8.0),
+            child: _loading && (_prayerTypes == null || _prayerTypes!.isEmpty)
+                ? Center(
+                    child: SizedBox(
+                      width: 24.0,
+                      height: 24.0,
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          FlutterFlowTheme.of(context).primary,
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  )
+                : RefreshIndicator(
+                    color: FlutterFlowTheme.of(context).primary,
+                    onRefresh: () => _loadTypes(forceRefresh: true),
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.zero,
+                      child: _prayerTypes != null && _prayerTypes!.isNotEmpty
+                          ? SubTypesViewWidget(
+                              prayerTypes: _prayerTypes!,
+                              onSelectPrayer: (prayerId) async {
+                                context.pushReplacementNamed(
+                                  'RosaryPage',
+                                  queryParameters: {
+                                    'prayerId': prayerId,
+                                  }.withoutNulls,
+                                );
+                              },
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
           ),
         ),
       ),

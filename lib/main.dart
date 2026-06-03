@@ -4,6 +4,7 @@ import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/reminders/prayer_reminder_service.dart';
 import 'package:my_prayer/custom_code/reminders/reminder_navigation.dart';
 import 'package:my_prayer/custom_code/reminders/reminder_storage.dart';
+import 'package:my_prayer/custom_code/prayer/downloaded_prayer_repository.dart';
 import 'package:my_prayer/service_locator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -35,6 +36,9 @@ void main() async {
   //await actions.initializeAudioHandler();
   // End final custom actions code
   await setupServiceLocator();
+  await getIt<DownloadedPrayerRepository>().migrateLegacyEntriesIfNeeded(
+    appState.downloadedPrayers,
+  );
   try {
       await Permission.notification.request();
       await Permission.mediaLibrary.request();
