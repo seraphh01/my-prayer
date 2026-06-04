@@ -7,6 +7,8 @@ class PrayerReminderService {
 
   Future<void> initialize({void Function(String prayerId)? onPrayerTap}) async {}
 
+  Future<void> handleLaunchNotificationTap() async {}
+
   Future<bool> requestPermissionIfNeeded() async => false;
 
   Future<bool> areNotificationsEnabled() async => false;

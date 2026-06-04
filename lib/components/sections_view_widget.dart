@@ -296,6 +296,21 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     return section != null && section.audioUrl.isNotEmpty;
   }
 
+  bool get _prayerHasAudio =>
+      _model.flattenedSections.any((section) => section.audioUrl.isNotEmpty);
+
+  bool get _isSingleSectionTextOnlyPrayer {
+    final sections = _model.flattenedSections;
+    if (sections.length != 1) {
+      return false;
+    }
+    return !_prayerHasAudio && sections.first.texts.isNotEmpty;
+  }
+
+  bool get _shouldShowControlBar =>
+      !_isSingleSectionTextOnlyPrayer &&
+      (_model.displayAudioPage || _controlBarVisibility.value);
+
   void _updatePlaybackHighlight() {
     final texts = _model.currentSection?.texts ?? const <SectionTextStruct>[];
     final audioTime = _pageManager.currentProgressNotifier.value.inSeconds;
@@ -405,7 +420,12 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
       await setCurrentSection(_pageManager.trackIndexNotifier.value);
     });
 
-    _model.displayAudioPage = FFAppState().isDisplayingAudio;
+    if (_isSingleSectionTextOnlyPrayer || !_prayerHasAudio) {
+      _model.displayAudioPage = false;
+      FFAppState().isDisplayingAudio = false;
+    } else {
+      _model.displayAudioPage = FFAppState().isDisplayingAudio;
+    }
 
     _pageManager.trackIndexNotifier.addListener(onTrackIndexChanged);
     _pageManager.currentProgressNotifier.addListener(onCurrentAudioTimeChanged);
@@ -471,6 +491,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                   textIndex: textIndex,
                   highlightListenable: highlightListenable,
                   isAudioSynced: isAudioSynced,
+                  initiallyExpanded: !isAudioSynced,
                   styles: styles,
                   onSeekBlock: () async {
                     currentPlayingTextIndex = textIndex;
@@ -625,7 +646,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
             builder: (context, showControlBar, child) {
               final bottomInset = MediaQuery.paddingOf(context).bottom;
               final effectiveShowControlBar =
-                  _model.displayAudioPage || showControlBar;
+                  _shouldShowControlBar &&
+                  (_model.displayAudioPage || showControlBar);
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeInOut,
@@ -642,12 +664,10 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                     opacity: effectiveShowControlBar ? 1.0 : 0.0,
                     child: SafeArea(
                       top: false,
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: bottomInset),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 80.0,
-                          child: custom_widgets.SectionsControlBar(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 80.0,
+                        child: custom_widgets.SectionsControlBar(
                             width: double.infinity,
                             height: double.infinity,
                             showingTextContent: !_model.displayAudioPage,
@@ -695,7 +715,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                       ),
                     ),
                   ),
-                ),
               );
             },
           ),

@@ -126,6 +126,17 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     return !flattenedSections.any((section) => section.texts.isNotEmpty);
   }
 
+  bool _shouldOpenInTextMode() {
+    final prayer = _model.currentPrayer;
+    if (prayer?.mode == PrayerMode.textOnly) {
+      return true;
+    }
+    if (flattenedSections.isEmpty) {
+      return false;
+    }
+    return !flattenedSections.any((section) => section.audioUrl.isNotEmpty);
+  }
+
   void _syncDisplayModeForPrayer({required bool continuingExistingAudio}) {
     if (continuingExistingAudio) {
       _displayingAudio = FFAppState().isDisplayingAudio;
@@ -135,6 +146,12 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     if (_shouldForceAudioMode()) {
       FFAppState().isDisplayingAudio = true;
       _displayingAudio = true;
+      return;
+    }
+
+    if (_shouldOpenInTextMode()) {
+      FFAppState().isDisplayingAudio = false;
+      _displayingAudio = false;
       return;
     }
 
@@ -509,6 +526,9 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     final fallbackAudioUrl = flattenedSections
         .map((section) => section.audioUrl)
         .firstWhere((url) => url.isNotEmpty, orElse: () => '');
+    final localFallbackPath = documentsDir != null && fallbackAudioUrl.isNotEmpty
+        ? localAudioPathForUrl(fallbackAudioUrl, documentsDir)
+        : null;
 
     final mediaItems = flattenedSections.map((section) {
       final artUri = section.imageUrl.isNotEmpty
@@ -548,7 +568,8 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
           'url': section.audioUrl,
           'isDownloaded': filePath != null,
           'filePath': filePath ?? '',
-          'fallbackUrl': fallbackAudioUrl,
+          'fallbackUrl': localFallbackPath ?? fallbackAudioUrl,
+          'fallbackIsLocal': localFallbackPath != null,
         },
       );
     }).toList();

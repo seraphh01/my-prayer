@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '/custom_code/reminders/prayer_reminder.dart';
+import '/custom_code/reminders/prayer_reminder_service.dart';
 import '/custom_code/reminders/resolve_reminder_prayer.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/nav/nav.dart';
@@ -13,10 +14,14 @@ const _maxNavigationAttempts = 60;
 
 /// Called once [MaterialApp.router] and [GoRouter] are ready (e.g. from [MyApp]).
 void flushPendingReminderNavigation() {
-  if (_pendingReminderPrayerId == null) {
-    return;
-  }
-  _scheduleReminderNavigation();
+  unawaited(
+    PrayerReminderService.instance.handleLaunchNotificationTap().then((_) {
+      if (_pendingReminderPrayerId == null) {
+        return;
+      }
+      _scheduleReminderNavigation();
+    }),
+  );
 }
 
 /// Opens a prayer after a reminder notification, keeping [HomePage] on the

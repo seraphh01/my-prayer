@@ -13,13 +13,17 @@ class SectionTextTitleRow extends StatefulWidget {
     required this.text,
     required this.textIndex,
     required this.highlightListenable,
-    required this.onSeek,
+    required this.onTap,
+    this.isManuallyExpandable = false,
+    this.isExpanded = true,
   });
 
   final SectionTextStruct text;
   final int textIndex;
   final ValueListenable<PlaybackHighlightState> highlightListenable;
-  final VoidCallback onSeek;
+  final VoidCallback onTap;
+  final bool isManuallyExpandable;
+  final bool isExpanded;
 
   @override
   State<SectionTextTitleRow> createState() => _SectionTextTitleRowState();
@@ -85,12 +89,20 @@ class _SectionTextTitleRowState extends State<SectionTextTitleRow> {
           focusColor: Colors.transparent,
           hoverColor: Colors.transparent,
           highlightColor: Colors.transparent,
-          onTap: widget.onSeek,
+          onTap: widget.onTap,
           child: Row(
             spacing: 4.0,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (_isActive)
+              if (widget.isManuallyExpandable)
+                Icon(
+                  widget.isExpanded
+                      ? Icons.expand_less
+                      : Icons.expand_more,
+                  color: theme.secondary,
+                  size: 20.0,
+                )
+              else if (_isActive)
                 Icon(
                   Icons.chevron_right,
                   color: theme.secondary,
@@ -103,7 +115,7 @@ class _SectionTextTitleRowState extends State<SectionTextTitleRow> {
                   style: _isActive ? titleStyles.active : titleStyles.inactive,
                 ),
               ),
-              if (_isActive)
+              if (!widget.isManuallyExpandable && _isActive)
                 Icon(
                   Icons.chevron_left,
                   color: theme.secondary,

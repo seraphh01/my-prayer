@@ -1,4 +1,3 @@
-import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/reminders/prayer_reminder_service.dart';
@@ -90,13 +89,6 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-
-    AudioSession.instance.then((audioSession) async {
-      // This line configures the app's audio session, indicating to the OS the
-      // type of audio we intend to play. Using the "speech" recipe rather than
-      // "music" since we are playing a podcast.
-      await audioSession.configure(AudioSessionConfiguration.music());
-    });
 
     getIt<PageManager>().init();
 

@@ -1,4 +1,5 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:my_prayer/custom_code/download/download_manager.dart';
 
 import '../custom_code/audio/page_manager.dart';
@@ -14,6 +15,9 @@ import 'package:get_it/get_it.dart';
 GetIt getIt = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
+  if (!kIsWeb) {
+    await configureAppAudioSession();
+  }
   // services
   getIt.registerSingleton<AudioHandler>(await initAudioService());
 

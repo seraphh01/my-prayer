@@ -252,34 +252,35 @@ class PageManager {
     );
     setTrackIndex(index);
 
+    var queueReady = false;
     try {
       if (_audioHandler is MyAudioHandler) {
         await (_audioHandler as MyAudioHandler)
             .loadQueueAtIndex(mediaItems, initialIndex: index)
-            .timeout(const Duration(seconds: 45));
+            .timeout(const Duration(seconds: 60));
         _lastQueueLength = mediaItems.length;
         setTrackIndex(index);
+        queueReady = _audioHandler.queue.value.length == mediaItems.length;
       } else {
         await _audioHandler.stop();
         await _audioHandler.updateQueue(mediaItems);
         await skipToIndex(index);
         _lastQueueLength = mediaItems.length;
+        queueReady = true;
       }
     } catch (error, stackTrace) {
       debugPrint('Failed to set audio queue: $error\n$stackTrace');
     } finally {
-      isQueueReadyNotifier.value = true;
+      isQueueReadyNotifier.value = queueReady;
     }
   }
 
   Future<void> clearQueue() async {
-    final queue = _audioHandler.queue.value;
-    if (queue.isNotEmpty) {
-      await _audioHandler.skipToQueueItem(0);
-      await _audioHandler.seek(Duration.zero);
+    if (_audioHandler is MyAudioHandler) {
+      await (_audioHandler as MyAudioHandler).resetQueue();
+    } else {
+      await _audioHandler.updateQueue([]);
     }
-    await _audioHandler.stop();
-    await _audioHandler.updateQueue([]);
     _lastQueueLength = 0;
   }
 
@@ -288,6 +289,10 @@ class PageManager {
   }
 
   Future<void> stop() async {
-    await _audioHandler.stop();
+    if (_audioHandler is MyAudioHandler) {
+      await (_audioHandler as MyAudioHandler).stopPlayback();
+    } else {
+      await _audioHandler.stop();
+    }
   }
 }

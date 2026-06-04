@@ -7,7 +7,7 @@ import 'prayer_text_span.dart';
 import 'prayer_text_styles.dart';
 import 'section_text_title_row.dart';
 
-class SectionTextBlockWidget extends StatelessWidget {
+class SectionTextBlockWidget extends StatefulWidget {
   const SectionTextBlockWidget({
     super.key,
     required this.blockKey,
@@ -18,6 +18,7 @@ class SectionTextBlockWidget extends StatelessWidget {
     required this.onSeekBlock,
     required this.onSeekElement,
     required this.styles,
+    this.initiallyExpanded = true,
   });
 
   final Key blockKey;
@@ -28,45 +29,80 @@ class SectionTextBlockWidget extends StatelessWidget {
   final VoidCallback onSeekBlock;
   final void Function(int elementStartTime) onSeekElement;
   final PrayerTextStyles styles;
+  final bool initiallyExpanded;
+
+  @override
+  State<SectionTextBlockWidget> createState() => _SectionTextBlockWidgetState();
+}
+
+class _SectionTextBlockWidgetState extends State<SectionTextBlockWidget> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.isAudioSynced ? true : widget.initiallyExpanded;
+  }
+
+  @override
+  void didUpdateWidget(SectionTextBlockWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isAudioSynced && !oldWidget.isAudioSynced) {
+      _expanded = true;
+    }
+  }
+
+  void _onTitleTap() {
+    if (widget.isAudioSynced) {
+      widget.onSeekBlock();
+      return;
+    }
+    setState(() => _expanded = !_expanded);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final showBody = widget.isAudioSynced || _expanded;
+
     return RepaintBoundary(
-      key: blockKey,
+      key: widget.blockKey,
       child: Padding(
-        padding: EdgeInsets.only(top: text.title.isNotEmpty ? 8.0 : 0.0),
+        padding: EdgeInsets.only(top: widget.text.title.isNotEmpty ? 8.0 : 0.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
             SectionTextTitleRow(
-              text: text,
-              textIndex: textIndex,
-              highlightListenable: highlightListenable,
-              onSeek: onSeekBlock,
+              text: widget.text,
+              textIndex: widget.textIndex,
+              highlightListenable: widget.highlightListenable,
+              onTap: _onTitleTap,
+              isManuallyExpandable: !widget.isAudioSynced,
+              isExpanded: _expanded,
             ),
-            if (text.textElements.isNotEmpty)
+            if (showBody && widget.text.textElements.isNotEmpty)
               Column(
                 spacing: 4.0,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (var elementIndex = 0;
-                      elementIndex < text.textElements.length;
+                      elementIndex < widget.text.textElements.length;
                       elementIndex++)
                     _SectionTextElementLine(
                       key: ValueKey(
-                        'section_text_${textIndex}_element_$elementIndex',
+                        'section_text_${widget.textIndex}_element_$elementIndex',
                       ),
-                      text: text,
-                      textIndex: textIndex,
-                      element: text.textElements[elementIndex],
+                      text: widget.text,
+                      textIndex: widget.textIndex,
+                      element: widget.text.textElements[elementIndex],
                       elementIndex: elementIndex,
-                      highlightListenable: highlightListenable,
-                      isAudioSynced: isAudioSynced,
-                      showDropCap: text.textElements[elementIndex].highlight ||
-                          elementIndex == 0,
-                      styles: styles,
-                      onSeekElement: onSeekElement,
+                      highlightListenable: widget.highlightListenable,
+                      isAudioSynced: widget.isAudioSynced,
+                      showDropCap:
+                          widget.text.textElements[elementIndex].highlight ||
+                              elementIndex == 0,
+                      styles: widget.styles,
+                      onSeekElement: widget.onSeekElement,
                     ),
                 ],
               ),

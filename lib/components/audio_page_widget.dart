@@ -418,20 +418,22 @@ class _AudioTextNavigationRowState extends State<_AudioTextNavigationRow> {
       padding: EdgeInsets.zero,
     );
 
+    final hasPrevious = index > 0;
+    final hasNext = index < widget.texts.length - 1;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         children: [
-          IconButton(
-            style: iconButtonStyle,
-            onPressed: index > 0
-                ? () async {
-                    await widget.onSeekToText
-                        ?.call(widget.texts[index - 1].startTime);
-                  }
-                : null,
-            icon: const Icon(Icons.skip_previous_rounded, size: 24.0),
-          ),
+          if (hasPrevious)
+            IconButton(
+              style: iconButtonStyle,
+              onPressed: () async {
+                await widget.onSeekToText
+                    ?.call(widget.texts[index - 1].startTime);
+              },
+              icon: const Icon(Icons.skip_previous_rounded, size: 24.0),
+            ),
           Expanded(
             child: GestureDetector(
               onTap: () async {
@@ -451,16 +453,15 @@ class _AudioTextNavigationRowState extends State<_AudioTextNavigationRow> {
               ),
             ),
           ),
-          IconButton(
-            style: iconButtonStyle,
-            onPressed: index < widget.texts.length - 1
-                ? () async {
-                    await widget.onSeekToText
-                        ?.call(widget.texts[index + 1].startTime);
-                  }
-                : null,
-            icon: const Icon(Icons.skip_next_rounded, size: 24.0),
-          ),
+          if (hasNext)
+            IconButton(
+              style: iconButtonStyle,
+              onPressed: () async {
+                await widget.onSeekToText
+                    ?.call(widget.texts[index + 1].startTime);
+              },
+              icon: const Icon(Icons.skip_next_rounded, size: 24.0),
+            ),
         ],
       ),
     );

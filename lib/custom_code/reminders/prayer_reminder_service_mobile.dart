@@ -18,6 +18,7 @@ class PrayerReminderService {
 
   void Function(String prayerId)? _onPrayerTap;
   bool _initialized = false;
+  bool _handledLaunchNotification = false;
 
   Future<void> initialize({void Function(String prayerId)? onPrayerTap}) async {
     if (_initialized) {
@@ -48,25 +49,49 @@ class PrayerReminderService {
         android: androidSettings,
         iOS: iosSettings,
       ),
-      onDidReceiveNotificationResponse: (response) {
-        final payload = response.payload;
-        if (payload != null && payload.isNotEmpty) {
-          _onPrayerTap?.call(payload);
-        }
-      },
+      onDidReceiveNotificationResponse: _handleNotificationResponse,
     );
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final ios = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      await ios?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
+
+    await handleLaunchNotificationTap();
+
+    _initialized = true;
+  }
+
+  void _handleNotificationResponse(NotificationResponse response) {
+    final payload = response.payload;
+    if (payload != null && payload.isNotEmpty) {
+      _onPrayerTap?.call(payload);
+    }
+  }
+
+  /// Handles cold-start taps (iOS/Android). Safe to call again after [runApp].
+  Future<void> handleLaunchNotificationTap() async {
+    if (_handledLaunchNotification) {
+      return;
+    }
 
     final launchDetails = await _plugin.getNotificationAppLaunchDetails();
     final launchPayload = launchDetails?.notificationResponse?.payload;
-    if (launchDetails?.didNotificationLaunchApp == true &&
-        launchPayload != null &&
-        launchPayload.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _onPrayerTap?.call(launchPayload);
-      });
+    if (launchDetails?.didNotificationLaunchApp != true ||
+        launchPayload == null ||
+        launchPayload.isEmpty) {
+      return;
     }
 
-    _initialized = true;
+    _handledLaunchNotification = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _onPrayerTap?.call(launchPayload);
+    });
   }
 
   Future<bool> requestPermissionIfNeeded() async {
