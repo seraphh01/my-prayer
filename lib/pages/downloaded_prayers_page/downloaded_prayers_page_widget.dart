@@ -1,8 +1,11 @@
 import '/backend/schema/structs/index.dart';
 import '/components/empty_downloaded_prayers_list_widget.dart';
+import '/components/prayer_type_card_widget.dart';
+import '/custom_code/prayer/prayer_card_lines.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -39,187 +42,149 @@ class _DownloadedPrayersPageWidgetState
     super.dispose();
   }
 
+  Future<void> _openPrayer(String prayerId) async {
+    await context.pushNamed(
+      'RosaryPage',
+      queryParameters: {
+        'prayerId': serializeParam(
+          prayerId,
+          ParamType.String,
+        ),
+      }.withoutNulls,
+      extra: <String, dynamic>{
+        kTransitionInfoKey: const TransitionInfo(
+          hasTransition: true,
+          transitionType: PageTransitionType.fade,
+          duration: Duration(milliseconds: 250),
+        ),
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Selector<FFAppState, List<PrayerStruct>>(
       selector: (_, state) => state.downloadedPrayers,
       builder: (context, downloadedPrayer, _) {
         return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(64.0),
-          child: AppBar(
-            backgroundColor: FlutterFlowTheme.of(context).primary,
-            iconTheme:
-                IconThemeData(color: FlutterFlowTheme.of(context).alternate),
-            automaticallyImplyLeading: true,
-            title: AutoSizeText(
-              'Rugăciuni descărcate',
-              maxLines: 1,
-              minFontSize: 16.0,
-              style: FlutterFlowTheme.of(context).titleLarge.override(
-                    fontFamily: 'Merriweather',
-                    color: FlutterFlowTheme.of(context).alternate,
-                    letterSpacing: 0.0,
-                  ),
-            ),
-            actions: [
-              FlutterFlowIconButton(
-                borderColor: Colors.transparent,
-                borderRadius: 8.0,
-                buttonSize: 64.0,
-                icon: Icon(
-                  Icons.info_outline_rounded,
+          onTap: () {
+            FocusScope.of(context).unfocus();
+            FocusManager.instance.primaryFocus?.unfocus();
+          },
+          child: Scaffold(
+            key: scaffoldKey,
+            backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(64.0),
+              child: AppBar(
+                backgroundColor: FlutterFlowTheme.of(context).primary,
+                iconTheme: IconThemeData(
                   color: FlutterFlowTheme.of(context).alternate,
-                  size: 24.0,
                 ),
-                onPressed: () async {
-                  await showDialog(
-                    context: context,
-                    builder: (alertDialogContext) {
-                      return AlertDialog(
-                        title: const Text('Rugăciuni descărcate'),
-                        content: const Text(
-                            'Rugăciunile descărcate sunt disponibile in mod offline. Le puteți șterge prin acțiunea de slide către stânga. Atenție, ștergerea din această listă nu implică și ștergerea din memorie. Pentru a șterge din memorie, accesați pagina de setări.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(alertDialogContext),
-                            child: const Text(FFAppConstants.ConfirmButtonText),
-                          ),
-                        ],
+                automaticallyImplyLeading: true,
+                title: AutoSizeText(
+                  'Rugăciuni descărcate',
+                  maxLines: 1,
+                  minFontSize: 16.0,
+                  style: FlutterFlowTheme.of(context).titleLarge.override(
+                        fontFamily: 'Merriweather',
+                        color: FlutterFlowTheme.of(context).alternate,
+                        letterSpacing: 0.0,
+                      ),
+                ),
+                actions: [
+                  FlutterFlowIconButton(
+                    borderColor: Colors.transparent,
+                    borderRadius: 8.0,
+                    buttonSize: 64.0,
+                    icon: Icon(
+                      Icons.info_outline_rounded,
+                      color: FlutterFlowTheme.of(context).alternate,
+                      size: 24.0,
+                    ),
+                    onPressed: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (alertDialogContext) {
+                          return AlertDialog(
+                            title: const Text('Rugăciuni descărcate'),
+                            content: const Text(
+                              'Rugăciunile descărcate sunt disponibile in mod offline. Le puteți șterge prin acțiunea de slide către stânga. Atenție, ștergerea din această listă nu implică și ștergerea din memorie. Pentru a șterge din memorie, accesați pagina de setări.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(alertDialogContext),
+                                child:
+                                    const Text(FFAppConstants.ConfirmButtonText),
+                              ),
+                            ],
+                          );
+                        },
                       );
                     },
-                  );
-                },
+                  ),
+                ],
+                centerTitle: true,
+                toolbarHeight: 64.0,
+                elevation: 0.0,
               ),
-            ],
-            centerTitle: true,
-            toolbarHeight: 64.0,
-            elevation: 0.0,
-          ),
-        ),
-        body: SafeArea(
-          top: true,
-          child: Align(
-            alignment: const AlignmentDirectional(0.0, -1.0),
-            child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(8.0, 0.0, 8.0, 0.0),
-              child: Container(
-                width: 400.0,
-                height: double.infinity,
-                decoration: const BoxDecoration(),
-                child: downloadedPrayer.isEmpty
-                    ? Center(
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: MediaQuery.sizeOf(context).height * 0.5,
-                          child: const EmptyDownloadedPrayersListWidget(),
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: EdgeInsets.zero,
-                        scrollDirection: Axis.vertical,
-                        itemCount: downloadedPrayer.length,
-                        itemBuilder: (context, downloadedPrayerIndex) {
-                          final downloadedPrayerItem =
-                              downloadedPrayer[downloadedPrayerIndex];
-                        return Column(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                context.pushReplacementNamed(
-                                  'RosaryPage',
-                                  queryParameters: {
-                                    'prayerId': serializeParam(
-                                      downloadedPrayerItem.id,
-                                      ParamType.String,
-                                    ),
-                                  }.withoutNulls,
-                                );
-                              },
-                              child: Slidable(
-                                endActionPane: ActionPane(
-                                  motion: const ScrollMotion(),
-                                  extentRatio: 0.25,
-                                  children: [
-                                    SlidableAction(
-                                      label: 'Sterge',
-                                      backgroundColor:
-                                          FlutterFlowTheme.of(context).error,
-                                      icon: Icons.delete_rounded,
-                                      onPressed: (_) async {
-                                        FFAppState()
-                                            .removeFromDownloadedPrayers(
-                                                downloadedPrayerItem);
-                                        safeSetState(() {});
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: ListTile(
-                                    title: Text(
-                                      downloadedPrayerItem.title,
-                                      style: FlutterFlowTheme.of(context)
-                                          .titleLarge
-                                          .override(
-                                            fontFamily: 'Merriweather',
-                                            letterSpacing: 0.0,
-                                          ),
-                                    ),
-                                    subtitle: Text(
-                                      downloadedPrayerItem.subtitle,
-                                      style: FlutterFlowTheme.of(context)
-                                          .labelMedium
-                                          .override(
-                                            fontFamily: 'Inter',
-                                            letterSpacing: 0.0,
-                                          ),
-                                    ),
-                                    trailing: Icon(
-                                      Icons.arrow_forward_ios_rounded,
-                                      color: FlutterFlowTheme.of(context)
-                                          .secondaryText,
-                                      size: 16.0,
-                                    ),
-                                    dense: false,
-                                    contentPadding:
-                                        const EdgeInsetsDirectional.fromSTEB(
-                                            12.0, 0.0, 12.0, 0.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8.0),
-                                    ),
-                                  ),
-                                ),
+            ),
+            body: SafeArea(
+              top: true,
+              child: downloadedPrayer.isEmpty
+                  ? Center(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: MediaQuery.sizeOf(context).height * 0.5,
+                        child: const EmptyDownloadedPrayersListWidget(),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        16.0,
+                        16.0,
+                        16.0,
+                        24.0,
+                      ),
+                      itemCount: downloadedPrayer.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12.0),
+                      itemBuilder: (context, index) {
+                        final prayer = downloadedPrayer[index];
+                        final cardLines = prayerCardTitleAndSubtitle(prayer);
+
+                        return Slidable(
+                          endActionPane: ActionPane(
+                            motion: const ScrollMotion(),
+                            extentRatio: 0.25,
+                            children: [
+                              SlidableAction(
+                                label: 'Șterge',
+                                backgroundColor:
+                                    FlutterFlowTheme.of(context).error,
+                                icon: Icons.delete_rounded,
+                                onPressed: (_) {
+                                  FFAppState()
+                                      .removeFromDownloadedPrayers(prayer);
+                                  safeSetState(() {});
+                                },
                               ),
-                            ),
-                            Divider(
-                              height: 1.0,
-                              thickness: 1.0,
-                              color: FlutterFlowTheme.of(context).secondary,
-                            ),
-                          ],
+                            ],
+                          ),
+                          child: PrayerTypeCardWidget(
+                            onLightBackground: true,
+                            title: cardLines.$1,
+                            subtitle: cardLines.$2,
+                            trailingText: null,
+                            trailingIcons: prayerCardTrailingIcons(prayer),
+                            onTap: () => unawaited(_openPrayer(prayer.id)),
+                          ),
                         );
                       },
                     ),
-              ),
             ),
           ),
-        ),
-      ),
-    );
+        );
       },
     );
   }

@@ -257,6 +257,7 @@ class _AudioControlsPanel extends StatelessWidget {
 
     return Column(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (texts != null && texts!.isNotEmpty)
@@ -422,10 +423,15 @@ class _AudioTextNavigationRowState extends State<_AudioTextNavigationRow> {
     final hasNext = index < widget.texts.length - 1;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: hasNext || hasPrevious ? EdgeInsets.zero : const EdgeInsets.only(bottom: 12.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
         children: [
-          if (hasPrevious)
+          if(!hasPrevious) 
+            const SizedBox(width: 48.0,),
+          if (hasPrevious) 
             IconButton(
               style: iconButtonStyle,
               onPressed: () async {
@@ -434,6 +440,7 @@ class _AudioTextNavigationRowState extends State<_AudioTextNavigationRow> {
               },
               icon: const Icon(Icons.skip_previous_rounded, size: 24.0),
             ),
+            
           Expanded(
             child: GestureDetector(
               onTap: () async {
@@ -453,6 +460,8 @@ class _AudioTextNavigationRowState extends State<_AudioTextNavigationRow> {
               ),
             ),
           ),
+          if(!hasNext) 
+            const SizedBox(width: 48.0,),
           if (hasNext)
             IconButton(
               style: iconButtonStyle,

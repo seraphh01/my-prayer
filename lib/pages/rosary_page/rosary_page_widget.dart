@@ -80,6 +80,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   bool? _wasInTextMode;
   bool _displayingAudio = true;
   bool _audioQueueInitialized = false;
+  Future<void>? _audioQueueInitFuture;
   bool _pageReady = false;
 
   Future<void> _preloadInitialSection() async {
@@ -204,7 +205,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       return;
     }
     final isAudio = FFAppState().isDisplayingAudio;
-    if (isAudio) {
+    if (isAudio && _pageReady) {
       unawaited(_ensureAudioQueueInitialized());
     }
     if (_displayingAudio != isAudio) {
@@ -219,8 +220,24 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     if (!flattenedSections.any((section) => section.audioUrl.isNotEmpty)) {
       return;
     }
-    _audioQueueInitialized = true;
-    await _initializeAudioQueue();
+
+    final inFlight = _audioQueueInitFuture;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final future = _initializeAudioQueue().then((_) {
+      _audioQueueInitialized = true;
+    });
+    _audioQueueInitFuture = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_audioQueueInitFuture, future)) {
+        _audioQueueInitFuture = null;
+      }
+    }
   }
 
   bool _canContinueExistingAudio({String? previousPrayerId}) {
@@ -244,18 +261,16 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     if (widget.continueAudio) {
       return;
     }
-    if (!_pageManager.hasActiveQueue &&
-        _pageManager.playButtonNotifier.value != ButtonState.playing) {
-      return;
-    }
 
     await _pageManager.stop();
     if (_pageManager.hasActiveQueue) {
       await _pageManager.clearQueue();
     }
     _audioQueueInitialized = false;
+    _audioQueueInitFuture = null;
     _pageManager.setTrackIndex(widget.page);
     _pageManager.currentProgressNotifier.value = Duration.zero;
+    _pageManager.totalDurationNotifier.value = Duration.zero;
   }
 
   void _applyTrackIndexForOpen({required bool continuingExistingAudio}) {

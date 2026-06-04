@@ -3,11 +3,15 @@ import 'package:flutter/foundation.dart';
 import 'package:my_prayer/backend/schema/enums/enums.dart';
 import 'dart:math' as math;
 import 'package:my_prayer/components/download_progress_indicator.dart';
+import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/download/download_manager.dart';
 import 'package:my_prayer/custom_code/download/notifiers/download_state_notifier.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_card_lines.dart';
+import 'package:my_prayer/custom_code/prayer/prayer_content_cache.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_search_index.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_types_cache.dart';
+import 'package:my_prayer/custom_code/recommended_prayer_picker.dart';
 import 'package:my_prayer/service_locator.dart';
 
 import '/components/home_audio_mini_player.dart';
@@ -62,6 +66,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
   bool get _showAudioPlayer =>
       !_searchPinned && _searchQuery.isEmpty;
+
+  /// Trailing space at the end of the catalog scroll.
+  double get _catalogScrollBottomPadding =>
+      _searchActive ? 16.0 : 24.0;
 
   Future<void> _loadPrayerTypes({bool forceRefresh = false}) async {
     if (mounted) {
@@ -142,20 +150,267 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     );
   }
 
-  Widget _buildToolbarLeading(BuildContext context) {
-    if (_downloadManager.downloadStateNotifier.value ==
-        DownloadState.downloading) {
-      return const Hero(
-        tag: 'downloadIndicator',
-        child: DownloadProgressIndicator(),
-      );
-    }
-    return IconButton(
-      icon: Icon(
-        Icons.menu_rounded,
-        color: FlutterFlowTheme.of(context).alternate,
+  Widget _buildToolbarLeading(
+    BuildContext context, {
+    required bool headerCollapsed,
+  }) {
+    return ValueListenableBuilder<DownloadState>(
+      valueListenable: _downloadManager.downloadStateNotifier,
+      builder: (context, downloadState, _) {
+        final isDownloading = downloadState == DownloadState.downloading;
+        final inTypeNav = _typeStack.isNotEmpty;
+        final showToolbarLogo =
+            !_searchActive && (headerCollapsed || inTypeNav);
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(
+                Icons.menu_rounded,
+                color: FlutterFlowTheme.of(context).alternate,
+              ),
+              onPressed: () => scaffoldKey.currentState?.openDrawer(),
+            ),
+            if (showToolbarLogo)
+              Padding(
+                padding: const EdgeInsets.only(left: 4.0, right: 4.0),
+                child: IgnorePointer(
+                  child: _buildHeroLogo(_appBarLogoSize),
+                ),
+              ),
+            if (isDownloading)
+              const Padding(
+                padding: EdgeInsets.only(right: 4.0),
+                child: Hero(
+                  tag: 'downloadIndicator',
+                  child: DownloadProgressIndicator(),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHeaderCollapseToggle(
+    BuildContext context, {
+    required bool isCollapsed,
+  }) {
+    final color = FlutterFlowTheme.of(context).alternate.withOpacity(0.85);
+
+    return Semantics(
+      button: true,
+      label: isCollapsed ? 'Extinde antetul' : 'Restrânge antetul',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => FFAppState().toggleHomeHeaderCollapsed(),
+          borderRadius: BorderRadius.circular(20.0),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: AnimatedSwitcher(
+              duration: _headerAnimationDuration,
+              switchInCurve: Curves.easeInOutCubic,
+              switchOutCurve: Curves.easeInOutCubic,
+              transitionBuilder: (child, animation) {
+                return RotationTransition(
+                  turns: Tween<double>(begin: 0.85, end: 1.0).animate(
+                    animation,
+                  ),
+                  child: FadeTransition(opacity: animation, child: child),
+                );
+              },
+              child: Icon(
+                isCollapsed
+                    ? Icons.keyboard_arrow_down_rounded
+                    : Icons.keyboard_arrow_up_rounded,
+                key: ValueKey(isCollapsed),
+                size: 22.0,
+                color: color,
+              ),
+            ),
+          ),
+        ),
       ),
-      onPressed: () => scaffoldKey.currentState?.openDrawer(),
+    );
+  }
+
+  Widget _buildHeaderTitleAndDate(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AutoSizeText(
+          'Congregația Surorilor Maicii Domnului',
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          minFontSize: 12.0,
+          style: theme.titleMedium.override(
+            fontFamily: 'PlayBall',
+            color: theme.alternate,
+            fontSize: 24.0,
+            letterSpacing: 0.0,
+            shadows: const [
+              Shadow(
+                color: Color(0xFF1C1200),
+                offset: Offset(1.0, 1.0),
+                blurRadius: 2.0,
+              ),
+            ],
+            useGoogleFonts: false,
+          ),
+        ),
+        const SizedBox(height: 4.0),
+        Text(
+          dateTimeFormat(
+            'yMMMMEEEEd',
+            DateTime.fromMillisecondsSinceEpoch(
+              getCurrentTimestamp.millisecondsSinceEpoch,
+            ),
+            locale: FFLocalizations.of(context).languageCode,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: theme.titleSmall.override(
+                fontFamily: 'Inter',
+                color: theme.alternate,
+                letterSpacing: 0.0,
+              ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHomeHeader(
+    BuildContext context, {
+    required bool headerCollapsed,
+  }) {
+    final inTypeNav = _typeStack.isNotEmpty;
+    final showCollapseToggle = !inTypeNav && !_searchActive;
+    final isCollapsed = headerCollapsed && !inTypeNav;
+    final showExpandedLogo = !isCollapsed && !inTypeNav;
+
+    return Container(
+      width: double.infinity,
+      decoration: _homeHeaderGradient(context),
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: _headerTextScaler(context),
+        ),
+        child: AnimatedSize(
+          duration: _headerAnimationDuration,
+          curve: Curves.easeInOutCubic,
+          alignment: Alignment.topCenter,
+          clipBehavior: Clip.none,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: _toolbarHeight,
+                child: Row(
+                  children: [
+                    _buildToolbarLeading(
+                      context,
+                      headerCollapsed: headerCollapsed,
+                    ),
+                    const Spacer(),
+                    ..._buildToolbarActions(context, includeSearch: true),
+                  ],
+                ),
+              ),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      16.0,
+                      0.0,
+                      16.0,
+                      showCollapseToggle ? 28.0 : 16.0,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildHeaderTitleAndDate(context),
+                        AnimatedSize(
+                          duration: _headerAnimationDuration,
+                          curve: Curves.easeInOutCubic,
+                          alignment: Alignment.topCenter,
+                          clipBehavior: Clip.none,
+                          child: showExpandedLogo
+                              ? Column(
+                                  key: const ValueKey('home-logo-expanded'),
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(height: 12.0),
+                                    _buildHeroLogo(_fixedLogoSize(context)),
+                                  ],
+                                )
+                              : const SizedBox(
+                                  key: ValueKey('home-logo-collapsed'),
+                                  width: double.infinity,
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (showCollapseToggle)
+                    Positioned(
+                      right: 12.0,
+                      bottom: 4.0,
+                      child: _buildHeaderCollapseToggle(
+                        context,
+                        isCollapsed: isCollapsed,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static const _drawerTransition = TransitionInfo(
+    hasTransition: true,
+    transitionType: PageTransitionType.fade,
+    duration: Duration(milliseconds: 250),
+  );
+
+  Future<void> _openDrawerPage(String routeName) async {
+    Navigator.of(context).pop();
+    await context.pushNamed(
+      routeName,
+      extra: <String, dynamic>{
+        kTransitionInfoKey: _drawerTransition,
+      },
+    );
+  }
+
+  Widget _drawerNavTile({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String routeName,
+  }) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: FlutterFlowTheme.of(context).primary,
+      ),
+      title: Text(
+        title,
+        style: FlutterFlowTheme.of(context).bodyLarge.override(
+              fontFamily: 'Inter',
+              color: FlutterFlowTheme.of(context).primaryText,
+              letterSpacing: 0.0,
+            ),
+      ),
+      onTap: () => unawaited(_openDrawerPage(routeName)),
     );
   }
 
@@ -176,153 +431,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           ),
           onPressed: _enterSearch,
         ),
-      FlutterFlowIconButton(
-        borderColor: Colors.transparent,
-        borderRadius: 8.0,
-        buttonSize: 48.0,
-        icon: Icon(
-          Icons.settings_rounded,
-          color: FlutterFlowTheme.of(context).alternate,
-          size: 24.0,
-        ),
-        onPressed: () async {
-          context.pushNamed(
-            'SettingsPage',
-            extra: <String, dynamic>{
-              kTransitionInfoKey: const TransitionInfo(
-                hasTransition: true,
-                transitionType: PageTransitionType.fade,
-                duration: Duration(milliseconds: 250),
-              ),
-            },
-          );
-        },
-      ),
     ];
-  }
-
-  Widget _buildHomeHeader(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-    final inTypeNav = _typeStack.isNotEmpty;
-
-    return Container(
-      width: double.infinity,
-      decoration: _homeHeaderGradient(context),
-      child: MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: _headerTextScaler(context),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: _toolbarHeight,
-              child: Row(
-                children: [
-                  _buildToolbarLeading(context),
-                  AnimatedSize(
-                    duration: _headerAnimationDuration,
-                    curve: Curves.easeInOutCubic,
-                    alignment: Alignment.centerLeft,
-                    clipBehavior: Clip.none,
-                    child: inTypeNav
-                        ? Row(
-                            key: const ValueKey('app-bar-logo'),
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(width: 4.0),
-                              _buildHeroLogo(_appBarLogoSize),
-                            ],
-                          )
-                        : const SizedBox(
-                            key: ValueKey('app-bar-logo-spacer'),
-                            width: 0.0,
-                            height: _appBarLogoSize,
-                          ),
-                  ),
-                  const Spacer(),
-                  ..._buildToolbarActions(context, includeSearch: true),
-                ],
-              ),
-            ),
-            AnimatedSize(
-              duration: _headerAnimationDuration,
-              curve: Curves.easeInOutCubic,
-              alignment: Alignment.topCenter,
-              clipBehavior: Clip.none,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  16.0,
-                  0.0,
-                  16.0,
-                  inTypeNav ? 12.0 : 16.0,
-                ),
-                child: Column(
-                  key: ValueKey(inTypeNav ? 'header-compact' : 'header-expanded'),
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AutoSizeText(
-                      'Congregația Surorilor Maicii Domnului',
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      minFontSize: 12.0,
-                      style: theme.titleMedium.override(
-                        fontFamily: 'PlayBall',
-                        color: theme.alternate,
-                        fontSize: 24.0,
-                        letterSpacing: 0.0,
-                        shadows: const [
-                          Shadow(
-                            color: Color(0xFF1C1200),
-                            offset: Offset(1.0, 1.0),
-                            blurRadius: 2.0,
-                          ),
-                        ],
-                        useGoogleFonts: false,
-                      ),
-                    ),
-                    const SizedBox(height: 4.0),
-                    Text(
-                      dateTimeFormat(
-                        'yMMMMEEEEd',
-                        DateTime.fromMillisecondsSinceEpoch(
-                          getCurrentTimestamp.millisecondsSinceEpoch,
-                        ),
-                        locale: FFLocalizations.of(context).languageCode,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: theme.titleSmall.override(
-                        fontFamily: 'Inter',
-                        color: theme.alternate,
-                        letterSpacing: 0.0,
-                      ),
-                    ),
-                    AnimatedSize(
-                      duration: _headerAnimationDuration,
-                      curve: Curves.easeInOutCubic,
-                      alignment: Alignment.topCenter,
-                      clipBehavior: Clip.none,
-                      child: inTypeNav
-                          ? const SizedBox(width: double.infinity)
-                          : Column(
-                              key: const ValueKey('home-logo-expanded'),
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(height: 12.0),
-                                _buildHeroLogo(_fixedLogoSize(context)),
-                              ],
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildTypeNavBackRow(BuildContext context) {
@@ -410,6 +519,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   Future<void> _openPrayerFromTypeNav(String prayerId) async {
     _typeStack.clear();
     safeSetState(() {});
+    getIt<PrayerContentCache>().prefetch(prayerId);
+    await _prepareToOpenPrayer();
     await context.pushNamed(
       'RosaryPage',
       queryParameters: {
@@ -464,7 +575,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           child: _buildSearchField(context),
         ),
       ),
-      leading: _buildToolbarLeading(context),
+      leading: _buildToolbarLeading(
+        context,
+        headerCollapsed: FFAppState().homeHeaderCollapsed,
+      ),
       iconTheme: IconThemeData(color: FlutterFlowTheme.of(context).alternate),
       actions: _buildToolbarActions(context, includeSearch: false),
       flexibleSpace: Container(
@@ -513,6 +627,13 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => HomePageModel());
+    _model.recommendedPrayerFuture = fetchRecommendedPrayer().then((result) {
+      final prayerId = result?.prayer.id;
+      if (prayerId != null && prayerId.isNotEmpty) {
+        getIt<PrayerContentCache>().prefetch(prayerId);
+      }
+      return result;
+    });
     unawaited(_loadPrayerTypes());
     _scrollController.addListener(() {
       if (!_searchActive || !_scrollController.hasClients || _isAutoScrolling) {
@@ -710,133 +831,37 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     color: FlutterFlowTheme.of(context).secondaryBackground,
                   ),
                   const SizedBox(height: 8.0),
-                  ListTile(
-                    leading: Icon(
-                      Icons.calendar_today_rounded,
-                      color: FlutterFlowTheme.of(context).primary,
-                    ),
-                    title: Text(
-                      'Calendar',
-                      style: FlutterFlowTheme.of(context).bodyLarge.override(
-                            fontFamily: 'Inter',
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            letterSpacing: 0.0,
-                          ),
-                    ),
-                    onTap: () async {
-                      Navigator.of(context).pop();
-                      await context.pushNamed(
-                        'CalendarPage',
-                        extra: <String, dynamic>{
-                          kTransitionInfoKey: const TransitionInfo(
-                            hasTransition: true,
-                            transitionType: PageTransitionType.fade,
-                            duration: Duration(milliseconds: 250),
-                          ),
-                        },
-                      );
-                    },
+                  _drawerNavTile(
+                    context: context,
+                    icon: Icons.calendar_today_rounded,
+                    title: 'Calendar',
+                    routeName: 'CalendarPage',
                   ),
                   if (!kIsWeb)
-                    ListTile(
-                      leading: Icon(
-                        Icons.notifications_outlined,
-                        color: FlutterFlowTheme.of(context).primary,
-                      ),
-                      title: Text(
-                        'Memento rugăciune',
-                        style: FlutterFlowTheme.of(context).bodyLarge.override(
-                              fontFamily: 'Inter',
-                              color: FlutterFlowTheme.of(context).primaryText,
-                              letterSpacing: 0.0,
-                            ),
-                      ),
-                      onTap: () async {
-                        Navigator.of(context).pop();
-                        await context.pushNamed(
-                          'RemindersPage',
-                          extra: <String, dynamic>{
-                            kTransitionInfoKey: const TransitionInfo(
-                              hasTransition: true,
-                              transitionType: PageTransitionType.fade,
-                              duration: Duration(milliseconds: 250),
-                            ),
-                          },
-                        );
-                      },
+                    _drawerNavTile(
+                      context: context,
+                      icon: Icons.notifications_outlined,
+                      title: 'Memento',
+                      routeName: 'RemindersPage',
                     ),
                   if (!kIsWeb)
-                    ListTile(
-                      leading: Icon(
-                        Icons.download_rounded,
-                        color: FlutterFlowTheme.of(context).primary,
-                      ),
-                      title: Text(
-                        'Descărcate',
-                        style: FlutterFlowTheme.of(context).bodyLarge.override(
-                              fontFamily: 'Inter',
-                              color: FlutterFlowTheme.of(context).primaryText,
-                              letterSpacing: 0.0,
-                            ),
-                      ),
-                      onTap: () async {
-                        Navigator.of(context).pop();
-                        await context.pushNamed(
-                          'DownloadedPrayersPage',
-                          extra: <String, dynamic>{
-                            kTransitionInfoKey: const TransitionInfo(
-                              hasTransition: true,
-                              transitionType: PageTransitionType.fade,
-                              duration: Duration(milliseconds: 250),
-                            ),
-                          },
-                        );
-                      },
+                    _drawerNavTile(
+                      context: context,
+                      icon: Icons.download_rounded,
+                      title: 'Descărcări',
+                      routeName: 'DownloadedPrayersPage',
                     ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.menu_book_rounded,
-                      color: FlutterFlowTheme.of(context).primary,
-                    ),
-                    title: Text(
-                      'Jurnal de rugăciune',
-                      style: FlutterFlowTheme.of(context).bodyLarge.override(
-                            fontFamily: 'Inter',
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            letterSpacing: 0.0,
-                          ),
-                    ),
-                    onTap: () async {
-                      Navigator.of(context).pop();
-                      await context.pushNamed('PrayerJournalPage');
-                    },
+                  _drawerNavTile(
+                    context: context,
+                    icon: Icons.menu_book_rounded,
+                    title: 'Jurnal',
+                    routeName: 'PrayerJournalPage',
                   ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.favorite_rounded,
-                      color: FlutterFlowTheme.of(context).primary,
-                    ),
-                    title: Text(
-                      'Favorite',
-                      style: FlutterFlowTheme.of(context).bodyLarge.override(
-                            fontFamily: 'Inter',
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            letterSpacing: 0.0,
-                          ),
-                    ),
-                    onTap: () async {
-                      Navigator.of(context).pop();
-                      await context.pushNamed(
-                        'FavoritePrayersPage',
-                        extra: <String, dynamic>{
-                          kTransitionInfoKey: const TransitionInfo(
-                            hasTransition: true,
-                            transitionType: PageTransitionType.fade,
-                            duration: Duration(milliseconds: 250),
-                          ),
-                        },
-                      );
-                    },
+                  _drawerNavTile(
+                    context: context,
+                    icon: Icons.favorite_rounded,
+                    title: 'Favorite',
+                    routeName: 'FavoritePrayersPage',
                   ),
                   Divider(
                     height: 1.0,
@@ -845,32 +870,11 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     color: FlutterFlowTheme.of(context).secondaryBackground,
                   ),
                   const Spacer(),
-                  ListTile(
-                    leading: Icon(
-                      Icons.settings_rounded,
-                      color: FlutterFlowTheme.of(context).primary,
-                    ),
-                    title: Text(
-                      'Setări',
-                      style: FlutterFlowTheme.of(context).bodyLarge.override(
-                            fontFamily: 'Inter',
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            letterSpacing: 0.0,
-                          ),
-                    ),
-                    onTap: () async {
-                      Navigator.of(context).pop();
-                      await context.pushNamed(
-                        'SettingsPage',
-                        extra: <String, dynamic>{
-                          kTransitionInfoKey: const TransitionInfo(
-                            hasTransition: true,
-                            transitionType: PageTransitionType.fade,
-                            duration: Duration(milliseconds: 250),
-                          ),
-                        },
-                      );
-                    },
+                  _drawerNavTile(
+                    context: context,
+                    icon: Icons.settings_rounded,
+                    title: 'Setări',
+                    routeName: 'SettingsPage',
                   ),
                 ],
               ),
@@ -895,203 +899,114 @@ class _HomePageWidgetState extends State<HomePageWidget> {
               ),
               child: Column(
                 children: [
-                  if (!_searchActive) _buildHomeHeader(context),
+                  if (!_searchActive)
+                    Selector<FFAppState, bool>(
+                      selector: (_, state) => state.homeHeaderCollapsed,
+                      builder: (context, headerCollapsed, _) {
+                        return _buildHomeHeader(
+                          context,
+                          headerCollapsed: headerCollapsed,
+                        );
+                      },
+                    ),
                   Expanded(
                     child: CustomScrollView(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       if (_searchActive) _buildSearchSliverAppBar(context),
-                      Selector<FFAppState, (SavedPrayerDataStruct, String)>(
-                        selector: (_, state) =>
-                            (state.savedPrayer, state.currentPrayerId),
-                        builder: (context, bookmarkState, _) {
-                          final savedPrayer = bookmarkState.$1;
-                          final currentPrayerId = bookmarkState.$2;
+                      Selector<FFAppState, SavedPrayerDataStruct>(
+                        selector: (_, state) => state.savedPrayer,
+                        builder: (context, savedPrayer, _) {
                           final showBookmark = !_searchActive &&
                               _typeStack.isEmpty &&
                               savedPrayer.prayer != null &&
-                              savedPrayer.prayer!.id.isNotEmpty &&
-                              currentPrayerId.isEmpty;
+                              savedPrayer.prayer!.id.isNotEmpty;
                           if (!showBookmark) {
                             return const SliverToBoxAdapter(
                               child: SizedBox.shrink(),
                             );
                           }
+                          final prayer = savedPrayer.prayer!;
+                          final savedCard = savedPrayerCardContent(savedPrayer);
+
                           return SliverToBoxAdapter(
                             child: Padding(
                               padding: const EdgeInsetsDirectional.fromSTEB(
-                                  16.0, 8.0, 16.0, 0.0),
-                              child: InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                final prayerId = savedPrayer.prayer?.id;
-                                final page = savedPrayer.page;
-
-                                FFAppState().deleteSavedPrayer();
-                                FFAppState().savedPrayer =
-                                    SavedPrayerDataStruct();
-
-                                safeSetState(() {});
-
-                                if (prayerId == null || prayerId.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      backgroundColor:
-                                          FlutterFlowTheme.of(context).alternate,
-                                      content: Text(
-                                        'Rugăciunea salvată nu este validă. Vă rugăm să salvați o rugăciune din nou.',
-                                        style: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .primary,
-                                              letterSpacing: 0.0,
-                                            ),
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                _typeStack.clear();
-                                safeSetState(() {});
-
-                                context.pushNamed(
-                                  'RosaryPage',
-                                  queryParameters: {
-                                    'prayerId': serializeParam(
-                                      prayerId,
-                                      ParamType.String,
-                                    ).toString(),
-                                    'page': serializeParam(
-                                      valueOrDefault<int>(
-                                        page,
-                                        0,
-                                      ),
-                                      ParamType.int,
-                                    ).toString(),
-                                  }.withoutNulls,
-                                  extra: <String, dynamic>{
-                                    kTransitionInfoKey: const TransitionInfo(
-                                      hasTransition: true,
-                                      transitionType: PageTransitionType.fade,
-                                      duration: Duration(milliseconds: 250),
-                                    ),
-                                  },
-                                );
-                              },
-                              child: Container(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    16.0, 14.0, 16.0, 14.0),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      FlutterFlowTheme.of(context).alternate,
-                                      FlutterFlowTheme.of(context).alternate.withOpacity(0.9),
-                                    ],
-                                    stops: const [0.0, 1.0],
-                                    begin: const AlignmentDirectional(-1.0, 0.0),
-                                    end: const AlignmentDirectional(1.0, 0.0),
+                                16.0,
+                                8.0,
+                                16.0,
+                                0.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildHomeSectionLabel(
+                                    context,
+                                    'Continuă de unde ai rămas',
                                   ),
-                                  borderRadius: BorderRadius.circular(16.0),
-                                  border: Border.all(
-                                    color: FlutterFlowTheme.of(context).primary.withOpacity(0.2),
-                                    width: 1.5,
+                                  const SizedBox(height: 8.0),
+                                  PrayerTypeCardWidget(
+                                    title: savedCard.$1,
+                                    subtitle: savedCard.$2,
+                                    leadingImageUrl: savedCard.$3,
+                                    trailingText: null,
+                                    trailingIcons:
+                                        _trailingIconsForPrayer(prayer),
+                                    onTap: () => unawaited(
+                                      _openSavedPrayer(context, savedPrayer),
+                                    ),
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: FlutterFlowTheme.of(context).primary.withOpacity(0.15),
-                                      blurRadius: 12.0,
-                                      offset: const Offset(0.0, 4.0),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8.0),
-                                      decoration: BoxDecoration(
-                                        color: FlutterFlowTheme.of(context).primary.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12.0),
-                                      ),
-                                      child: Icon(
-                                        Icons.bookmark_rounded,
-                                        color: FlutterFlowTheme.of(context).primary,
-                                        size: 24.0,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12.0),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Continuă rugăciunea salvată',
-                                            style: FlutterFlowTheme.of(context)
-                                                .labelSmall
-                                                .override(
-                                                  fontFamily: 'Inter',
-                                                  color: FlutterFlowTheme.of(context)
-                                                      .secondaryText,
-                                                  letterSpacing: 0.5,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                          ),
-                                          const SizedBox(height: 2.0),
-                                          Text(
-                                            savedPrayer.prayer?.title ?? '',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: FlutterFlowTheme.of(context)
-                                                .titleSmall
-                                                .override(
-                                                  fontFamily: 'Merriweather',
-                                                  color: FlutterFlowTheme.of(context)
-                                                      .primary,
-                                                  letterSpacing: 0.0,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.arrow_forward_rounded,
-                                      color: FlutterFlowTheme.of(context).primary,
-                                      size: 20.0,
-                                    ),
-                                  ],
-                                ),
+                                ],
                               ),
                             ),
-                          ),
-                        );
+                          );
                         },
                       ),
-
+                      if (!_searchActive && _typeStack.isEmpty)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                              16.0,
+                              8.0,
+                              16.0,
+                              0.0,
+                            ),
+                            child: _buildHomeSectionLabel(
+                              context,
+                              'Rugăciuni și cântări',
+                            ),
+                          ),
+                        ),
                       SliverPadding(
                         padding: const EdgeInsetsDirectional.fromSTEB(
                           16.0,
-                          16.0,
+                          8.0,
                           16.0,
                           0.0,
                         ),
                         sliver: _buildPrayerTypesSliver(context),
                       ),
-
-                        SliverToBoxAdapter(
-                          child: SizedBox(
-                            height: _searchActive
-                                ? 16.0
-                                : (_showAudioPlayer ? 8.0 : 24.0),
-                          ),
+                      SliverToBoxAdapter(
+                        child: _buildRecommendedPrayerSection(context),
+                      ),
+                      Selector<FFAppState, List<PrayerStruct>>(
+                        selector: (_, state) => state.favoritePrayers,
+                        builder: (context, favoritePrayers, _) {
+                          return SliverToBoxAdapter(
+                            child: _buildFavoritePrayersSection(
+                              context,
+                              favoritePrayers: favoritePrayers,
+                            ),
+                          );
+                        },
+                      ),
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: _catalogScrollBottomPadding,
                         ),
-                      ],
+                      ),
+                    ],
                     ),
                   ),
                   Selector<FFAppState, String>(
@@ -1101,8 +1016,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         return const SizedBox.shrink();
                       }
                       return Padding(
-                        padding:
-                            const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
+                        padding: const EdgeInsets.fromLTRB(
+                          16.0,
+                          HomeAudioMiniPlayer.homeScreenMarginVertical / 2,
+                          16.0,
+                          HomeAudioMiniPlayer.homeScreenMarginVertical / 2,
+                        ),
                         child: HomeAudioMiniPlayer(
                           pageManager: _pageManager,
                           audioHandler: _audioHandler,
@@ -1331,6 +1250,251 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     );
   }
 
+  Widget _buildHomeSectionLabel(BuildContext context, String label) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(
+        label.toUpperCase(),
+        textAlign: TextAlign.start,
+        style: FlutterFlowTheme.of(context).labelSmall.override(
+              fontFamily: 'Inter',
+              color: FlutterFlowTheme.of(context).alternate.withOpacity(0.85),
+              letterSpacing: 0.5,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
+  }
+
+  (String, String?) _prayerCardTitleAndSubtitle(PrayerStruct prayer) {
+    final cardTitle =
+        prayer.title.isNotEmpty ? prayer.title : prayer.subtitle;
+    final cardSubtitle = prayer.title.isNotEmpty &&
+            prayer.subtitle.isNotEmpty &&
+            prayer.subtitle != cardTitle
+        ? prayer.subtitle
+        : null;
+    return (cardTitle, cardSubtitle);
+  }
+
+  Future<void> _openSavedPrayer(
+    BuildContext context,
+    SavedPrayerDataStruct savedPrayer,
+  ) async {
+    final prayerId = savedPrayer.prayer?.id;
+    final page = savedPrayer.page;
+
+    if (prayerId == null || prayerId.isEmpty) {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: FlutterFlowTheme.of(context).alternate,
+          content: Text(
+            'Rugăciunea salvată nu este validă. Vă rugăm să salvați o rugăciune din nou.',
+            style: FlutterFlowTheme.of(context).labelMedium.override(
+                  fontFamily: 'Inter',
+                  color: FlutterFlowTheme.of(context).primary,
+                  letterSpacing: 0.0,
+                ),
+          ),
+        ),
+      );
+      return;
+    }
+
+    _typeStack.clear();
+    safeSetState(() {});
+
+    getIt<PrayerContentCache>().prefetch(prayerId);
+    await _prepareToOpenPrayer();
+
+    await context.pushNamed(
+      'RosaryPage',
+      queryParameters: {
+        'prayerId': serializeParam(
+          prayerId,
+          ParamType.String,
+        ).toString(),
+        'page': serializeParam(
+          valueOrDefault<int>(page, 0),
+          ParamType.int,
+        ).toString(),
+      }.withoutNulls,
+      extra: <String, dynamic>{
+        kTransitionInfoKey: const TransitionInfo(
+          hasTransition: true,
+          transitionType: PageTransitionType.fade,
+          duration: Duration(milliseconds: 250),
+        ),
+      },
+    );
+
+    if (!context.mounted) {
+      return;
+    }
+    FFAppState().deleteSavedPrayer();
+    FFAppState().savedPrayer = SavedPrayerDataStruct();
+  }
+
+  Widget _buildFavoritePrayersSection(
+    BuildContext context, {
+    required List<PrayerStruct> favoritePrayers,
+  }) {
+    if (_searchActive || _typeStack.isNotEmpty || favoritePrayers.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final preview = favoritePrayers.take(3).toList();
+    for (final prayer in preview) {
+      if (prayer.id.isNotEmpty) {
+        getIt<PrayerContentCache>().prefetch(prayer.id);
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHomeSectionLabel(
+            context,
+            'Favorite',
+          ),
+          const SizedBox(height: 8.0),
+          ...List.generate(preview.length, (index) {
+            final prayer = preview[index];
+            final cardLines = _prayerCardTitleAndSubtitle(prayer);
+            return Padding(
+              padding: EdgeInsets.only(top: index > 0 ? 12.0 : 0.0),
+              child: PrayerTypeCardWidget(
+                title: cardLines.$1,
+                subtitle: cardLines.$2,
+                trailingText: null,
+                trailingIcons: _trailingIconsForPrayer(prayer),
+                onTap: () => unawaited(_openPrayer(context, prayer.id)),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendedPrayerSection(BuildContext context) {
+    if (_searchActive || _typeStack.isNotEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return FutureBuilder<RecommendedPrayerResult?>(
+      future: _model.recommendedPrayerFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
+            child: Container(
+              height: 72.0,
+              decoration: BoxDecoration(
+                color: FlutterFlowTheme.of(context).alternate,
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: 20.0,
+                height: 20.0,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.0,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    FlutterFlowTheme.of(context).primary,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final recommendation = snapshot.data;
+        if (recommendation == null) {
+          return Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHomeSectionLabel(
+                  context,
+                  'Pentru astăzi',
+                ),
+                const SizedBox(height: 8.0),
+                Text(
+                  'Nicio recomandare pentru astăzi. Deschide calendarul pentru rugăciunile zilei.',
+                  style: FlutterFlowTheme.of(context).labelMedium.override(
+                        fontFamily: 'Inter',
+                        color: FlutterFlowTheme.of(context).alternate,
+                        letterSpacing: 0.0,
+                      ),
+                ),
+                const SizedBox(height: 8.0),
+                TextButton.icon(
+                  onPressed: () => unawaited(
+                    context.pushNamed(
+                      'CalendarPage',
+                      extra: <String, dynamic>{
+                        kTransitionInfoKey: _drawerTransition,
+                      },
+                    ),
+                  ),
+                  icon: Icon(
+                    Icons.calendar_today_rounded,
+                    size: 18.0,
+                    color: FlutterFlowTheme.of(context).alternate,
+                  ),
+                  label: Text(
+                    'Deschide calendarul',
+                    style: FlutterFlowTheme.of(context).labelMedium.override(
+                          fontFamily: 'Inter',
+                          color: FlutterFlowTheme.of(context).alternate,
+                          letterSpacing: 0.0,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final prayer = recommendation.prayer;
+        final cardLines = _prayerCardTitleAndSubtitle(prayer);
+
+        return Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHomeSectionLabel(
+                context,
+                'Pentru astăzi',
+              ),
+              const SizedBox(height: 8.0),
+              PrayerTypeCardWidget(
+                title: cardLines.$1,
+                subtitle: cardLines.$2,
+                trailingText: null,
+                trailingIcons: _trailingIconsForPrayer(prayer),
+                onTap: () async {
+                  _typeStack.clear();
+                  safeSetState(() {});
+                  await _openPrayer(context, prayer.id);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   List<IconData> _trailingIconsForPrayer(PrayerStruct prayer) {
     if (prayer.mode == PrayerMode.audioAndText) {
       return const [Icons.chevron_right_rounded];
@@ -1344,9 +1508,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   }
 
   Widget _buildSearchResultCard(BuildContext context, PrayerSearchEntry result) {
+    final subtitle = result.displaySubtitle;
     return PrayerTypeCardWidget(
-      title: result.prayer.subtitle,
-      subtitle: result.prayer.title,
+      title: result.prayer.subtitle.isNotEmpty
+          ? result.prayer.subtitle
+          : result.prayer.title,
+      subtitle: subtitle.isEmpty ? null : subtitle,
       trailingText: null,
       trailingIcons: _trailingIconsForPrayer(result.prayer),
       onTap: () async {
@@ -1358,7 +1525,23 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     );
   }
 
+  Future<void> _prepareToOpenPrayer() async {
+    if (FFAppState().currentPrayerId.isEmpty &&
+        !_pageManager.hasActiveQueue &&
+        _pageManager.playButtonNotifier.value != ButtonState.playing) {
+      return;
+    }
+
+    await _pageManager.stop();
+    if (_pageManager.hasActiveQueue) {
+      await _pageManager.clearQueue();
+    }
+    FFAppState().currentPrayerId = '';
+  }
+
   Future<void> _openPrayer(BuildContext context, String prayerId) async {
+    getIt<PrayerContentCache>().prefetch(prayerId);
+    await _prepareToOpenPrayer();
     await context.pushNamed(
       'RosaryPage',
       queryParameters: {

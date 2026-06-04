@@ -95,6 +95,11 @@ class FFAppState extends ChangeNotifier {
         _isFirstTime = !hasPriorUse;
       }
     });
+    await _safeInitAsync(() async {
+      _homeHeaderCollapsed =
+          await secureStorage.getBool('ff_homeHeaderCollapsed') ??
+              _homeHeaderCollapsed;
+    });
   }
 
   void update(VoidCallback callback) {
@@ -120,6 +125,21 @@ class FFAppState extends ChangeNotifier {
     _isFirstTime = value;
     secureStorage.setBool('ff_isFirstTime', value);
     notifyListeners();
+  }
+
+  bool _homeHeaderCollapsed = false;
+  bool get homeHeaderCollapsed => _homeHeaderCollapsed;
+  set homeHeaderCollapsed(bool value) {
+    if (_homeHeaderCollapsed == value) {
+      return;
+    }
+    _homeHeaderCollapsed = value;
+    secureStorage.setBool('ff_homeHeaderCollapsed', value);
+    notifyListeners();
+  }
+
+  void toggleHomeHeaderCollapsed() {
+    homeHeaderCollapsed = !homeHeaderCollapsed;
   }
 
   double _audioSpeed = 1.0;

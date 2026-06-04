@@ -16,6 +16,28 @@ class HomeAudioMiniPlayer extends StatelessWidget {
     required this.onOpenPrayer,
   });
 
+  /// Inner row height (artwork / controls).
+  static const double contentHeight = 44.0;
+
+  static const double progressBarHeight = 3.0;
+
+  static const double _cardPaddingHorizontal = 12.0;
+  static const double _cardPaddingTop = 10.0;
+  static const double _progressTopGap = 8.0;
+  static const double _cardPaddingBottom = 10.0;
+
+  /// Margin around the player on the home screen (top + bottom).
+  static const double homeScreenMarginVertical = 16.0;
+
+  /// Total vertical space the home page should reserve below the catalog scroll.
+  static double get homeReservedHeight =>
+      _cardPaddingTop +
+      contentHeight +
+      _progressTopGap +
+      progressBarHeight +
+      _cardPaddingBottom +
+      homeScreenMarginVertical;
+
   final PageManager pageManager;
   final AudioHandler audioHandler;
   final VoidCallback onClose;
@@ -107,6 +129,36 @@ class HomeAudioMiniPlayer extends StatelessWidget {
     );
   }
 
+  Widget _buildProgressBar(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        pageManager.currentProgressNotifier,
+        pageManager.totalDurationNotifier,
+      ]),
+      builder: (context, _) {
+        final current = pageManager.currentProgressNotifier.value;
+        final total = pageManager.totalDurationNotifier.value;
+        final progress = total.inMilliseconds > 0
+            ? (current.inMilliseconds / total.inMilliseconds).clamp(0.0, 1.0)
+            : 0.0;
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(999.0),
+          child: LinearProgressIndicator(
+            minHeight: progressBarHeight,
+            value: progress > 0 ? progress : null,
+            backgroundColor: theme.primary.withValues(alpha: 0.12),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              theme.primary.withValues(alpha: 0.75),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
@@ -125,89 +177,120 @@ class HomeAudioMiniPlayer extends StatelessWidget {
         }
 
         final mediaItem = queue[trackIndex];
+        final showProgress = _hasAudioUrl(mediaItem);
 
         return Material(
           color: Colors.transparent,
-          child: InkWell(
-            onTap: onOpenPrayer,
-            borderRadius: BorderRadius.circular(16.0),
-            child: Ink(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.alternate,
-                    theme.alternate.withValues(alpha: 0.95),
-                  ],
-                  begin: const AlignmentDirectional(-1.0, -1.0),
-                  end: const AlignmentDirectional(1.0, 1.0),
-                ),
-                borderRadius: BorderRadius.circular(16.0),
-                border: Border.all(
-                  color: theme.primary.withValues(alpha: 0.2),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.primary.withValues(alpha: 0.15),
-                    blurRadius: 12.0,
-                    offset: const Offset(0.0, 4.0),
-                  ),
+          child: Ink(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  theme.alternate,
+                  theme.alternate.withValues(alpha: 0.95),
                 ],
+                begin: const AlignmentDirectional(-1.0, -1.0),
+                end: const AlignmentDirectional(1.0, 1.0),
               ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12.0, 10.0, 8.0, 10.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Hero(
-                      tag: 'sectionImageHero',
-                      child: _buildArtwork(context, mediaItem),
-                    ),
-                    const SizedBox(width: 10.0),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+              borderRadius: BorderRadius.circular(16.0),
+              border: Border.all(
+                color: theme.primary.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.primary.withValues(alpha: 0.15),
+                  blurRadius: 12.0,
+                  offset: const Offset(0.0, 4.0),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: onOpenPrayer,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        _cardPaddingHorizontal,
+                        _cardPaddingTop,
+                        4.0,
+                        showProgress ? 0.0 : _cardPaddingBottom,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            mediaItem.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.titleSmall.override(
-                              fontFamily: 'Merriweather',
-                              color: theme.primary,
-                              letterSpacing: 0.0,
+                          Hero(
+                            tag: 'sectionImageHero',
+                            child: _buildArtwork(context, mediaItem),
+                          ),
+                          const SizedBox(width: 10.0),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  mediaItem.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.titleSmall.override(
+                                    fontFamily: 'Merriweather',
+                                    color: theme.primary,
+                                    letterSpacing: 0.0,
+                                  ),
+                                ),
+                                if (mediaItem.album != null &&
+                                    mediaItem.album!.isNotEmpty)
+                                  Text(
+                                    mediaItem.album!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.labelSmall.override(
+                                      fontFamily: 'Inter',
+                                      color: theme.primary,
+                                      letterSpacing: 0.0,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                          if (mediaItem.album != null &&
-                              mediaItem.album!.isNotEmpty)
-                            Text(
-                              mediaItem.album!,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.labelSmall.override(
-                                fontFamily: 'Inter',
-                                color: theme.primary,
-                                letterSpacing: 0.0,
-                              ),
-                            ),
+                          if (showProgress) _buildPlayButton(context),
+                          ValueListenableBuilder<ButtonState>(
+                            valueListenable: pageManager.playButtonNotifier,
+                            builder: (_, playState, __) {
+
+                              return IconButton(
+                                onPressed: onClose,
+                                icon: Icon(
+                                  Icons.close_rounded,
+                                  color: theme.primary,
+                                ),
+                                tooltip: 'Închide',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(
+                                  minWidth: 44.0,
+                                  minHeight: 44.0,
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
-                    if (_hasAudioUrl(mediaItem)) _buildPlayButton(context),
-                    IconButton(
-                      onPressed: onClose,
-                      icon: Icon(Icons.close_rounded, color: theme.primary),
-                      tooltip: 'Închide',
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 36.0,
-                        minHeight: 36.0,
+                  ),
+                  if (showProgress)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        _cardPaddingHorizontal,
+                        _progressTopGap,
+                        _cardPaddingHorizontal,
+                        _cardPaddingBottom,
                       ),
+                      child: _buildProgressBar(context),
                     ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),

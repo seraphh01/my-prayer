@@ -10,6 +10,9 @@ class PrayerSearchEntry {
   final PrayerStruct prayer;
   final String path;
   final String searchHaystack;
+
+  /// Category path shown under the prayer name in search results.
+  String get displaySubtitle => path;
 }
 
 class PrayerSearchIndex {

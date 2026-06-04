@@ -8,6 +8,8 @@ import '/flutter_flow/flutter_flow_util.dart';
 import 'index.dart'; // Imports other custom widgets
 import '/custom_code/actions/index.dart'; // Imports custom actions
 import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 // Begin custom widget code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
@@ -43,23 +45,30 @@ class _CustomSliderState extends State<CustomSlider> {
 
   @override
   Widget build(BuildContext context) {
+    final min = widget.minValue.toDouble();
+    var max = widget.maxValue.toDouble();
+    if (max <= min) {
+      max = math.max(
+        min + 1,
+        math.max(widget.sliderValue, widget.bufferValue.toDouble()),
+      );
+    }
+
+    final value =
+        (_sliding ? _sliderValue : widget.sliderValue).clamp(min, max);
+    final buffer = widget.bufferValue.toDouble().clamp(min, max);
+
     return Container(
       width: widget.width,
       height: widget.height,
       child: Slider(
           activeColor: FlutterFlowTheme.of(context).primary,
           inactiveColor: Color(0x33000000),
-          min: valueOrDefault<double>(
-            widget.minValue?.toDouble(),
-            0,
-          ),
-          max: valueOrDefault<double>(
-            widget.maxValue?.toDouble(),
-            300.0,
-          ),
-          secondaryTrackValue: widget.bufferValue.toDouble() ?? 0,
+          min: min,
+          max: max,
+          secondaryTrackValue: buffer,
           secondaryActiveColor: FlutterFlowTheme.of(context).secondary,
-          value: _sliding ? _sliderValue : widget.sliderValue ?? 0,
+          value: value,
           divisions: 100,
           onChangeStart: (newValue) async {
             setState(() {

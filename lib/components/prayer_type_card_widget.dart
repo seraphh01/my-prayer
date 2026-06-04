@@ -2,6 +2,8 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
 
+import '/components/section_text/cached_section_image.dart';
+
 class PrayerTypeCardWidget extends StatefulWidget {
   const PrayerTypeCardWidget({
     super.key,
@@ -11,6 +13,8 @@ class PrayerTypeCardWidget extends StatefulWidget {
     this.onTap,
     this.trailingIcons,
     this.prefixIcon,
+    this.leadingImageUrl,
+    this.onLightBackground = false,
   });
 
   final String title;
@@ -19,6 +23,9 @@ class PrayerTypeCardWidget extends StatefulWidget {
   final VoidCallback? onTap;
   final List<IconData>? trailingIcons;
   final IconData? prefixIcon;
+  final String? leadingImageUrl;
+  /// Use on pages with a light scaffold background (e.g. favorites, downloads).
+  final bool onLightBackground;
 
   @override
   State<PrayerTypeCardWidget> createState() => _PrayerTypeCardWidgetState();
@@ -42,6 +49,10 @@ class _PrayerTypeCardWidgetState extends State<PrayerTypeCardWidget>
 
   @override
   Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    // Cream surface on all pages; light pages add border/shadow for white scaffolds.
+    final surfaceColor = theme.alternate;
+
     return AnimatedScale(
       scale: _scale,
       alignment: Alignment.center,
@@ -60,19 +71,37 @@ class _PrayerTypeCardWidgetState extends State<PrayerTypeCardWidget>
           padding:
               const EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 12.0),
           decoration: BoxDecoration(
-            color: FlutterFlowTheme.of(context).alternate,
+            color: surfaceColor,
             borderRadius: BorderRadius.circular(16.0),
-            boxShadow: const [
+            border: widget.onLightBackground
+                ? Border.all(
+                    color: theme.primary.withValues(alpha: 0.12),
+                    width: 1.0,
+                  )
+                : null,
+            boxShadow: [
               BoxShadow(
-                color: Color(0x1A000000),
+                color: widget.onLightBackground
+                    ? theme.primary.withValues(alpha: 0.08)
+                    : const Color(0x1A000000),
                 blurRadius: 8.0,
-                offset: Offset(0.0, 4.0),
+                offset: const Offset(0.0, 4.0),
               ),
             ],
           ),
           child: Row(
             children: [
-              if (widget.prefixIcon != null)
+              if (widget.leadingImageUrl != null)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 12.0),
+                  child: CachedSectionImage(
+                    imageUrl: widget.leadingImageUrl!,
+                    width: 44.0,
+                    height: 44.0,
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                )
+              else if (widget.prefixIcon != null)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: 8.0),
                   child: Icon(
@@ -102,13 +131,16 @@ class _PrayerTypeCardWidgetState extends State<PrayerTypeCardWidget>
                           widget.subtitle!,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style:
-                              FlutterFlowTheme.of(context).labelMedium.override(
-                                    fontFamily: 'Inter',
-                                    color:
-                                        FlutterFlowTheme.of(context).secondary,
-                                    letterSpacing: 0.0,
-                                  ),
+                          style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                fontFamily: 'Inter',
+                                color: FlutterFlowTheme.of(context)
+                                    .primary
+                                    .withValues(alpha: 0.62),
+                                fontSize: 14.0,
+                                letterSpacing: 0.0,
+                                lineHeight: 1.35,
+                                fontWeight: FontWeight.w400,
+                              ),
                         ),
                       ),
                   ],
