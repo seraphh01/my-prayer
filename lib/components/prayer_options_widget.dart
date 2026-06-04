@@ -2,11 +2,11 @@ import 'package:my_prayer/flutter_flow/flutter_flow_choice_chips.dart';
 import 'package:my_prayer/flutter_flow/form_field_controller.dart';
 
 import '/backend/schema/structs/index.dart';
+import '/components/reading_text_scroll_settings.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'prayer_options_model.dart';
 export 'prayer_options_model.dart';
 
@@ -249,7 +249,13 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                     ),
                   ),
                 ),
-
+                const Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(1.0, 8.0, 0.0, 0.0),
+                  child: ReadingTextScrollSettings(
+                    compact: true,
+                    showHint: false,
+                  ),
+                ),
                 Padding(
                   padding:
                       const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),

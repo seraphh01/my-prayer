@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:csv/csv.dart';
 import 'package:synchronized/synchronized.dart';
 import 'flutter_flow/flutter_flow_util.dart';
+import '/custom_code/prayer/reading_anchor_presets.dart';
 
 class FFAppState extends ChangeNotifier {
   static FFAppState _instance = FFAppState._internal();
@@ -35,6 +36,17 @@ class FFAppState extends ChangeNotifier {
       _fontSizeMultiplier =
           await secureStorage.getDouble('ff_fontSizeMultiplier') ??
               _fontSizeMultiplier;
+    });
+    await _safeInitAsync(() async {
+      _readingAnchorAlignment =
+          await secureStorage.getDouble('ff_readingAnchorAlignment') ??
+              _readingAnchorAlignment;
+    });
+    await _safeInitAsync(() async {
+      final stored = await secureStorage.getBool('ff_textAutoScrollEnabled');
+      if (stored != null) {
+        _textAutoScrollEnabled = stored;
+      }
     });
     await _safeInitAsync(() async {
       var prayers = await secureStorage.getString('ff_favoritePrayers');
@@ -181,6 +193,36 @@ class FFAppState extends ChangeNotifier {
 
   void deleteFontSizeMultiplier() {
     secureStorage.delete(key: 'ff_fontSizeMultiplier');
+  }
+
+  double _readingAnchorAlignment = ReadingAnchorPresets.standardAlignment;
+  double get readingAnchorAlignment => _readingAnchorAlignment;
+  set readingAnchorAlignment(double value) {
+    if (_readingAnchorAlignment == value) {
+      return;
+    }
+    _readingAnchorAlignment = value;
+    secureStorage.setDouble('ff_readingAnchorAlignment', value);
+    notifyListeners();
+  }
+
+  void deleteReadingAnchorAlignment() {
+    secureStorage.delete(key: 'ff_readingAnchorAlignment');
+  }
+
+  bool _textAutoScrollEnabled = true;
+  bool get textAutoScrollEnabled => _textAutoScrollEnabled;
+  set textAutoScrollEnabled(bool value) {
+    if (_textAutoScrollEnabled == value) {
+      return;
+    }
+    _textAutoScrollEnabled = value;
+    secureStorage.setBool('ff_textAutoScrollEnabled', value);
+    notifyListeners();
+  }
+
+  void deleteTextAutoScrollEnabled() {
+    secureStorage.delete(key: 'ff_textAutoScrollEnabled');
   }
 
   List<PrayerStruct> _favoritePrayers = [];

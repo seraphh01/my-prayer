@@ -19,6 +19,7 @@ class SectionTextBlockWidget extends StatefulWidget {
     required this.onSeekElement,
     required this.styles,
     this.initiallyExpanded = true,
+    this.elementKeyFor,
   });
 
   final Key blockKey;
@@ -30,6 +31,7 @@ class SectionTextBlockWidget extends StatefulWidget {
   final void Function(int elementStartTime) onSeekElement;
   final PrayerTextStyles styles;
   final bool initiallyExpanded;
+  final GlobalKey? Function(int elementIndex)? elementKeyFor;
 
   @override
   State<SectionTextBlockWidget> createState() => _SectionTextBlockWidgetState();
@@ -92,6 +94,7 @@ class _SectionTextBlockWidgetState extends State<SectionTextBlockWidget> {
                       key: ValueKey(
                         'section_text_${widget.textIndex}_element_$elementIndex',
                       ),
+                      elementKey: widget.elementKeyFor?.call(elementIndex),
                       text: widget.text,
                       textIndex: widget.textIndex,
                       element: widget.text.textElements[elementIndex],
@@ -116,6 +119,7 @@ class _SectionTextBlockWidgetState extends State<SectionTextBlockWidget> {
 class _SectionTextElementLine extends StatefulWidget {
   const _SectionTextElementLine({
     super.key,
+    this.elementKey,
     required this.text,
     required this.textIndex,
     required this.element,
@@ -127,6 +131,7 @@ class _SectionTextElementLine extends StatefulWidget {
     required this.onSeekElement,
   });
 
+  final GlobalKey? elementKey;
   final SectionTextStruct text;
   final int textIndex;
   final TextElementStruct element;
@@ -195,16 +200,19 @@ class _SectionTextElementLineState extends State<_SectionTextElementLine> {
       element: widget.element,
     );
 
-    return PrayerTextSpan(
-      text: widget.element.text,
-      type: widget.element.type,
-      quoteSource: widget.element.quoteSource,
-      showDropCap: widget.showDropCap,
-      isPlaying: isPlaying,
-      hasPassed: hasPassed,
-      isSynced: widget.isAudioSynced,
-      styles: widget.styles,
-      onPressed: () => widget.onSeekElement(widget.element.startTime),
+    return RepaintBoundary(
+      key: widget.elementKey,
+      child: PrayerTextSpan(
+        text: widget.element.text,
+        type: widget.element.type,
+        quoteSource: widget.element.quoteSource,
+        showDropCap: widget.showDropCap,
+        isPlaying: isPlaying,
+        hasPassed: hasPassed,
+        isSynced: widget.isAudioSynced,
+        styles: widget.styles,
+        onPressed: () => widget.onSeekElement(widget.element.startTime),
+      ),
     );
   }
 }

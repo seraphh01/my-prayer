@@ -178,23 +178,30 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       return;
     }
 
-    if (continuingExistingAudio) {
+    if (continuingExistingAudio &&
+        _pageManager.isQueueReadyForSectionCount(flattenedSections.length)) {
       _audioQueueInitialized = true;
       if (!_isAudioActivelyPlaying() && widget.initialAudioTime > 0) {
         await _pageManager.seek(Duration(seconds: widget.initialAudioTime));
       }
       return;
     }
+
+    _audioQueueInitialized = false;
     if (!flattenedSections.any((section) => section.audioUrl.isNotEmpty)) {
       return;
     }
 
     await _ensureAudioQueueInitialized();
+    if (!_isAudioQueueReady()) {
+      return;
+    }
     final maxIndex = flattenedSections.isEmpty ? 0 : flattenedSections.length - 1;
     _pageManager.setTrackIndex(widget.page.clamp(0, maxIndex));
-    if (widget.continueAudio && widget.initialAudioTime > 0) {
+    if (widget.initialAudioTime > 0) {
       await _pageManager.seek(Duration(seconds: widget.initialAudioTime));
-    } else {
+    }
+    if (!widget.continueAudio || !_isAudioActivelyPlaying()) {
       _pageManager.pause();
       _pageManager.playButtonNotifier.value = ButtonState.paused;
     }
@@ -213,26 +220,36 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     }
   }
 
+  bool _isAudioQueueReady() {
+    return _pageManager.isQueueReadyForSectionCount(flattenedSections.length);
+  }
+
   Future<void> _ensureAudioQueueInitialized() async {
-    if (_audioQueueInitialized || flattenedSections.isEmpty) {
+    if (flattenedSections.isEmpty) {
       return;
     }
     if (!flattenedSections.any((section) => section.audioUrl.isNotEmpty)) {
       return;
     }
 
-    final inFlight = _audioQueueInitFuture;
-    if (inFlight != null) {
-      await inFlight;
+    if (_audioQueueInitialized && _isAudioQueueReady()) {
       return;
     }
 
-    final future = _initializeAudioQueue().then((_) {
-      _audioQueueInitialized = true;
-    });
+    _audioQueueInitialized = false;
+
+    final inFlight = _audioQueueInitFuture;
+    if (inFlight != null) {
+      await inFlight;
+      _audioQueueInitialized = _isAudioQueueReady();
+      return;
+    }
+
+    final future = _initializeAudioQueue();
     _audioQueueInitFuture = future;
     try {
-      await future;
+      final success = await future;
+      _audioQueueInitialized = success && _isAudioQueueReady();
     } finally {
       if (identical(_audioQueueInitFuture, future)) {
         _audioQueueInitFuture = null;
@@ -268,6 +285,8 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     }
     _audioQueueInitialized = false;
     _audioQueueInitFuture = null;
+    _pageManager.clearPendingTrackIndex();
+    _pageManager.playButtonNotifier.value = ButtonState.paused;
     _pageManager.setTrackIndex(widget.page);
     _pageManager.currentProgressNotifier.value = Duration.zero;
     _pageManager.totalDurationNotifier.value = Duration.zero;
@@ -434,12 +453,12 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {
+            onTap: () async {
               _onFloatingControlsInteraction();
               if (isPlaying) {
                 _pageManager.pause();
               } else {
-                _pageManager.play();
+                await _pageManager.play();
               }
             },
             borderRadius: BorderRadius.circular(18.0),
@@ -593,11 +612,13 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     await _pageManager.setQueue(mediaItems);
   }
 
-  Future<void> _initializeAudioQueue() async {
+  Future<bool> _initializeAudioQueue() async {
     try {
       await setInitialMediaItems().timeout(const Duration(seconds: 45));
+      return _isAudioQueueReady();
     } catch (error, stackTrace) {
       debugPrint('Audio queue initialization failed: $error\n$stackTrace');
+      return false;
     }
   }
 
@@ -608,6 +629,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     _allowScroll.addListener(_onAllowScrollChanged);
     _displayingAudio = FFAppState().isDisplayingAudio;
     FFAppState().addListener(_onAppStateChanged);
+    _pageManager.ensureQueueBeforePlay = _ensureAudioQueueInitialized;
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -676,6 +698,9 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
 
   @override
   void dispose() {
+    if (_pageManager.ensureQueueBeforePlay == _ensureAudioQueueInitialized) {
+      _pageManager.ensureQueueBeforePlay = null;
+    }
     FFAppState().removeListener(_onAppStateChanged);
     _floatingControlsIdleTimer?.cancel();
     _floatingControlsBackgroundOpacity.dispose();

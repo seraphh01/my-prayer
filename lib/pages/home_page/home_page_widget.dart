@@ -1321,6 +1321,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           valueOrDefault<int>(page, 0),
           ParamType.int,
         ).toString(),
+        'initialAudioTime': serializeParam(
+          valueOrDefault<int>(savedPrayer.audioTime, 0),
+          ParamType.int,
+        ).toString(),
       }.withoutNulls,
       extra: <String, dynamic>{
         kTransitionInfoKey: const TransitionInfo(
@@ -1526,9 +1530,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   }
 
   Future<void> _prepareToOpenPrayer() async {
-    if (FFAppState().currentPrayerId.isEmpty &&
-        !_pageManager.hasActiveQueue &&
-        _pageManager.playButtonNotifier.value != ButtonState.playing) {
+    final hasPlaybackState = FFAppState().currentPrayerId.isNotEmpty ||
+        _pageManager.hasActiveQueue ||
+        _pageManager.playButtonNotifier.value != ButtonState.playing;
+    if (!hasPlaybackState) {
       return;
     }
 
@@ -1536,6 +1541,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     if (_pageManager.hasActiveQueue) {
       await _pageManager.clearQueue();
     }
+    _pageManager.playButtonNotifier.value = ButtonState.paused;
     FFAppState().currentPrayerId = '';
   }
 

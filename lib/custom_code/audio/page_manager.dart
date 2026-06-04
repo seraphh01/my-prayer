@@ -32,6 +32,9 @@ class PageManager {
   int? _pendingTrackIndex;
   int _lastQueueLength = 0;
 
+  /// Optional hook (e.g. Rosary page) to load the queue before [play].
+  Future<void> Function()? ensureQueueBeforePlay;
+
   void init() {
     _listenToChangesInPlaylist();
     _listenToPlaybackStateUpdates();
@@ -153,12 +156,20 @@ class PageManager {
   }
 
   Future<void> play() async {
-    final index = trackIndexNotifier.value;
+    if (ensureQueueBeforePlay != null) {
+      await ensureQueueBeforePlay!();
+    }
+
     final queue = _audioHandler.queue.value;
+    if (queue.isEmpty) {
+      playButtonNotifier.value = ButtonState.paused;
+      return;
+    }
+
+    final index = trackIndexNotifier.value.clamp(0, queue.length - 1);
     final currentIndex = _audioHandler.playbackState.value.queueIndex;
 
-    if (queue.isNotEmpty &&
-        index >= 0 &&
+    if (index >= 0 &&
         index < queue.length &&
         (currentIndex == null || currentIndex != index)) {
       await skipToIndex(index);
@@ -276,12 +287,15 @@ class PageManager {
   }
 
   Future<void> clearQueue() async {
+    isQueueReadyNotifier.value = false;
+    clearPendingTrackIndex();
     if (_audioHandler is MyAudioHandler) {
       await (_audioHandler as MyAudioHandler).resetQueue();
     } else {
       await _audioHandler.updateQueue([]);
     }
     _lastQueueLength = 0;
+    isQueueReadyNotifier.value = false;
   }
 
   void dispose() {

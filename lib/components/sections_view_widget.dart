@@ -5,6 +5,7 @@ import 'package:my_prayer/components/choose_chapter_widget.dart';
 import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_section_content_cache.dart';
+import 'package:my_prayer/custom_code/prayer/reading_anchor_presets.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_typography.dart';
 import 'package:my_prayer/service_locator.dart';
 
@@ -45,20 +46,29 @@ class SectionsViewWidget extends StatefulWidget {
 class _SectionsViewWidgetState extends State<SectionsViewWidget> {
   late SectionsViewModel _model;
   ScrollController? _primaryScrollController;
-  int currentPlayingTextIndex = 0;
+  (int textIndex, int elementIndex) _scrollCursor = (-1, -1);
   int currentSectionIndex = 0;
   late final ValueNotifier<bool> _controlBarVisibility;
   final Map<int, List<GlobalKey>> _keys = {};
+  final Map<int, List<List<GlobalKey>>> _elementKeys = {};
 
   final _pageManager = getIt<PageManager>();
   final _sectionCache = getIt<PrayerSectionContentCache>();
   final ValueNotifier<bool> _isContentLoading = ValueNotifier(false);
   bool _hasInitialContent = false;
 
-  Timer? _scrollDebounce;
+  Timer? _clippedAboveDebounce;
   Timer? _scrollbarHideTimer;
   bool _scrollbarThumbVisible = false;
   static const Duration _scrollbarHideDelay = Duration(seconds: 1);
+  static const Duration _clippedAboveRecoverDelay =
+      Duration(milliseconds: 2500);
+  /// Elements taller than this fraction of the visible viewport scroll to their top.
+  static const double kLargeElementViewportRatio = 0.4;
+  static const double kPaddingBelowAppBar = 12.0;
+  static const double kAppBarToolbarHeight = 64.0;
+
+  double get _readingAnchorAlignment => FFAppState().readingAnchorAlignment;
 
   void _markContentReady() {
     _model.isLoading = false;
@@ -84,6 +94,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
       _model.currentSection = section;
       currentSectionIndex = index;
       setTextKeys(index, section.texts.length);
+      _ensureElementKeys(index, section.texts);
       _updatePlaybackHighlight();
       _markContentReady();
     }
@@ -115,17 +126,30 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     });
   }
 
-  double _scrollbarTopPadding(BuildContext context) {
-    final topInset = MediaQuery.viewPaddingOf(context).top;
+  double _scrollTopInset(BuildContext context) {
     if (!_needsScrollOverlap) {
+      return 0.0;
+    }
+
+    try {
+      final handle = NestedScrollView.sliverOverlapAbsorberHandleFor(context);
+      final extent = handle.layoutExtent;
+      if (extent != null && extent > 0) {
+        return extent;
+      }
+    } catch (_) {
+      // Not under a NestedScrollView.
+    }
+
+    return MediaQuery.viewPaddingOf(context).top + kAppBarToolbarHeight;
+  }
+
+  double _scrollbarTopPadding(BuildContext context) {
+    final topInset = _scrollTopInset(context);
+    if (topInset > 0) {
       return topInset;
     }
-    final handle = NestedScrollView.sliverOverlapAbsorberHandleFor(context);
-    final extent = handle.layoutExtent;
-    if (extent != null && extent > 0) {
-      return extent;
-    }
-    return topInset + 64.0;
+    return MediaQuery.viewPaddingOf(context).top;
   }
 
   Widget _buildTextScrollView({required List<Widget> slivers}) {
@@ -210,7 +234,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
       if (!mounted) {
         return;
       }
-      _syncScrollWithHeader();
+      _resetScrollCursor();
+      _onHighlightCursorChanged();
       setState(() {});
     });
   }
@@ -236,6 +261,66 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
       return;
     }
     _keys[sectionIndex] = List.generate(textCount, (_) => GlobalKey());
+  }
+
+  void _ensureElementKeys(int sectionIndex, List<SectionTextStruct> texts) {
+    setTextKeys(sectionIndex, texts.length);
+
+    final existing = _elementKeys[sectionIndex];
+    if (existing != null && existing.length == texts.length) {
+      var matches = true;
+      for (var textIndex = 0; textIndex < texts.length; textIndex++) {
+        if (existing[textIndex].length != texts[textIndex].textElements.length) {
+          matches = false;
+          break;
+        }
+      }
+      if (matches) {
+        return;
+      }
+    }
+
+    _elementKeys[sectionIndex] = texts
+        .map(
+          (text) => List.generate(
+            text.textElements.length,
+            (_) => GlobalKey(),
+          ),
+        )
+        .toList();
+  }
+
+  GlobalKey getElementKey(
+    int sectionIndex,
+    int textIndex,
+    int elementIndex,
+  ) {
+    if (sectionIndex >= _model.flattenedSections.length) {
+      return GlobalKey();
+    }
+
+    final texts = _model.flattenedSections[sectionIndex].texts;
+    if (textIndex >= texts.length) {
+      return GlobalKey();
+    }
+
+    final elements = texts[textIndex].textElements;
+    if (elementIndex >= elements.length) {
+      return GlobalKey();
+    }
+
+    _ensureElementKeys(sectionIndex, texts);
+    return _elementKeys[sectionIndex]![textIndex][elementIndex];
+  }
+
+  void _resetScrollCursor() {
+    _scrollCursor = (-1, -1);
+  }
+
+  void _scrollAfterSeek() {
+    _resetScrollCursor();
+    _updatePlaybackHighlight();
+    _onHighlightCursorChanged();
   }
 
   Future<void> setCurrentSection(int sectionIndex) async {
@@ -265,7 +350,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     }
 
     currentSectionIndex = sectionIndex;
-    setTextKeys(sectionIndex, _model.currentSection?.texts.length ?? 0);
+    final texts = _model.currentSection?.texts ?? const <SectionTextStruct>[];
+    _ensureElementKeys(sectionIndex, texts);
     _updatePlaybackHighlight();
     _sectionCache.prefetchAdjacent(_model.flattenedSections, sectionIndex);
     _markContentReady();
@@ -273,7 +359,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
       if (!mounted) {
         return;
       }
-      _syncScrollWithHeader();
+      if (switchingSection) {
+        _syncScrollWithHeader();
+        _resetScrollCursor();
+      }
+      _onHighlightCursorChanged();
     });
   }
 
@@ -331,45 +421,298 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     }
 
     _isContentLoading.value = true;
+    _resetScrollCursor();
     await setCurrentSection(_pageManager.trackIndexNotifier.value);
-    currentPlayingTextIndex =
-        _pageManager.playbackHighlightNotifier.value.activeTextIndex;
   }
 
-  void _scheduleScrollToActiveText() {
-    _scrollDebounce?.cancel();
-    _scrollDebounce = Timer(const Duration(milliseconds: 300), _scrollToActiveText);
+  ({RenderBox element, RenderBox viewport})? _elementScrollMetrics(
+    BuildContext elementContext,
+  ) {
+    final elementBox = elementContext.findRenderObject() as RenderBox?;
+    if (elementBox == null || !elementBox.hasSize) {
+      return null;
+    }
+
+    final scrollable = Scrollable.maybeOf(elementContext);
+    final viewportBox = scrollable?.context.findRenderObject() as RenderBox?;
+    if (viewportBox == null) {
+      return null;
+    }
+
+    return (element: elementBox, viewport: viewportBox);
   }
 
-  void _scrollToActiveText() {
-    if (_pageManager.playButtonNotifier.value != ButtonState.playing ||
+  bool _isLargeTextElement(
+    RenderBox elementBox,
+    RenderBox viewportBox,
+    double topInset,
+  ) {
+    final viewportHeight = viewportBox.size.height;
+    final effectiveHeight = (viewportHeight - topInset).clamp(1.0, viewportHeight);
+    if (effectiveHeight <= 0) {
+      return false;
+    }
+
+    final elementHeight = elementBox.size.height;
+    if (elementHeight > effectiveHeight * kLargeElementViewportRatio) {
+      return true;
+    }
+
+    final spaceBelowAnchor = effectiveHeight * (1.0 - _readingAnchorAlignment);
+    return elementHeight > spaceBelowAnchor * 0.85;
+  }
+
+  double _alignmentForViewportY(double viewportHeight, double targetY) {
+    if (viewportHeight <= 0) {
+      return _readingAnchorAlignment;
+    }
+    return (targetY / viewportHeight).clamp(0.0, 1.0);
+  }
+
+  double _visibleContentTop(double topInset) => topInset + kPaddingBelowAppBar;
+
+  double _elementTopInViewport(RenderBox elementBox, RenderBox viewportBox) {
+    return elementBox.localToGlobal(Offset.zero, ancestor: viewportBox).dy;
+  }
+
+  bool _isElementTopAboveVisibleArea(
+    double elementTop,
+    double topInset,
+  ) {
+    return elementTop < _visibleContentTop(topInset);
+  }
+
+  BuildContext? _activeHighlightedElementContext() {
+    final highlight = _pageManager.playbackHighlightNotifier.value;
+    final textIndex = highlight.activeTextIndex;
+    final elementIndex = highlight.activeElementIndex;
+    if (textIndex < 0 || elementIndex < 0) {
+      return null;
+    }
+
+    return getElementKey(
+      currentSectionIndex,
+      textIndex,
+      elementIndex,
+    ).currentContext;
+  }
+
+  ({double alignment, bool skipScroll}) _scrollTargetForElement(
+    BuildContext elementContext,
+  ) {
+    final metrics = _elementScrollMetrics(elementContext);
+    if (metrics == null) {
+      return (alignment: _readingAnchorAlignment, skipScroll: false);
+    }
+
+    final elementBox = metrics.element;
+    final viewportBox = metrics.viewport;
+    final viewportHeight = viewportBox.size.height;
+    final topInset = _scrollTopInset(elementContext);
+    final effectiveHeight =
+        (viewportHeight - topInset).clamp(1.0, viewportHeight);
+    final elementTop = _elementTopInViewport(elementBox, viewportBox);
+
+    final targetTopY = _isLargeTextElement(elementBox, viewportBox, topInset)
+        ? topInset + effectiveHeight * ReadingAnchorPresets.highAlignment + 32.0
+        : topInset + effectiveHeight * _readingAnchorAlignment;
+    final isTopAboveVisibleArea =
+        _isElementTopAboveVisibleArea(elementTop, topInset);
+    final elementBottom = elementTop + elementBox.size.height;
+    final isBelowReadingAnchor = elementTop > targetTopY + 4.0;
+    final isBelowVisibleViewport =
+        elementBottom > viewportHeight - kPaddingBelowAppBar;
+    final isAlreadyAtOrAboveAnchor = !isTopAboveVisibleArea &&
+        !isBelowReadingAnchor &&
+        !isBelowVisibleViewport &&
+        elementTop <= targetTopY;
+
+    return (
+      alignment: _alignmentForViewportY(viewportHeight, targetTopY),
+      skipScroll: isAlreadyAtOrAboveAnchor,
+    );
+  }
+
+  void _scrollElementToTarget(
+    BuildContext elementContext, {
+    bool force = false,
+    bool immediate = false,
+  }) {
+    final target = _scrollTargetForElement(elementContext);
+    if (!force && target.skipScroll) {
+      return;
+    }
+
+    Scrollable.ensureVisible(
+      elementContext,
+      alignment: target.alignment,
+      duration: immediate
+          ? Duration.zero
+          : const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _maybeScheduleClippedAboveRecovery() {
+    if (!_isTextAutoScrollEnabled ||
+        _pageManager.playButtonNotifier.value != ButtonState.playing ||
+        _model.displayAudioPage) {
+      _clippedAboveDebounce?.cancel();
+      _clippedAboveDebounce = null;
+      return;
+    }
+
+    if (_clippedAboveDebounce?.isActive == true) {
+      return;
+    }
+
+    final elementContext = _activeHighlightedElementContext();
+    if (elementContext == null) {
+      return;
+    }
+
+    final metrics = _elementScrollMetrics(elementContext);
+    if (metrics == null) {
+      return;
+    }
+
+    final topInset = _scrollTopInset(elementContext);
+    final elementTop =
+        _elementTopInViewport(metrics.element, metrics.viewport);
+    if (!_isElementTopAboveVisibleArea(elementTop, topInset)) {
+      return;
+    }
+
+    _clippedAboveDebounce = Timer(_clippedAboveRecoverDelay, () {
+      _clippedAboveDebounce = null;
+      _recoverIfActiveElementClippedAbove();
+    });
+  }
+
+  void _recoverIfActiveElementClippedAbove() {
+    if (!_isTextAutoScrollEnabled ||
+        _pageManager.playButtonNotifier.value != ButtonState.playing ||
         _model.displayAudioPage) {
       return;
     }
 
-    final controller = _getActiveScrollController();
-    if (controller == null || !controller.hasClients) {
+    final elementContext = _activeHighlightedElementContext();
+    if (elementContext == null) {
       return;
     }
 
-    if (currentPlayingTextIndex <= 0) {
-      controller.animateTo(
-        0.0,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOut,
-      );
+    final metrics = _elementScrollMetrics(elementContext);
+    if (metrics == null) {
       return;
     }
 
-    final blockContext =
-        getTextKey(currentSectionIndex, currentPlayingTextIndex).currentContext;
-    if (blockContext != null) {
-      Scrollable.ensureVisible(
-        blockContext,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.ease,
-        alignment: 0.15,
-      );
+    final topInset = _scrollTopInset(elementContext);
+    final elementTop =
+        _elementTopInViewport(metrics.element, metrics.viewport);
+    if (!_isElementTopAboveVisibleArea(elementTop, topInset)) {
+      return;
+    }
+
+    _scrollElementToTarget(elementContext);
+  }
+
+  bool get _isTextAutoScrollEnabled => FFAppState().textAutoScrollEnabled;
+
+  void _onReadingScrollSettingsChanged() {
+    if (!_isTextAutoScrollEnabled) {
+      _clippedAboveDebounce?.cancel();
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _resetScrollCursor();
+      _onHighlightCursorChanged();
+    });
+  }
+
+  void _scheduleScrollAfterSwitchingToText() {
+    _resetScrollCursor();
+    if (!_isTextAutoScrollEnabled) {
+      return;
+    }
+    _retryAlignActiveElementAfterShowingText(0);
+  }
+
+  void _retryAlignActiveElementAfterShowingText(int attempt) {
+    if (attempt > 12 || !mounted || _model.displayAudioPage) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _model.displayAudioPage) {
+        return;
+      }
+
+      final elementContext = _activeHighlightedElementContext();
+      if (elementContext == null) {
+        _retryAlignActiveElementAfterShowingText(attempt + 1);
+        return;
+      }
+
+      _scrollElementToTarget(elementContext, force: true);
+      final highlight = _pageManager.playbackHighlightNotifier.value;
+      if (highlight.activeTextIndex >= 0 && highlight.activeElementIndex >= 0) {
+        _scrollCursor = (
+          highlight.activeTextIndex,
+          highlight.activeElementIndex,
+        );
+      }
+    });
+  }
+
+  void _scrollToActiveElementOnSelection({int attempt = 0}) {
+    if (!_isTextAutoScrollEnabled || _model.displayAudioPage) {
+      return;
+    }
+
+    final elementContext = _activeHighlightedElementContext();
+    if (elementContext == null) {
+      if (attempt < 8) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _scrollToActiveElementOnSelection(attempt: attempt + 1);
+          }
+        });
+      }
+      return;
+    }
+
+    _scrollElementToTarget(elementContext);
+  }
+
+  void _scrollOnElementSelected() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _scrollToActiveElementOnSelection();
+    });
+  }
+
+  void _onHighlightCursorChanged() {
+    if (!_isTextAutoScrollEnabled || _model.displayAudioPage) {
+      return;
+    }
+
+    final highlight = _pageManager.playbackHighlightNotifier.value;
+    final textIndex = highlight.activeTextIndex;
+    final elementIndex = highlight.activeElementIndex;
+    if (textIndex < 0 || elementIndex < 0) {
+      return;
+    }
+
+    if (textIndex != _scrollCursor.$1 || elementIndex != _scrollCursor.$2) {
+      _scrollCursor = (textIndex, elementIndex);
+      _clippedAboveDebounce?.cancel();
+      _clippedAboveDebounce = null;
+      _scrollOnElementSelected();
     }
   }
 
@@ -381,12 +724,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
       return;
     }
 
-    final activeIndex =
-        _pageManager.playbackHighlightNotifier.value.activeTextIndex;
-    if (activeIndex != currentPlayingTextIndex) {
-      currentPlayingTextIndex = activeIndex;
-      _scheduleScrollToActiveText();
-    }
+    _onHighlightCursorChanged();
+    _maybeScheduleClippedAboveRecovery();
   }
 
   @override
@@ -396,6 +735,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     _controlBarVisibility =
         widget.controlBarVisibilityNotifier ?? ValueNotifier(true);
     _controlBarVisibility.addListener(_onControlBarVisibilityChanged);
+    FFAppState().addListener(_onReadingScrollSettingsChanged);
 
     _model.flattenedSections = functions
         .flattenSectionsList(widget.sections!.toList())!
@@ -433,7 +773,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
 
   @override
   void dispose() {
-    _scrollDebounce?.cancel();
+    _clippedAboveDebounce?.cancel();
     _scrollbarHideTimer?.cancel();
     _isContentLoading.dispose();
     _model.maybeDispose();
@@ -441,6 +781,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     _pageManager.currentProgressNotifier
         .removeListener(onCurrentAudioTimeChanged);
     _controlBarVisibility.removeListener(_onControlBarVisibilityChanged);
+    FFAppState().removeListener(_onReadingScrollSettingsChanged);
     if (widget.controlBarVisibilityNotifier == null) {
       _controlBarVisibility.dispose();
     }
@@ -493,16 +834,21 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                   isAudioSynced: isAudioSynced,
                   initiallyExpanded: !isAudioSynced,
                   styles: styles,
+                  elementKeyFor: isAudioSynced
+                      ? (elementIndex) => getElementKey(
+                            currentSectionIndex,
+                            textIndex,
+                            elementIndex,
+                          )
+                      : null,
                   onSeekBlock: () async {
-                    currentPlayingTextIndex = textIndex;
                     await _pageManager.seek(Duration(seconds: text.startTime));
-                    _updatePlaybackHighlight();
+                    _scrollAfterSeek();
                   },
                   onSeekElement: (elementStartTime) async {
-                    currentPlayingTextIndex = textIndex;
                     final seekTime = text.startTime + elementStartTime;
                     await _pageManager.seek(Duration(seconds: seekTime));
-                    _updatePlaybackHighlight();
+                    _scrollAfterSeek();
                   },
                 );
               },
@@ -682,12 +1028,17 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                                 _model.currentSection?.texts.isNotEmpty ??
                                     false,
                             switchContent: () async {
-                              currentPlayingTextIndex = -1;
+                              final leavingAudioPage = _model.displayAudioPage;
                               _model.displayAudioPage =
                                   !_model.displayAudioPage;
                               FFAppState().isDisplayingAudio =
                                   _model.displayAudioPage;
                               safeSetState(() {});
+                              if (leavingAudioPage) {
+                                _scheduleScrollAfterSwitchingToText();
+                              } else {
+                                _resetScrollCursor();
+                              }
                             },
                             chooseChapter: () async {
                               final index =

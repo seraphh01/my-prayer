@@ -7,6 +7,7 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/form_field_controller.dart';
+import '/components/reading_text_scroll_settings.dart';
 import '/custom_code/actions/index.dart' as actions;
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -56,9 +57,14 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<FFAppState, (String, double, double)>(
-      selector: (_, state) =>
-          (state.fontFamily, state.fontSizeMultiplier, state.audioSpeed),
+    return Selector<FFAppState, (String, double, double, double, bool)>(
+      selector: (_, state) => (
+        state.fontFamily,
+        state.fontSizeMultiplier,
+        state.audioSpeed,
+        state.readingAnchorAlignment,
+        state.textAutoScrollEnabled,
+      ),
       builder: (context, _, __) {
         return Scaffold(
       key: scaffoldKey,
@@ -387,6 +393,27 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(1.0, 0.0, 0.0, 0.0),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).primaryBackground,
+                    border: Border.all(
+                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                      width: 1.0,
+                    ),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 16.0),
+                    child: ReadingTextScrollSettings(
+                      showTitle: true,
+                      showHint: true,
                     ),
                   ),
                 ),
