@@ -555,8 +555,10 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
 
     final hasAudio =
         flattenedSections.any((section) => section.audioUrl.isNotEmpty);
-    final documentsDir =
-        hasAudio ? await getApplicationDocumentsDirectory() : null;
+    // Local audio files are stored on device storage, which is unavailable on web.
+    final documentsDir = hasAudio && !isWeb
+        ? await getApplicationDocumentsDirectory()
+        : null;
     final fallbackAudioUrl = flattenedSections
         .map((section) => section.audioUrl)
         .firstWhere((url) => url.isNotEmpty, orElse: () => '');

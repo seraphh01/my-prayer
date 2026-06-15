@@ -48,6 +48,20 @@ class HomeAudioMiniPlayer extends StatelessWidget {
     return url.isNotEmpty;
   }
 
+  bool _hasPlaybackStarted() {
+    final playState = pageManager.playButtonNotifier.value;
+    final current = pageManager.currentProgressNotifier.value;
+    final processingState = pageManager.playBackStateNotifier.value;
+
+    if (playState == ButtonState.playing || playState == ButtonState.loading) {
+      return true;
+    }
+    if (current.inMilliseconds > 0) {
+      return true;
+    }
+    return processingState != AudioProcessingState.idle;
+  }
+
   Widget _buildArtwork(BuildContext context, MediaItem mediaItem) {
     final theme = FlutterFlowTheme.of(context);
     final artUri = mediaItem.artUri?.toString() ?? '';
@@ -177,9 +191,18 @@ class HomeAudioMiniPlayer extends StatelessWidget {
         }
 
         final mediaItem = queue[trackIndex];
-        final showProgress = _hasAudioUrl(mediaItem);
+        final hasAudio = _hasAudioUrl(mediaItem);
 
-        return Material(
+        return ListenableBuilder(
+          listenable: Listenable.merge([
+            pageManager.playButtonNotifier,
+            pageManager.currentProgressNotifier,
+            pageManager.playBackStateNotifier,
+          ]),
+          builder: (context, _) {
+            final showProgressBar = hasAudio && _hasPlaybackStarted();
+
+            return Material(
           color: Colors.transparent,
           child: Ink(
             decoration: BoxDecoration(
@@ -216,7 +239,7 @@ class HomeAudioMiniPlayer extends StatelessWidget {
                         _cardPaddingHorizontal,
                         _cardPaddingTop,
                         4.0,
-                        showProgress ? 0.0 : _cardPaddingBottom,
+                        showProgressBar ? 0.0 : _cardPaddingBottom,
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -256,7 +279,7 @@ class HomeAudioMiniPlayer extends StatelessWidget {
                               ],
                             ),
                           ),
-                          if (showProgress) _buildPlayButton(context),
+                          if (hasAudio) _buildPlayButton(context),
                           ValueListenableBuilder<ButtonState>(
                             valueListenable: pageManager.playButtonNotifier,
                             builder: (_, playState, __) {
@@ -280,7 +303,7 @@ class HomeAudioMiniPlayer extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (showProgress)
+                  if (showProgressBar)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         _cardPaddingHorizontal,
@@ -294,6 +317,8 @@ class HomeAudioMiniPlayer extends StatelessWidget {
               ),
             ),
           ),
+        );
+          },
         );
       },
     );

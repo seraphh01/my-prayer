@@ -96,7 +96,7 @@ class GetPrayersByDateGroupsCall {
 
     return ApiManager.instance.makeApiCall(
       callName: 'Get Prayers By Date Groups',
-      apiUrl: '$baseUrl/get_prayers_by_date_groups',
+      apiUrl: '$baseUrl/get_prayers_from_date_groups',
       callType: ApiCallType.GET,
       headers: {
         'apikey':

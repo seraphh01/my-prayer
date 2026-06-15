@@ -7,7 +7,7 @@ import '/backend/backend.dart';
 import '/backend/schema/structs/index.dart';
 
 import '/index.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
+import '/components/app_splash_screen.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
 export 'package:go_router/go_router.dart';
@@ -23,11 +23,33 @@ class AppStateNotifier extends ChangeNotifier {
   static AppStateNotifier? _instance;
   static AppStateNotifier get instance => _instance ??= AppStateNotifier._();
 
-  bool showSplashImage = false;
+  bool showSplashImage = true;
 
   void stopShowingSplashImage() {
     showSplashImage = false;
     notifyListeners();
+  }
+}
+
+class AppSplashGate extends StatelessWidget {
+  const AppSplashGate({
+    super.key,
+    required this.notifier,
+  });
+
+  final AppStateNotifier notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: notifier,
+      builder: (context, _) {
+        if (notifier.showSplashImage) {
+          return const AppSplashScreen();
+        }
+        return const HomePageWidget();
+      },
+    );
   }
 }
 
@@ -36,32 +58,16 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
       debugLogDiagnostics: true,
       refreshListenable: appStateNotifier,
       navigatorKey: appNavigatorKey,
-      errorBuilder: (context, state) => appStateNotifier.showSplashImage
-          ? Builder(
-              builder: (context) => Container(
-                color: FlutterFlowTheme.of(context).primary,
-                child: Image.asset(
-                  'assets/images/logo.jpg',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            )
-          : const HomePageWidget(),
+      errorBuilder: (context, state) => AppSplashGate(
+            notifier: appStateNotifier,
+          ),
       routes: [
         FFRoute(
           name: '_initialize',
           path: '/',
-          builder: (context, _) => appStateNotifier.showSplashImage
-              ? Builder(
-                  builder: (context) => Container(
-                    color: FlutterFlowTheme.of(context).primary,
-                    child: Image.asset(
-                      'assets/images/logo.jpg',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                )
-              : const HomePageWidget(),
+          builder: (context, _) => AppSplashGate(
+                notifier: appStateNotifier,
+              ),
         ),
         FFRoute(
           name: 'HomePage',

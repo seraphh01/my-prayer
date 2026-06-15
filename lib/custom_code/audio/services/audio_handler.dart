@@ -31,7 +31,7 @@ bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
 class MyAudioHandler extends BaseAudioHandler {
   final _player = AudioPlayer();
-  final _playlist = ConcatenatingAudioSource(children: []);
+  ConcatenatingAudioSource _playlist = ConcatenatingAudioSource(children: []);
 
   late final Future<void> _playlistReady;
   Future<void> _queueOperation = Future.value();
@@ -48,6 +48,10 @@ class MyAudioHandler extends BaseAudioHandler {
   }
 
   Future<void> _loadEmptyPlaylist() async {
+    if (kIsWeb) {
+      // just_audio_web mishandles an initially empty bound playlist; bind on first load.
+      return;
+    }
     try {
       await _player
           .setAudioSource(_playlist, preload: false)
@@ -260,12 +264,17 @@ class MyAudioHandler extends BaseAudioHandler {
     return _runQueueOperation(() async {
       await _playlistReady;
       await _preparePlayerForNewQueue();
-      _playlist.clear();
+      if (!kIsWeb) {
+        _playlist.clear();
+      }
       queue.value.clear();
 
       if (mediaItems.isEmpty) {
         queue.add([]);
         await _player.stop();
+        if (kIsWeb) {
+          _playlist = ConcatenatingAudioSource(children: []);
+        }
         return;
       }
 
@@ -282,6 +291,11 @@ class MyAudioHandler extends BaseAudioHandler {
           index,
           preload: shouldPreload,
         );
+        return;
+      }
+
+      if (kIsWeb) {
+        await _loadWebQueue(mediaItems, sources, index);
         return;
       }
 
@@ -323,6 +337,38 @@ class MyAudioHandler extends BaseAudioHandler {
     _publishDurationForCurrentItem();
 
     await _expandPlaylistSources(sources, start, end, generation);
+  }
+
+  Future<void> _loadWebQueue(
+    List<MediaItem> mediaItems,
+    List<AudioSource> sources,
+    int index,
+  ) async {
+    await _player.stop();
+    _playlist = ConcatenatingAudioSource(children: sources);
+    queue.add(mediaItems);
+
+    try {
+      await _player
+          .setAudioSource(
+            _playlist,
+            initialIndex: index,
+            preload: false,
+          )
+          .timeout(_setSourceTimeout);
+    } on TimeoutException {
+      await _player.stop();
+      await _player
+          .setAudioSource(
+            _playlist,
+            initialIndex: index,
+            preload: false,
+          )
+          .timeout(_setSourceTimeout);
+    }
+
+    mediaItem.add(mediaItems[index]);
+    _publishDurationForCurrentItem();
   }
 
   Future<void> _expandPlaylistSources(
@@ -478,7 +524,11 @@ class MyAudioHandler extends BaseAudioHandler {
   Future<void> resetQueue() async {
     await _runQueueOperation(() async {
       await _preparePlayerForNewQueue();
-      _playlist.clear();
+      if (kIsWeb) {
+        _playlist = ConcatenatingAudioSource(children: []);
+      } else {
+        _playlist.clear();
+      }
       queue.add([]);
       await _player.stop();
     });

@@ -9,6 +9,10 @@ Future<List<DateGroupStruct>> fetchPrayersForDate(
   DateTime date, {
   int hour = -1,
 }) async {
+  if (hour < 0) {
+    return fetchCalendarPrayersForDate(date);
+  }
+
   final selectedDate = DateTime(date.year, date.month, date.day);
   final response =
       await SuapabaseQueriesGroup.getPrayersByDateGroupsCall.call(
@@ -22,13 +26,137 @@ Future<List<DateGroupStruct>> fetchPrayersForDate(
     return [];
   }
 
-  final rawGroups = ((response.jsonBody ?? '').toList()
+  final rawGroups = parseRawDateGroups(response.jsonBody);
+
+  return mergeSimilarDateGroups(rawGroups);
+}
+
+/// Raw RPC rows without merging — for home screen hour-aware selection.
+Future<List<DateGroupStruct>> fetchRawPrayersForDate(
+  DateTime date, {
+  int hour = -1,
+}) async {
+  final selectedDate = DateTime(date.year, date.month, date.day);
+  final response =
+      await SuapabaseQueriesGroup.getPrayersByDateGroupsCall.call(
+    dayOfWeek: selectedDate.weekday,
+    month: selectedDate.month,
+    day: selectedDate.day,
+    specificDate: dateTimeFormat('yyyy-MM-dd', selectedDate),
+    hour: hour,
+  );
+  if (response.succeeded != true) {
+    return const [];
+  }
+
+  return parseRawDateGroups(response.jsonBody);
+}
+
+/// Hour-of-day scheduling groups (home “Pentru astăzi” only, not Calendar).
+bool isHourSlotDateGroup(DateGroupStruct group) {
+  if (group.hasHour()) {
+    return true;
+  }
+
+  final name = group.name.trim().toLowerCase();
+  return name == 'pentru momentul zilei';
+}
+
+/// Calendar view: hide hour-of-day sections, but keep every prayer for the day.
+List<DateGroupStruct> dayOnlyDateGroupsFromRaw(List<DateGroupStruct> rawGroups) {
+  final dayGroups = <DateGroupStruct>[];
+  final hourSlotPrayers = <PrayerStruct>[];
+
+  for (final group in rawGroups) {
+    if (isHourSlotDateGroup(group)) {
+      hourSlotPrayers.addAll(group.prayers);
+      continue;
+    }
+
+    if (group.prayers.isEmpty) {
+      continue;
+    }
+
+    dayGroups.add(
+      DateGroupStruct(
+        name: group.name,
+        description: group.description,
+        prayers: List<PrayerStruct>.from(group.prayers),
+      ),
+    );
+  }
+
+  if (hourSlotPrayers.isEmpty) {
+    return dayGroups;
+  }
+
+  final mergedHourPrayers = _dedupePrayersById(hourSlotPrayers);
+  if (dayGroups.isEmpty) {
+    return [
+      DateGroupStruct(
+        name: 'Rugăciunile din ziuă',
+        prayers: mergedHourPrayers,
+      ),
+    ];
+  }
+
+  final targetIndex = _primaryDayGroupIndex(dayGroups);
+  final target = dayGroups[targetIndex];
+  dayGroups[targetIndex] = DateGroupStruct(
+    name: target.name,
+    description: target.description,
+    prayers: _dedupePrayersById([
+      ...target.prayers,
+      ...mergedHourPrayers,
+    ]),
+  );
+
+  return dayGroups;
+}
+
+const _primaryDayGroupName = 'rugăciunile din ziuă';
+
+int _primaryDayGroupIndex(List<DateGroupStruct> dayGroups) {
+  final primaryIndex = dayGroups.indexWhere(
+    (group) => group.name.trim().toLowerCase() == _primaryDayGroupName,
+  );
+  return primaryIndex >= 0 ? primaryIndex : 0;
+}
+
+List<PrayerStruct> _dedupePrayersById(Iterable<PrayerStruct> prayers) {
+  final byId = <String, PrayerStruct>{};
+  for (final prayer in prayers) {
+    if (prayer.id.isEmpty) {
+      continue;
+    }
+    final existing = byId[prayer.id];
+    if (existing == null || prayer.sequence < existing.sequence) {
+      byId[prayer.id] = prayer;
+    }
+  }
+
+  return byId.values.toList()
+    ..sort((a, b) {
+      final bySequence = a.sequence.compareTo(b.sequence);
+      if (bySequence != 0) {
+        return bySequence;
+      }
+      return a.title.compareTo(b.title);
+    });
+}
+
+/// Calendar page: weekday/feast groups for the day; hour slots folded in, not listed separately.
+Future<List<DateGroupStruct>> fetchCalendarPrayersForDate(DateTime date) async {
+  final rawGroups = await fetchRawPrayersForDate(date);
+  return mergeSimilarDateGroups(dayOnlyDateGroupsFromRaw(rawGroups));
+}
+
+List<DateGroupStruct> parseRawDateGroups(dynamic jsonBody) {
+  return ((jsonBody ?? '').toList()
           .map<DateGroupStruct?>(DateGroupStruct.maybeFromMap)
           .toList() as Iterable<DateGroupStruct?>)
       .withoutNulls
       .toList();
-
-  return mergeSimilarDateGroups(rawGroups);
 }
 
 /// First prayer id from [date]'s calendar groups, optionally filtered by [hour].

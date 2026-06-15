@@ -9,6 +9,9 @@ import 'package:synchronized/synchronized.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import '/custom_code/prayer/reading_anchor_presets.dart';
 
+/// Set to `false` before release. When `true`, onboarding runs on every cold start.
+const kForceOnboarding = false;
+
 class FFAppState extends ChangeNotifier {
   static FFAppState _instance = FFAppState._internal();
 
@@ -43,9 +46,9 @@ class FFAppState extends ChangeNotifier {
               _readingAnchorAlignment;
     });
     await _safeInitAsync(() async {
-      final stored = await secureStorage.getBool('ff_textAutoScrollEnabled');
-      if (stored != null) {
-        _textAutoScrollEnabled = stored;
+      final storedRaw = await secureStorage.read(key: 'ff_textAutoScrollEnabled');
+      if (storedRaw != null) {
+        _textAutoScrollEnabled = storedRaw == 'true';
       }
     });
     await _safeInitAsync(() async {
@@ -97,9 +100,13 @@ class FFAppState extends ChangeNotifier {
       }
     });
     await _safeInitAsync(() async {
-      final stored = await secureStorage.getBool('ff_isFirstTime');
-      if (stored != null) {
-        _isFirstTime = stored;
+      if (kForceOnboarding) {
+        _isFirstTime = true;
+        return;
+      }
+      final storedRaw = await secureStorage.read(key: 'ff_isFirstTime');
+      if (storedRaw != null) {
+        _isFirstTime = storedRaw == 'true';
       } else {
         // Existing installs: skip onboarding if user already has data.
         final hasPriorUse = _favoritePrayers.isNotEmpty ||
@@ -134,6 +141,11 @@ class FFAppState extends ChangeNotifier {
   bool _isFirstTime = true;
   bool get isFirstTime => _isFirstTime;
   set isFirstTime(bool value) {
+    if (kForceOnboarding && !value) {
+      _isFirstTime = false;
+      notifyListeners();
+      return;
+    }
     _isFirstTime = value;
     secureStorage.setBool('ff_isFirstTime', value);
     notifyListeners();
@@ -413,7 +425,13 @@ extension FlutterSecureStorageExtensions on FlutterSecureStorage {
   Future<void> setString(String key, String value) async =>
       await writeSync(key: key, value: value);
 
-  Future<bool?> getBool(String key) async => (await read(key: key)) == 'true';
+  Future<bool?> getBool(String key) async {
+    final value = await read(key: key);
+    if (value == null) {
+      return null;
+    }
+    return value == 'true';
+  }
   Future<void> setBool(String key, bool value) async =>
       await writeSync(key: key, value: value.toString());
 

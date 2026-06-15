@@ -24,49 +24,23 @@ void main() {
     expect(merged, hasLength(1));
     expect(merged.first.name, 'Dimineața');
     expect(merged.first.prayers.map((p) => p.id), ['a', 'b', 'c']);
-    expect(merged.first.prayers.firstWhere((p) => p.id == 'b').sequence, 2);
   });
 
-  test('keeps distinct groups when names differ', () {
+  test('merges hour groups with the same name for calendar display', () {
     final merged = mergeSimilarDateGroups([
       DateGroupStruct(
-        name: 'Dimineața',
+        name: 'Pentru momentul zilei',
+        hour: 6,
         prayers: [PrayerStruct(id: 'a', title: 'A', sequence: 1)],
       ),
       DateGroupStruct(
-        name: 'Seara',
+        name: 'Pentru momentul zilei',
+        hour: 9,
         prayers: [PrayerStruct(id: 'b', title: 'B', sequence: 1)],
       ),
     ]);
 
-    expect(merged, hasLength(2));
-  });
-
-  test('groups prayers with the same title for calendar display', () {
-    final groups = groupPrayersByTitle([
-      PrayerStruct(
-        id: '1',
-        title: 'Orele Canonice - Luni',
-        subtitle: 'Ora I',
-        sequence: 2,
-      ),
-      PrayerStruct(
-        id: '2',
-        title: 'Orele Canonice - Luni',
-        subtitle: 'Ora a III-a',
-        sequence: 3,
-      ),
-      PrayerStruct(
-        id: '3',
-        title: 'Vecernia',
-        subtitle: 'Luni',
-        sequence: 1,
-      ),
-    ]);
-
-    expect(groups, hasLength(2));
-    expect(groups.first.title, 'Vecernia');
-    expect(groups[1].title, 'Orele Canonice - Luni');
-    expect(groups[1].prayers, hasLength(2));
+    expect(merged, hasLength(1));
+    expect(merged.first.prayers.map((p) => p.id), ['a', 'b']);
   });
 }

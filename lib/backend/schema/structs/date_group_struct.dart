@@ -9,10 +9,12 @@ class DateGroupStruct extends FFFirebaseStruct {
   DateGroupStruct({
     String? name,
     String? description,
+    int? hour,
     List<PrayerStruct>? prayers,
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _name = name,
         _description = description,
+        _hour = hour,
         _prayers = prayers,
         super(firestoreUtilData);
 
@@ -30,6 +32,13 @@ class DateGroupStruct extends FFFirebaseStruct {
 
   bool hasDescription() => _description != null;
 
+  // "hour" field.
+  int? _hour;
+  int? get hour => _hour;
+  set hour(int? val) => _hour = val;
+
+  bool hasHour() => _hour != null;
+
   // "prayers" field.
   List<PrayerStruct>? _prayers;
   List<PrayerStruct> get prayers => _prayers ?? const [];
@@ -44,6 +53,7 @@ class DateGroupStruct extends FFFirebaseStruct {
   static DateGroupStruct fromMap(Map<String, dynamic> data) => DateGroupStruct(
         name: data['name'] as String?,
         description: data['description'] as String?,
+        hour: castToType<int>(data['hour']),
         prayers: getStructList(
           data['prayers'],
           PrayerStruct.fromMap,
@@ -57,6 +67,7 @@ class DateGroupStruct extends FFFirebaseStruct {
   Map<String, dynamic> toMap() => {
         'name': _name,
         'description': _description,
+        'hour': _hour,
         'prayers': _prayers?.map((e) => e.toMap()).toList(),
       }.withoutNulls;
 
@@ -69,6 +80,10 @@ class DateGroupStruct extends FFFirebaseStruct {
         'description': serializeParam(
           _description,
           ParamType.String,
+        ),
+        'hour': serializeParam(
+          _hour,
+          ParamType.int,
         ),
         'prayers': serializeParam(
           _prayers,
@@ -87,6 +102,10 @@ class DateGroupStruct extends FFFirebaseStruct {
           data['description'],
           ParamType.String,
         ),
+        hour: deserializeParam(
+          data['hour'],
+          ParamType.int,
+        ),
         prayers: deserializeStructParam<PrayerStruct>(
           data['prayers'],
           ParamType.DataStruct,
@@ -104,16 +123,19 @@ class DateGroupStruct extends FFFirebaseStruct {
     return other is DateGroupStruct &&
         name == other.name &&
         description == other.description &&
+        hour == other.hour &&
         listEquality.equals(prayers, other.prayers);
   }
 
   @override
-  int get hashCode => const ListEquality().hash([name, description, prayers]);
+  int get hashCode =>
+      const ListEquality().hash([name, description, hour, prayers]);
 }
 
 DateGroupStruct createDateGroupStruct({
   String? name,
   String? description,
+  int? hour,
   Map<String, dynamic> fieldValues = const {},
   bool clearUnsetFields = true,
   bool create = false,
@@ -122,6 +144,7 @@ DateGroupStruct createDateGroupStruct({
     DateGroupStruct(
       name: name,
       description: description,
+      hour: hour,
       firestoreUtilData: FirestoreUtilData(
         clearUnsetFields: clearUnsetFields,
         create: create,

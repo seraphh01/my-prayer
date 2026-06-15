@@ -1,9 +1,7 @@
 import 'dart:async';
 
-import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/structs/index.dart';
-import '/custom_code/calendar/merge_date_groups.dart';
-import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/calendar/fetch_date_group_prayers.dart';
 
 class CalendarPrayersCache {
   final Map<String, List<DateGroupStruct>> _cache = {};
@@ -64,28 +62,7 @@ class CalendarPrayersCache {
   }
 
   Future<List<DateGroupStruct>> _fetch(DateTime date, String key) async {
-    final response =
-        await SuapabaseQueriesGroup.getPrayersByDateGroupsCall.call(
-      dayOfWeek: date.weekday,
-      month: date.month,
-      day: date.day,
-      specificDate: _formatDate(date),
-      hour: -1,
-    );
-
-    if (!(response.succeeded ?? true)) {
-      return const [];
-    }
-
-    final rawGroups = ((response.jsonBody ?? '')
-            .toList()
-            .map<DateGroupStruct?>(DateGroupStruct.maybeFromMap)
-            .toList() as Iterable<DateGroupStruct?>)
-        .withoutNulls
-        .toList()
-        .cast<DateGroupStruct>();
-
-    final merged = mergeSimilarDateGroups(rawGroups);
+    final merged = await fetchCalendarPrayersForDate(date);
     _cache[key] = merged;
     return merged;
   }

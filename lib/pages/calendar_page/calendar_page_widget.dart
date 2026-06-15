@@ -200,6 +200,7 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                   if (_model.dateGroups.isNotEmpty)
                     Expanded(
                       child: ListView.separated(
+                        key: const PageStorageKey<String>('calendar_prayers_list'),
                         padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
                         itemCount: _model.dateGroups.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 8.0),
@@ -309,6 +310,9 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
               dividerColor: Colors.transparent,
             ),
             child: ExpansionTile(
+              key: PageStorageKey<String>(
+                'calendar_prayer_group_${prayerGroup.title.hashCode}_${prayerGroup.prayers.first.id}',
+              ),
               tilePadding: const EdgeInsets.symmetric(horizontal: 4.0),
               childrenPadding: EdgeInsets.zero,
               title: Text(

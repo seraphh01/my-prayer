@@ -1,9 +1,11 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:my_prayer/custom_code/debug/simulated_clock.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/reminders/prayer_reminder_service.dart';
 import 'package:my_prayer/custom_code/reminders/reminder_navigation.dart';
 import 'package:my_prayer/custom_code/reminders/reminder_storage.dart';
 import 'package:my_prayer/custom_code/prayer/downloaded_prayer_repository.dart';
+import 'package:my_prayer/custom_code/splash/hide_html_splash.dart';
 import 'package:my_prayer/service_locator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -38,11 +40,13 @@ void main() async {
   await getIt<DownloadedPrayerRepository>().migrateLegacyEntriesIfNeeded(
     appState.downloadedPrayers,
   );
-  try {
+  if (!kIsWeb) {
+    try {
       await Permission.notification.request();
       await Permission.mediaLibrary.request();
-  } catch (e) {
+    } catch (e) {
       print('Error requesting permissions: $e');
+    }
   }
 
   if (!kIsWeb) {
@@ -84,7 +88,7 @@ class _MyAppState extends State<MyApp> {
   late AppStateNotifier _appStateNotifier;
   late GoRouter _router;
 
-  bool displaySplashImage = true;
+  static const Duration _splashMinimumDuration = Duration(milliseconds: 900);
 
   @override
   void initState() {
@@ -93,13 +97,16 @@ class _MyAppState extends State<MyApp> {
     getIt<PageManager>().init();
 
     _appStateNotifier = AppStateNotifier.instance;
-
-    // Future.delayed(const Duration(milliseconds: 500),
-    //     () => safeSetState(() => _appStateNotifier.stopShowingSplashImage()));
     _router = createRouter(_appStateNotifier);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       flushPendingReminderNavigation();
+      await Future<void>.delayed(_splashMinimumDuration);
+      if (!mounted) {
+        return;
+      }
+      hideHtmlSplashOverlay();
+      _appStateNotifier.stopShowingSplashImage();
     });
   }
 

@@ -186,6 +186,23 @@ T? castToType<T>(dynamic value) {
         return value.toInt() as T;
       }
       break;
+    case bool:
+      if (value is bool) {
+        return value as T;
+      }
+      if (value is num) {
+        return (value != 0) as T;
+      }
+      if (value is String) {
+        final normalized = value.toLowerCase();
+        if (normalized == 'true' || normalized == '1') {
+          return true as T;
+        }
+        if (normalized == 'false' || normalized == '0') {
+          return false as T;
+        }
+      }
+      break;
     default:
       break;
   }

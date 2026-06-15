@@ -1,41 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    Alternatively, build your application passing the --base-href parameter
-    specifying the new root path of your web app.
-
-    Fore more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
 
-  <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Rugaciuni și cântări - CMD">
-
-  
 
   <meta name="robots" content="noindex" />
 
-  <!-- Favicon -->
   <link rel="icon" href="logo-cmd-transparent-white.png" sizes="any"/>
-  
 
-  <!-- Open Graph & SEO tags -->
   <meta property="og:title" content="Congregația Surorilor Maicii Domnului" />
   <meta property="og:description" content="Congregația Surorilor Maicii Domnului" />
-  <meta property="og:image" content="/assets/assets/images/logo.jpg" /> 
+  <meta property="og:image" content="/assets/assets/images/logo.jpg" />
   <meta name="twitter:title" content="Congregația Surorilor Maicii Domnului" />
   <meta name="twitter:description" content="Congregația Surorilor Maicii Domnului" />
   <meta name="twitter:image" content="/assets/assets/images/logo.jpg" />
@@ -43,23 +24,67 @@
 
   <title> Congregația Surorilor Maicii Domnului </title>
   <meta name="description" content="Congregația Surorilor Maicii Domnului" />
-    
 
-  <!-- Status Bar color in Safari browser (iOS) and PWA -->
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffe5ad">
-  <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#121212">
+  <meta name="theme-color" content="#790822">
 
   <link rel="manifest" href="manifest.json">
-  
+
+  <style>
+    #flutter-loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      padding: 32px;
+      box-sizing: border-box;
+      background: linear-gradient(180deg, #790822 0%, #3c010c 100%);
+      color: #ffe5ad;
+      z-index: 9999;
+      transition: opacity 240ms ease;
+    }
+
+    #flutter-loading.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #flutter-loading img {
+      width: 96px;
+      height: 96px;
+      border-radius: 18px;
+      object-fit: cover;
+    }
+
+    #flutter-loading h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.25rem, 4vw, 1.75rem);
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.25;
+    }
+
+    #flutter-loading p {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1rem, 3.5vw, 1.25rem);
+      text-align: center;
+      line-height: 1.3;
+      opacity: 0.92;
+    }
+  </style>
 </head>
-<body>
-  
-  
-  
-  
-  
-  <script>
-    {{flutter_bootstrap_js}}
-  </script>
+<body style="margin:0;background:#790822;">
+  <div id="flutter-loading" aria-hidden="true">
+    <img src="splash_logo.jpg" alt="" width="96" height="96" />
+    <div>
+      <h1>Rugăciuni și cântări</h1>
+      <p>Congregația Surorilor Maicii Domnului</p>
+    </div>
+  </div>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

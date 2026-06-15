@@ -11,7 +11,9 @@ import 'package:my_prayer/custom_code/prayer/prayer_card_lines.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_content_cache.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_search_index.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_types_cache.dart';
+import 'package:my_prayer/custom_code/debug/simulated_clock.dart';
 import 'package:my_prayer/custom_code/recommended_prayer_picker.dart';
+import 'package:my_prayer/custom_code/calendar/filter_prayer_types.dart';
 import 'package:my_prayer/service_locator.dart';
 
 import '/components/home_audio_mini_player.dart';
@@ -37,10 +39,19 @@ class HomePageWidget extends StatefulWidget {
 }
 
 class _HomePageWidgetState extends State<HomePageWidget> {
+  static bool _onboardingLaunchScheduled = false;
   late HomePageModel _model;
 
   static const double _toolbarHeight = 60.0;
   static const double _searchBarHeight = 72.0;
+  static const double _homeSectionHorizontalPadding = 12.0;
+  static const double _homeSectionTopPadding = 12.0;
+  static const double _homeSectionInnerGap = 8.0;
+  static const double _homeCardGap = 12.0;
+  static const double _homeAcasaSubsectionGap = 12.0;
+  static const double _homeCatalogBreakTop = 8.0;
+  static const String _congregationTitle =
+      'Congregația Surorilor Maicii Domnului';
   double _headerExpandedHeightCache = 320.0;
   final _downloadManager = getIt<DownloadManager>();
   final _typesCache = getIt<PrayerTypesCache>();
@@ -236,51 +247,45 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     );
   }
 
-  Widget _buildHeaderTitleAndDate(BuildContext context) {
+  String _todayFormattedDate(BuildContext context) {
+    final dateLabel = dateTimeFormat(
+      'MMMMEEEEd',
+      effectiveNow(),
+      locale: FFLocalizations.of(context).languageCode,
+    );
+    
+    return dateLabel;
+  }
+
+  TextStyle _headerBrandingTextStyle(
+    BuildContext context, {
+    double fontSize = 22.0,
+  }) {
     final theme = FlutterFlowTheme.of(context);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AutoSizeText(
-          'Congregația Surorilor Maicii Domnului',
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          minFontSize: 12.0,
-          style: theme.titleMedium.override(
-            fontFamily: 'PlayBall',
-            color: theme.alternate,
-            fontSize: 24.0,
-            letterSpacing: 0.0,
-            shadows: const [
-              Shadow(
-                color: Color(0xFF1C1200),
-                offset: Offset(1.0, 1.0),
-                blurRadius: 2.0,
-              ),
-            ],
-            useGoogleFonts: false,
-          ),
-        ),
-        const SizedBox(height: 4.0),
-        Text(
-          dateTimeFormat(
-            'yMMMMEEEEd',
-            DateTime.fromMillisecondsSinceEpoch(
-              getCurrentTimestamp.millisecondsSinceEpoch,
-            ),
-            locale: FFLocalizations.of(context).languageCode,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: theme.titleSmall.override(
-                fontFamily: 'Inter',
-                color: theme.alternate,
-                letterSpacing: 0.0,
-              ),
+    return theme.titleMedium.override(
+      fontFamily: 'PlayBall',
+      color: theme.alternate,
+      fontSize: fontSize,
+      letterSpacing: 0.0,
+      shadows: const [
+        Shadow(
+          color: Color(0xFF1C1200),
+          offset: Offset(1.0, 1.0),
+          blurRadius: 2.0,
         ),
       ],
+      useGoogleFonts: false,
+    );
+  }
+
+  Widget _buildHeaderCongregationText(BuildContext context) {
+    return AutoSizeText(
+      _congregationTitle,
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      minFontSize: 12.0,
+      style: _headerBrandingTextStyle(context),
     );
   }
 
@@ -291,7 +296,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     final inTypeNav = _typeStack.isNotEmpty;
     final showCollapseToggle = !inTypeNav && !_searchActive;
     final isCollapsed = headerCollapsed && !inTypeNav;
-    final showExpandedLogo = !isCollapsed && !inTypeNav;
 
     return Container(
       width: double.infinity,
@@ -317,57 +321,48 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       headerCollapsed: headerCollapsed,
                     ),
                     const Spacer(),
+                    if (showCollapseToggle && isCollapsed)
+                      _buildHeaderCollapseToggle(
+                        context,
+                        isCollapsed: isCollapsed,
+                      ),
                     ..._buildToolbarActions(context, includeSearch: true),
                   ],
                 ),
               ),
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      16.0,
-                      0.0,
-                      16.0,
-                      showCollapseToggle ? 28.0 : 16.0,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildHeaderTitleAndDate(context),
-                        AnimatedSize(
-                          duration: _headerAnimationDuration,
-                          curve: Curves.easeInOutCubic,
-                          alignment: Alignment.topCenter,
-                          clipBehavior: Clip.none,
-                          child: showExpandedLogo
-                              ? Column(
-                                  key: const ValueKey('home-logo-expanded'),
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const SizedBox(height: 12.0),
-                                    _buildHeroLogo(_fixedLogoSize(context)),
-                                  ],
-                                )
-                              : const SizedBox(
-                                  key: ValueKey('home-logo-collapsed'),
-                                  width: double.infinity,
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (showCollapseToggle)
-                    Positioned(
-                      right: 12.0,
-                      bottom: 4.0,
-                      child: _buildHeaderCollapseToggle(
-                        context,
-                        isCollapsed: isCollapsed,
+              if (!inTypeNav)
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        16.0,
+                        0.0,
+                        16.0,
+                        showCollapseToggle && !isCollapsed ? 28.0 : 12.0,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildHeaderCongregationText(context),
+                          if (!isCollapsed) ...[
+                            const SizedBox(height: 12.0),
+                            _buildHeroLogo(_fixedLogoSize(context)),
+                          ],
+                        ],
                       ),
                     ),
-                ],
-              ),
+                    if (showCollapseToggle && !isCollapsed)
+                      Positioned(
+                        right: 12.0,
+                        bottom: 4.0,
+                        child: _buildHeaderCollapseToggle(
+                          context,
+                          isCollapsed: isCollapsed,
+                        ),
+                      ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -627,12 +622,14 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => HomePageModel());
-    _model.recommendedPrayerFuture = fetchRecommendedPrayer().then((result) {
-      final prayerId = result?.prayer.id;
-      if (prayerId != null && prayerId.isNotEmpty) {
-        getIt<PrayerContentCache>().prefetch(prayerId);
+    _model.todayPrayersFuture = fetchTodayPrayers().then((entries) {
+      for (final entry in entries) {
+        final prayerId = entry.prayer.id;
+        if (prayerId.isNotEmpty) {
+          getIt<PrayerContentCache>().prefetch(prayerId);
+        }
       }
-      return result;
+      return entries;
     });
     unawaited(_loadPrayerTypes());
     _scrollController.addListener(() {
@@ -692,7 +689,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       safeSetState(() {});
-      if (FFAppState().isFirstTime && mounted) {
+      if (FFAppState().isFirstTime &&
+          mounted &&
+          !_onboardingLaunchScheduled) {
+        _onboardingLaunchScheduled = true;
         context.pushNamed('OnboardingPage');
       }
     });
@@ -915,92 +915,31 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       if (_searchActive) _buildSearchSliverAppBar(context),
-                      Selector<FFAppState, SavedPrayerDataStruct>(
-                        selector: (_, state) => state.savedPrayer,
-                        builder: (context, savedPrayer, _) {
-                          final showBookmark = !_searchActive &&
-                              _typeStack.isEmpty &&
-                              savedPrayer.prayer != null &&
-                              savedPrayer.prayer!.id.isNotEmpty;
-                          if (!showBookmark) {
-                            return const SliverToBoxAdapter(
-                              child: SizedBox.shrink(),
-                            );
-                          }
-                          final prayer = savedPrayer.prayer!;
-                          final savedCard = savedPrayerCardContent(savedPrayer);
-
-                          return SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                16.0,
-                                8.0,
-                                16.0,
-                                0.0,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildHomeSectionLabel(
-                                    context,
-                                    'Continuă de unde ai rămas',
-                                  ),
-                                  const SizedBox(height: 8.0),
-                                  PrayerTypeCardWidget(
-                                    title: savedCard.$1,
-                                    subtitle: savedCard.$2,
-                                    leadingImageUrl: savedCard.$3,
-                                    trailingText: null,
-                                    trailingIcons:
-                                        _trailingIconsForPrayer(prayer),
-                                    onTap: () => unawaited(
-                                      _openSavedPrayer(context, savedPrayer),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
                       if (!_searchActive && _typeStack.isEmpty)
                         SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                              16.0,
-                              8.0,
-                              16.0,
-                              0.0,
-                            ),
-                            child: _buildHomeSectionLabel(
-                              context,
-                              'Rugăciuni și cântări',
-                            ),
-                          ),
+                          child: _buildContinueHomeSection(context),
+                        ),
+                      if (!_searchActive && _typeStack.isEmpty)
+                        SliverToBoxAdapter(
+                          child: _buildTodayHomeSection(context),
+                        ),
+                      if (!_searchActive && _typeStack.isEmpty)
+                        SliverToBoxAdapter(
+                          child: _buildHomeCatalogSectionLabel(context),
                         ),
                       SliverPadding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                          16.0,
-                          8.0,
-                          16.0,
+                        padding: EdgeInsetsDirectional.fromSTEB(
+                          _homeSectionHorizontalPadding,
+                          _homeSectionInnerGap,
+                          _homeSectionHorizontalPadding,
                           0.0,
                         ),
                         sliver: _buildPrayerTypesSliver(context),
                       ),
-                      SliverToBoxAdapter(
-                        child: _buildRecommendedPrayerSection(context),
-                      ),
-                      Selector<FFAppState, List<PrayerStruct>>(
-                        selector: (_, state) => state.favoritePrayers,
-                        builder: (context, favoritePrayers, _) {
-                          return SliverToBoxAdapter(
-                            child: _buildFavoritePrayersSection(
-                              context,
-                              favoritePrayers: favoritePrayers,
-                            ),
-                          );
-                        },
-                      ),
+                      if (!_searchActive && _typeStack.isEmpty)
+                        SliverToBoxAdapter(
+                          child: _buildFavoritesHomeSection(context),
+                        ),
                       SliverToBoxAdapter(
                         child: SizedBox(
                           height: _catalogScrollBottomPadding,
@@ -1250,6 +1189,249 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     );
   }
 
+  Widget _buildContinueHomeSection(BuildContext context) {
+    return Selector<FFAppState, SavedPrayerDataStruct>(
+      selector: (_, state) => state.savedPrayer,
+      builder: (context, savedPrayer, _) {
+        final section = _buildContinueSubsection(
+          context,
+          savedPrayer: savedPrayer,
+        );
+        if (section == null) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(
+            _homeSectionHorizontalPadding,
+            _homeSectionTopPadding,
+            _homeSectionHorizontalPadding,
+            0.0,
+          ),
+          child: section,
+        );
+      },
+    );
+  }
+
+  Widget _buildHomeCatalogSectionLabel(BuildContext context) {
+    return Padding(
+      padding: EdgeInsetsDirectional.fromSTEB(
+        _homeSectionHorizontalPadding,
+        _homeCatalogBreakTop,
+        _homeSectionHorizontalPadding,
+        0.0,
+      ),
+      child: _buildHomeSectionLabel(context, 'Rugăciuni și cântări'),
+    );
+  }
+
+  Widget _buildTodayHomeSection(BuildContext context) {
+    return Selector<FFAppState, SavedPrayerDataStruct>(
+      selector: (_, state) => state.savedPrayer,
+      builder: (context, savedPrayer, _) {
+        final prayerId = savedPrayer.prayer?.id;
+        final hasContinue = prayerId != null && prayerId.isNotEmpty;
+        final topPadding =
+            hasContinue ? _homeAcasaSubsectionGap : _homeSectionTopPadding;
+
+        return Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(
+            _homeSectionHorizontalPadding,
+            topPadding,
+            _homeSectionHorizontalPadding,
+            0.0,
+          ),
+          child: FutureBuilder<List<TodayPrayerEntry>>(
+            future: _model.todayPrayersFuture,
+            builder: (context, snapshot) {
+              return _buildTodaySubsection(context, snapshot);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFavoritesHomeSection(BuildContext context) {
+    return Selector<FFAppState, List<PrayerStruct>>(
+      selector: (_, state) => state.favoritePrayers,
+      builder: (context, favoritePrayers, _) {
+        if (favoritePrayers.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(
+            _homeSectionHorizontalPadding,
+            _homeAcasaSubsectionGap,
+            _homeSectionHorizontalPadding,
+            0.0,
+          ),
+          child: _buildFavoritesSubsection(
+            context,
+            favoritePrayers: favoritePrayers,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget? _buildContinueSubsection(
+    BuildContext context, {
+    required SavedPrayerDataStruct savedPrayer,
+  }) {
+    final prayer = savedPrayer.prayer;
+    if (prayer == null || prayer.id.isEmpty) {
+      return null;
+    }
+
+    final savedCard = savedPrayerCardContent(savedPrayer);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHomeSectionLabel(context, 'Continuă de unde ai rămas'),
+        SizedBox(height: _homeSectionInnerGap),
+        PrayerTypeCardWidget(
+          title: savedCard.$1,
+          subtitle: savedCard.$2,
+          leadingImageUrl: savedCard.$3,
+          trailingText: null,
+          trailingIcons: _trailingIconsForPrayer(prayer),
+          onTap: () => unawaited(_openSavedPrayer(context, savedPrayer)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFavoritesSubsection(
+    BuildContext context, {
+    required List<PrayerStruct> favoritePrayers,
+  }) {
+    final preview = favoritePrayers.take(3).toList();
+    for (final prayer in preview) {
+      if (prayer.id.isNotEmpty) {
+        getIt<PrayerContentCache>().prefetch(prayer.id);
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHomeSectionLabel(context, 'Favorite'),
+        SizedBox(height: _homeSectionInnerGap),
+        ...List.generate(preview.length, (index) {
+          final prayer = preview[index];
+          final cardLines = _prayerCardTitleAndSubtitle(prayer);
+          return Padding(
+            padding: EdgeInsets.only(top: index > 0 ? _homeCardGap : 0.0),
+            child: PrayerTypeCardWidget(
+              title: cardLines.$1,
+              subtitle: cardLines.$2,
+              trailingText: null,
+              trailingIcons: _trailingIconsForPrayer(prayer),
+              onTap: () => unawaited(_openPrayer(context, prayer.id)),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildTodaySubsection(
+    BuildContext context,
+    AsyncSnapshot<List<TodayPrayerEntry>> snapshot,
+  ) {
+    final theme = FlutterFlowTheme.of(context);
+
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTodaySectionLabel(context),
+          SizedBox(height: _homeSectionInnerGap),
+          Container(
+            height: 72.0,
+            decoration: BoxDecoration(
+              color: theme.alternate,
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: 20.0,
+              height: 20.0,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.0,
+                valueColor: AlwaysStoppedAnimation<Color>(theme.primary),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final entries = snapshot.data ?? const <TodayPrayerEntry>[];
+    if (entries.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTodaySectionLabel(context),
+          SizedBox(height: _homeSectionInnerGap),
+          Text(
+            'Nicio recomandare pentru astăzi. Deschide calendarul pentru rugăciunile zilei.',
+            style: theme.labelMedium.override(
+              fontFamily: 'Inter',
+              color: theme.alternate,
+              letterSpacing: 0.0,
+            ),
+          ),
+          SizedBox(height: _homeSectionInnerGap),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTodaySectionLabel(context),
+        SizedBox(height: _homeSectionInnerGap),
+        ...List.generate(entries.length, (index) {
+          final entry = entries[index];
+          final cardLines = _todayPrayerCardLines(entry);
+          return Padding(
+            padding: EdgeInsets.only(top: index > 0 ? _homeCardGap : 0.0),
+            child: PrayerTypeCardWidget(
+              title: cardLines.$1,
+              subtitle: cardLines.$2,
+              trailingText: null,
+              trailingIcons: entry.opensPrayerType
+                  ? const [Icons.chevron_right_rounded]
+                  : _trailingIconsForPrayer(entry.prayer),
+              onTap: () => unawaited(_openTodayPrayerEntry(context, entry)),
+            ),
+          );
+        }),
+        SizedBox(height: _homeSectionInnerGap),
+      ],
+    );
+  }
+
+  (String, String?) _todayPrayerCardLines(TodayPrayerEntry entry) {
+    if (entry.opensPrayerType) {
+      final typeTitle = entry.prayerTypeTitle?.trim();
+      final typeSubtitle = entry.prayerTypeSubtitle?.trim();
+      if (typeTitle != null &&
+          typeTitle.isNotEmpty &&
+          typeSubtitle != null &&
+          typeSubtitle.isNotEmpty &&
+          typeTitle != typeSubtitle) {
+        return (typeTitle, typeSubtitle);
+      }
+    }
+
+    return _prayerCardTitleAndSubtitle(entry.prayer);
+  }
+
   Widget _buildHomeSectionLabel(BuildContext context, String label) {
     return Align(
       alignment: AlignmentDirectional.centerStart,
@@ -1263,6 +1445,14 @@ class _HomePageWidgetState extends State<HomePageWidget> {
               fontWeight: FontWeight.w600,
             ),
       ),
+    );
+  }
+
+  Widget _buildTodaySectionLabel(BuildContext context) {
+    final dateLabel = _todayFormattedDate(context);
+    return _buildHomeSectionLabel(
+      context,
+      'Pentru astăzi · $dateLabel',
     );
   }
 
@@ -1342,163 +1532,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     FFAppState().savedPrayer = SavedPrayerDataStruct();
   }
 
-  Widget _buildFavoritePrayersSection(
-    BuildContext context, {
-    required List<PrayerStruct> favoritePrayers,
-  }) {
-    if (_searchActive || _typeStack.isNotEmpty || favoritePrayers.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final preview = favoritePrayers.take(3).toList();
-    for (final prayer in preview) {
-      if (prayer.id.isNotEmpty) {
-        getIt<PrayerContentCache>().prefetch(prayer.id);
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHomeSectionLabel(
-            context,
-            'Favorite',
-          ),
-          const SizedBox(height: 8.0),
-          ...List.generate(preview.length, (index) {
-            final prayer = preview[index];
-            final cardLines = _prayerCardTitleAndSubtitle(prayer);
-            return Padding(
-              padding: EdgeInsets.only(top: index > 0 ? 12.0 : 0.0),
-              child: PrayerTypeCardWidget(
-                title: cardLines.$1,
-                subtitle: cardLines.$2,
-                trailingText: null,
-                trailingIcons: _trailingIconsForPrayer(prayer),
-                onTap: () => unawaited(_openPrayer(context, prayer.id)),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecommendedPrayerSection(BuildContext context) {
-    if (_searchActive || _typeStack.isNotEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return FutureBuilder<RecommendedPrayerResult?>(
-      future: _model.recommendedPrayerFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
-            child: Container(
-              height: 72.0,
-              decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).alternate,
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-              alignment: Alignment.center,
-              child: SizedBox(
-                width: 20.0,
-                height: 20.0,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.0,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    FlutterFlowTheme.of(context).primary,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
-        final recommendation = snapshot.data;
-        if (recommendation == null) {
-          return Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHomeSectionLabel(
-                  context,
-                  'Pentru astăzi',
-                ),
-                const SizedBox(height: 8.0),
-                Text(
-                  'Nicio recomandare pentru astăzi. Deschide calendarul pentru rugăciunile zilei.',
-                  style: FlutterFlowTheme.of(context).labelMedium.override(
-                        fontFamily: 'Inter',
-                        color: FlutterFlowTheme.of(context).alternate,
-                        letterSpacing: 0.0,
-                      ),
-                ),
-                const SizedBox(height: 8.0),
-                TextButton.icon(
-                  onPressed: () => unawaited(
-                    context.pushNamed(
-                      'CalendarPage',
-                      extra: <String, dynamic>{
-                        kTransitionInfoKey: _drawerTransition,
-                      },
-                    ),
-                  ),
-                  icon: Icon(
-                    Icons.calendar_today_rounded,
-                    size: 18.0,
-                    color: FlutterFlowTheme.of(context).alternate,
-                  ),
-                  label: Text(
-                    'Deschide calendarul',
-                    style: FlutterFlowTheme.of(context).labelMedium.override(
-                          fontFamily: 'Inter',
-                          color: FlutterFlowTheme.of(context).alternate,
-                          letterSpacing: 0.0,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        final prayer = recommendation.prayer;
-        final cardLines = _prayerCardTitleAndSubtitle(prayer);
-
-        return Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHomeSectionLabel(
-                context,
-                'Pentru astăzi',
-              ),
-              const SizedBox(height: 8.0),
-              PrayerTypeCardWidget(
-                title: cardLines.$1,
-                subtitle: cardLines.$2,
-                trailingText: null,
-                trailingIcons: _trailingIconsForPrayer(prayer),
-                onTap: () async {
-                  _typeStack.clear();
-                  safeSetState(() {});
-                  await _openPrayer(context, prayer.id);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   List<IconData> _trailingIconsForPrayer(PrayerStruct prayer) {
     if (prayer.mode == PrayerMode.audioAndText) {
       return const [Icons.chevron_right_rounded];
@@ -1506,7 +1539,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     return [
       prayer.mode == PrayerMode.audioOnly
           ? Icons.audiotrack_rounded
-          : Icons.text_snippet_rounded,
+          : Icons.text_fields_rounded,
       Icons.chevron_right_rounded,
     ];
   }
@@ -1543,6 +1576,43 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
     _pageManager.playButtonNotifier.value = ButtonState.paused;
     FFAppState().currentPrayerId = '';
+  }
+
+  Future<void> _openTodayPrayerEntry(
+    BuildContext context,
+    TodayPrayerEntry entry,
+  ) async {
+    _typeStack.clear();
+    safeSetState(() {});
+
+    if (!entry.opensPrayerType) {
+      await _openPrayer(context, entry.prayer.id);
+      return;
+    }
+
+    final types = await _typesCache.load();
+    final allowedIds = entry.voicePrayers
+        .map((prayer) => prayer.id)
+        .where((id) => id.isNotEmpty)
+        .toSet();
+    final resolved = resolveTodayPrayerType(
+      types,
+      entry.voicePrayers,
+    );
+
+    if (resolved != null) {
+      _enterPrayerType(resolved.entryType);
+      return;
+    }
+
+    final filteredTypes = filterPrayerTypesForCalendar(types, allowedIds);
+
+    if (filteredTypes.isNotEmpty) {
+      _enterPrayerType(filteredTypes.first);
+      return;
+    }
+
+    await _openPrayer(context, entry.prayer.id);
   }
 
   Future<void> _openPrayer(BuildContext context, String prayerId) async {
