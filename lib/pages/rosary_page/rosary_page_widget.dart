@@ -66,6 +66,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   final _pageManager = getIt<PageManager>();
   List<PrayerSectionStruct> flattenedSections = [];
   final ScrollController _scrollController = ScrollController();
+
   /// When true, the app header and bottom audio/control bar are visible.
   final ValueNotifier<bool> _chromeVisible = ValueNotifier(true);
   final ValueNotifier<bool> _allowScroll = ValueNotifier(true);
@@ -196,7 +197,8 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     if (!_isAudioQueueReady()) {
       return;
     }
-    final maxIndex = flattenedSections.isEmpty ? 0 : flattenedSections.length - 1;
+    final maxIndex =
+        flattenedSections.isEmpty ? 0 : flattenedSections.length - 1;
     _pageManager.setTrackIndex(widget.page.clamp(0, maxIndex));
     if (widget.initialAudioTime > 0) {
       await _pageManager.seek(Duration(seconds: widget.initialAudioTime));
@@ -275,7 +277,9 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   }
 
   Future<void> _stopPreviousPrayerAudioIfNeeded() async {
-    if (widget.continueAudio) {
+    final canContinueAudio =
+        widget.continueAudio && FFAppState().currentPrayerId == widget.prayerId;
+    if (canContinueAudio) {
       return;
     }
 
@@ -293,15 +297,14 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
   }
 
   void _applyTrackIndexForOpen({required bool continuingExistingAudio}) {
-    final maxIndex = flattenedSections.isEmpty
-        ? 0
-        : flattenedSections.length - 1;
+    final maxIndex =
+        flattenedSections.isEmpty ? 0 : flattenedSections.length - 1;
     if (continuingExistingAudio && _pageManager.hasActiveQueue) {
       if (_isAudioActivelyPlaying()) {
         return;
       }
-      final currentIndex = _pageManager.trackIndexNotifier.value
-          .clamp(0, maxIndex);
+      final currentIndex =
+          _pageManager.trackIndexNotifier.value.clamp(0, maxIndex);
       if (_pageManager.trackIndexNotifier.value != currentIndex) {
         _pageManager.setTrackIndex(currentIndex);
       }
@@ -340,8 +343,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       if (!mounted) {
         return;
       }
-      _floatingControlsBackgroundOpacity.value =
-          _floatingBackgroundOpacityIdle;
+      _floatingControlsBackgroundOpacity.value = _floatingBackgroundOpacityIdle;
     });
   }
 
@@ -465,7 +467,8 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
             child: Container(
               width: 36.0,
               height: 36.0,
-              decoration: _floatingControlDecoration(context, backgroundOpacity),
+              decoration:
+                  _floatingControlDecoration(context, backgroundOpacity),
               child: Icon(
                 isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                 color: FlutterFlowTheme.of(context).primary,
@@ -556,15 +559,15 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     final hasAudio =
         flattenedSections.any((section) => section.audioUrl.isNotEmpty);
     // Local audio files are stored on device storage, which is unavailable on web.
-    final documentsDir = hasAudio && !isWeb
-        ? await getApplicationDocumentsDirectory()
-        : null;
+    final documentsDir =
+        hasAudio && !isWeb ? await getApplicationDocumentsDirectory() : null;
     final fallbackAudioUrl = flattenedSections
         .map((section) => section.audioUrl)
         .firstWhere((url) => url.isNotEmpty, orElse: () => '');
-    final localFallbackPath = documentsDir != null && fallbackAudioUrl.isNotEmpty
-        ? localAudioPathForUrl(fallbackAudioUrl, documentsDir)
-        : null;
+    final localFallbackPath =
+        documentsDir != null && fallbackAudioUrl.isNotEmpty
+            ? localAudioPathForUrl(fallbackAudioUrl, documentsDir)
+            : null;
 
     final mediaItems = flattenedSections.map((section) {
       final artUri = section.imageUrl.isNotEmpty
@@ -639,9 +642,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       await _stopPreviousPrayerAudioIfNeeded();
       FFAppState().currentPrayerId = widget.prayerId ?? '';
 
-      if (FFAppState()
-          .downloadedPrayers
-          .any((e) => e.id == widget.prayerId)) {
+      if (FFAppState().downloadedPrayers.any((e) => e.id == widget.prayerId)) {
         _model.currentPrayer =
             await getIt<DownloadedPrayerRepository>().loadFullPrayer(
           widget.prayerId!,
@@ -650,8 +651,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
           _prayerCache.seed(widget.prayerId!, _model.currentPrayer!);
         }
       } else {
-        _model.currentPrayer =
-            await _prayerCache.loadPrayer(widget.prayerId!);
+        _model.currentPrayer = await _prayerCache.loadPrayer(widget.prayerId!);
       }
 
       flattenedSections = functions.flattenSectionsList(
@@ -716,8 +716,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
 
   bool get _isTextMode => !_displayingAudio;
 
-  bool _showAppChrome(bool chromeVisible) =>
-      !_isTextMode || chromeVisible;
+  bool _showAppChrome(bool chromeVisible) => !_isTextMode || chromeVisible;
 
   bool _usePrimaryStatusBarFill(bool chromeVisible) =>
       _isTextMode || chromeVisible;
@@ -738,7 +737,10 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       left: 0,
       right: 0,
       height: height,
-      child: ColoredBox(color: _isTextMode && !_chromeVisible.value? FlutterFlowTheme.of(context).primaryBackground : FlutterFlowTheme.of(context).primary),
+      child: ColoredBox(
+          color: _isTextMode && !_chromeVisible.value
+              ? FlutterFlowTheme.of(context).primaryBackground
+              : FlutterFlowTheme.of(context).primary),
     );
   }
 
@@ -773,419 +775,514 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: ValueListenableBuilder<bool>(
-        valueListenable: _chromeVisible,
-        builder: (context, chromeVisible, child) {
-          final primaryStatusBar = _usePrimaryStatusBarFill(chromeVisible);
-          return AnnotatedRegion<SystemUiOverlayStyle>(
-            value: SystemUiOverlayStyle(
-              statusBarColor: Colors.transparent,
-              statusBarIconBrightness:
-                  primaryStatusBar ? Brightness.light : Brightness.dark,
-              statusBarBrightness:
-                  primaryStatusBar ? Brightness.dark : Brightness.light,
-            ),
-            child: child!,
-          );
-        },
-        child: Scaffold(
-        key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        body: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            ValueListenableBuilder<bool>(
-              valueListenable: _allowScroll,
-              builder: (context, allowScroll, child) {
-                return NotificationListener<ScrollNotification>(
-                  onNotification: _handleFloatingControlsScrollNotification,
-                  child: NestedScrollView(
-                  controller: _scrollController,
-                  physics: allowScroll
-                      ? const AlwaysScrollableScrollPhysics()
-                      : const NeverScrollableScrollPhysics(),
-                  floatHeaderSlivers: false,
-              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          valueListenable: _chromeVisible,
+          builder: (context, chromeVisible, child) {
+            final primaryStatusBar = _usePrimaryStatusBarFill(chromeVisible);
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness:
+                    primaryStatusBar ? Brightness.light : Brightness.dark,
+                statusBarBrightness:
+                    primaryStatusBar ? Brightness.dark : Brightness.light,
+              ),
+              child: child!,
+            );
+          },
+          child: Scaffold(
+            key: scaffoldKey,
+            backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+            body: Stack(
+              clipBehavior: Clip.none,
+              children: [
                 ValueListenableBuilder<bool>(
-                  valueListenable: _chromeVisible,
-                  builder: (context, chromeVisible, _) {
-                    if (!_showAppChrome(chromeVisible)) {
-                      return const SliverToBoxAdapter(
-                        child: SizedBox.shrink(),
-                      );
-                    }
-                    return SliverOverlapAbsorber(
-                      handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                        context,
-                      ),
-                      sliver: SliverAppBar(
-              backgroundColor: FlutterFlowTheme.of(context).primary,
-              automaticallyImplyLeading: false,
-              floating: false,
-              pinned: true,
-              snap: false,
-              leading: IconButton(
-                onPressed: () {
-                  context.goHomeReplacingStack();
-                },
-                icon: Icon(
-                  Icons.home_rounded,
-                  color: FlutterFlowTheme.of(context).alternate,
-                  size: 24.0,
-                ),
-                iconSize: 24.0,
-              ),
-              iconTheme:
-                  IconThemeData(color: FlutterFlowTheme.of(context).alternate),
-              title: Builder(
-                builder: (context) {
-                  final typography = PrayerTypography.of(context);
-                  final theme = FlutterFlowTheme.of(context);
-                  return AutoSizeText(
-                    valueOrDefault<String>(
-                      _model.currentPrayer?.title,
-                      '',
-                    ),
-                    textAlign: TextAlign.start,
-                    maxLines: 1,
-                    minFontSize: 16.0,
-                    style: typography
-                        .style(
-                          theme.headlineMedium,
-                          fontSize: 20.0,
-                          scaleFontSize: false,
-                        )
-                        .copyWith(
-                          color: theme.alternate,
-                          letterSpacing: 0.0,
-                        ),
-                  );
-                },
-              ),
-              actions: [
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    if (!FFAppState().isDeviceOnline && !isWeb)
-                      Container(
-                        width: 48.0,
-                        height: 48.0,
-                        decoration: const BoxDecoration(),
-                        child: AlignedTooltip(
-                          content: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Text(
-                              valueOrDefault<bool>(
-                                FFAppState()
-                                    .downloadedPrayers
-                                    .map((e) => e.id)
-                                    .toList()
-                                    .contains((widget.prayerId!)),
-                                false,
-                              )
-                                  ? 'Disponibilă în mod offline.'
-                                  : 'Nedisponibilă în mod offline.',
-                              style: PrayerTypography.of(context)
-                                  .style(
-                                    FlutterFlowTheme.of(context).bodyLarge,
-                                    scaleFontSize: false,
-                                  )
-                                  .copyWith(
-                                    color:
-                                        FlutterFlowTheme.of(context).primary,
-                                    letterSpacing: 0.0,
-                                  ),
-                            ),
-                          ),
-                          offset: 2.0,
-                          preferredDirection: AxisDirection.down,
-                          borderRadius: BorderRadius.circular(8.0),
-                          backgroundColor:
-                              FlutterFlowTheme.of(context).secondaryBackground,
-                          elevation: 4.0,
-                          tailBaseWidth: 24.0,
-                          tailLength: 12.0,
-                          waitDuration: const Duration(milliseconds: 100),
-                          showDuration: const Duration(milliseconds: 1500),
-                          triggerMode: TooltipTriggerMode.tap,
-                          child: Builder(
-                            builder: (context) {
-                              if (valueOrDefault<bool>(
-                                FFAppState()
-                                    .downloadedPrayers
-                                    .map((e) => e.id)
-                                    .toList()
-                                    .contains((widget.prayerId!)),
-                                false,
-                              )) {
-                                return Icon(
-                                  Icons.download_done_rounded,
-                                  color: FlutterFlowTheme.of(context).alternate,
-                                  size: 24.0,
-                                );
-                              } else {
-                                return Icon(
-                                  Icons.file_download_off_rounded,
-                                  color: FlutterFlowTheme.of(context).alternate,
-                                  size: 24.0,
+                  valueListenable: _allowScroll,
+                  builder: (context, allowScroll, child) {
+                    return NotificationListener<ScrollNotification>(
+                      onNotification: _handleFloatingControlsScrollNotification,
+                      child: NestedScrollView(
+                        controller: _scrollController,
+                        physics: allowScroll
+                            ? const AlwaysScrollableScrollPhysics()
+                            : const NeverScrollableScrollPhysics(),
+                        floatHeaderSlivers: false,
+                        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                          ValueListenableBuilder<bool>(
+                            valueListenable: _chromeVisible,
+                            builder: (context, chromeVisible, _) {
+                              if (!_showAppChrome(chromeVisible)) {
+                                return const SliverToBoxAdapter(
+                                  child: SizedBox.shrink(),
                                 );
                               }
-                            },
-                          ),
-                        ),
-                      ),
-                    Container(
-                      width: 48.0,
-                      height: 48.0,
-                      decoration: const BoxDecoration(),
-                      child: Stack(
-                        children: [
-                          Builder(
-                            builder: (context) => FlutterFlowIconButton(
-                              borderRadius: 8.0,
-                              buttonSize: 48.0,
-                              icon: Icon(
-                                Icons.more_vert_rounded,
-                                color: _downloadManager
-                                                .downloadStateNotifier.value !=
-                                            DownloadState.downloading &&
-                                        _downloadManager.downloadStateNotifier
-                                                .value !=
-                                            DownloadState.loading
-                                    ? FlutterFlowTheme.of(context).alternate
-                                    : Colors.transparent,
-                                size: 24.0,
-                              ),
-                              onPressed: () async {
-                                await showModalBottomSheet(
-                                  isScrollControlled: true,
+                              return SliverOverlapAbsorber(
+                                handle: NestedScrollView
+                                    .sliverOverlapAbsorberHandleFor(
+                                  context,
+                                ),
+                                sliver: SliverAppBar(
                                   backgroundColor:
-                                      FlutterFlowTheme.of(context).alternate,
-                                  enableDrag: false,
-                                  useSafeArea: true,
-                                  context: context,
-                                  builder: (context) {
-                                    return GestureDetector(
-                                      onTap: () {
-                                        FocusScope.of(context).unfocus();
-                                        FocusManager.instance.primaryFocus
-                                            ?.unfocus();
-                                      },
-                                      child: Padding(
-                                        padding:
-                                            MediaQuery.viewInsetsOf(context),
-                                        child: PrayerOptionsWidget(
-                                          prayer: _model.currentPrayer!,
-                                          enableDownloadButton: FFAppState()
-                                                  .isDeviceOnline &&
-                                              (!valueOrDefault<bool>(
-                                                FFAppState()
-                                                    .downloadedPrayers
-                                                    .map((e) => e.id)
-                                                    .contains(
-                                                        (widget.prayerId!)),
-                                                false,
-                                              )),
-                                          currentPageIndex: _pageManager
-                                              .trackIndexNotifier.value,
+                                      FlutterFlowTheme.of(context).primary,
+                                  automaticallyImplyLeading: false,
+                                  floating: false,
+                                  pinned: true,
+                                  snap: false,
+                                  leading: IconButton(
+                                    onPressed: () {
+                                      context.safePop();
+                                    },
+                                    icon: Icon(
+                                      Icons.arrow_back_rounded,
+                                      color: FlutterFlowTheme.of(context)
+                                          .alternate,
+                                      size: 24.0,
+                                    ),
+                                    iconSize: 24.0,
+                                  ),
+                                  iconTheme: IconThemeData(
+                                      color: FlutterFlowTheme.of(context)
+                                          .alternate),
+                                  title: Builder(
+                                    builder: (context) {
+                                      final typography =
+                                          PrayerTypography.of(context);
+                                      final theme =
+                                          FlutterFlowTheme.of(context);
+                                      return AutoSizeText(
+                                        valueOrDefault<String>(
+                                          _model.currentPrayer?.title,
+                                          '',
                                         ),
-                                      ),
-                                    );
-                                  },
-                                ).then((value) => safeSetState(
-                                    () => _model.pressedButton = value));
-
-                                if (_model.pressedButton == 'download') {
-                                  safeSetState(() {});
-                                  await _downloadManager.downloadPrayer(
-                                    context: context,
-                                    prayer: _model.currentPrayer!,
-                                  );
-                                } else if (_model.pressedButton == 'share') {
-                                  if (!isWeb) {
-                                    await SharePlus.instance.share(
-                                      ShareParams(
-                                        text:
-                                            'Descoperă rugăciunea „${_model.currentPrayer?.title}” în aplicația „Rugăciuni și Cântări - CMD”! \nDescarcă aplicația din  App Store sau Google Play: '
-                                            '\nhttps://play.google.com/store/apps/details?id=com.surorilecmd.rugaciunisicantari'
-                                            '\nhttps://apps.apple.com/app/rugaciunisicantaricmd/id6758237098',
-                                        subject: _model.currentPrayer?.title,
-                                        title:
-                                            'Descoperă „${_model.currentPrayer?.title}” în aplicația „Rugăciuni și Cântări - CMD”!',
-                                        sharePositionOrigin:
-                                            getWidgetBoundingBox(context),
-                                      ),
-                                    );
-                                  }
-                                } else if (_model.pressedButton == 'save') {
-                                  FFAppState().savedPrayer =
-                                      SavedPrayerDataStruct(
-                                    prayer: _model.currentPrayer,
-                                    page: _pageManager.trackIndexNotifier.value,
-                                    audioTime: _pageManager
-                                        .currentProgressNotifier
-                                        .value
-                                        .inSeconds,
-                                  );
-                                  ScaffoldMessenger.of(context)
-                                      .clearSnackBars();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Semnul de carte către ${_model.currentPrayer!.title.isNotEmpty ? '„${_model.currentPrayer!.title}” - ' : ''}„${flattenedSections.elementAtOrNull(_pageManager.trackIndexNotifier.value)?.title}” a fost salvat!',
-                                        style: PrayerTypography.of(context)
+                                        textAlign: TextAlign.start,
+                                        maxLines: 1,
+                                        minFontSize: 16.0,
+                                        style: typography
                                             .style(
-                                              FlutterFlowTheme.of(context)
-                                                  .labelMedium,
+                                              theme.headlineMedium,
+                                              fontSize: 20.0,
                                               scaleFontSize: false,
                                             )
                                             .copyWith(
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .alternate,
+                                              color: theme.alternate,
                                               letterSpacing: 0.0,
                                             ),
-                                      ),
-                                      duration:
-                                          const Duration(milliseconds: 5000),
-                                      backgroundColor:
-                                          FlutterFlowTheme.of(context).primary,
-                                      action: SnackBarAction(
-                                        label: 'Anulează',
-                                        textColor: FlutterFlowTheme.of(context)
-                                            .alternate,
-                                        onPressed: () async {
-                                          FFAppState().deleteSavedPrayer();
-                                          FFAppState().savedPrayer =
-                                              SavedPrayerDataStruct();
-                                        },
-                                      ),
+                                      );
+                                    },
+                                  ),
+                                  actions: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: [
+                                        if (!FFAppState().isDeviceOnline &&
+                                            !isWeb)
+                                          Container(
+                                            width: 48.0,
+                                            height: 48.0,
+                                            decoration: const BoxDecoration(),
+                                            child: AlignedTooltip(
+                                              content: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(4.0),
+                                                child: Text(
+                                                  valueOrDefault<bool>(
+                                                    FFAppState()
+                                                        .downloadedPrayers
+                                                        .map((e) => e.id)
+                                                        .toList()
+                                                        .contains(
+                                                            (widget.prayerId!)),
+                                                    false,
+                                                  )
+                                                      ? 'Disponibilă în mod offline.'
+                                                      : 'Nedisponibilă în mod offline.',
+                                                  style: PrayerTypography.of(
+                                                          context)
+                                                      .style(
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .bodyLarge,
+                                                        scaleFontSize: false,
+                                                      )
+                                                      .copyWith(
+                                                        color:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .primary,
+                                                        letterSpacing: 0.0,
+                                                      ),
+                                                ),
+                                              ),
+                                              offset: 2.0,
+                                              preferredDirection:
+                                                  AxisDirection.down,
+                                              borderRadius:
+                                                  BorderRadius.circular(8.0),
+                                              backgroundColor:
+                                                  FlutterFlowTheme.of(context)
+                                                      .secondaryBackground,
+                                              elevation: 4.0,
+                                              tailBaseWidth: 24.0,
+                                              tailLength: 12.0,
+                                              waitDuration: const Duration(
+                                                  milliseconds: 100),
+                                              showDuration: const Duration(
+                                                  milliseconds: 1500),
+                                              triggerMode:
+                                                  TooltipTriggerMode.tap,
+                                              child: Builder(
+                                                builder: (context) {
+                                                  if (valueOrDefault<bool>(
+                                                    FFAppState()
+                                                        .downloadedPrayers
+                                                        .map((e) => e.id)
+                                                        .toList()
+                                                        .contains(
+                                                            (widget.prayerId!)),
+                                                    false,
+                                                  )) {
+                                                    return Icon(
+                                                      Icons
+                                                          .download_done_rounded,
+                                                      color:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .alternate,
+                                                      size: 24.0,
+                                                    );
+                                                  } else {
+                                                    return Icon(
+                                                      Icons
+                                                          .file_download_off_rounded,
+                                                      color:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .alternate,
+                                                      size: 24.0,
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                        Container(
+                                          width: 48.0,
+                                          height: 48.0,
+                                          decoration: const BoxDecoration(),
+                                          child: Stack(
+                                            children: [
+                                              Builder(
+                                                builder: (context) =>
+                                                    FlutterFlowIconButton(
+                                                  borderRadius: 8.0,
+                                                  buttonSize: 48.0,
+                                                  icon: Icon(
+                                                    Icons.more_vert_rounded,
+                                                    color: _downloadManager
+                                                                    .downloadStateNotifier
+                                                                    .value !=
+                                                                DownloadState
+                                                                    .downloading &&
+                                                            _downloadManager
+                                                                    .downloadStateNotifier
+                                                                    .value !=
+                                                                DownloadState
+                                                                    .loading
+                                                        ? FlutterFlowTheme.of(
+                                                                context)
+                                                            .alternate
+                                                        : Colors.transparent,
+                                                    size: 24.0,
+                                                  ),
+                                                  onPressed: () async {
+                                                    await showModalBottomSheet(
+                                                      isScrollControlled: true,
+                                                      backgroundColor:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .alternate,
+                                                      enableDrag: false,
+                                                      useSafeArea: true,
+                                                      context: context,
+                                                      builder: (context) {
+                                                        return GestureDetector(
+                                                          onTap: () {
+                                                            FocusScope.of(
+                                                                    context)
+                                                                .unfocus();
+                                                            FocusManager
+                                                                .instance
+                                                                .primaryFocus
+                                                                ?.unfocus();
+                                                          },
+                                                          child: Padding(
+                                                            padding: MediaQuery
+                                                                .viewInsetsOf(
+                                                                    context),
+                                                            child:
+                                                                PrayerOptionsWidget(
+                                                              prayer: _model
+                                                                  .currentPrayer!,
+                                                              enableDownloadButton:
+                                                                  FFAppState()
+                                                                          .isDeviceOnline &&
+                                                                      (!valueOrDefault<
+                                                                          bool>(
+                                                                        FFAppState()
+                                                                            .downloadedPrayers
+                                                                            .map((e) =>
+                                                                                e.id)
+                                                                            .contains((widget.prayerId!)),
+                                                                        false,
+                                                                      )),
+                                                              currentPageIndex:
+                                                                  _pageManager
+                                                                      .trackIndexNotifier
+                                                                      .value,
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ).then((value) =>
+                                                        safeSetState(() => _model
+                                                                .pressedButton =
+                                                            value));
+
+                                                    if (_model.pressedButton ==
+                                                        'download') {
+                                                      safeSetState(() {});
+                                                      await _downloadManager
+                                                          .downloadPrayer(
+                                                        context: context,
+                                                        prayer: _model
+                                                            .currentPrayer!,
+                                                      );
+                                                    } else if (_model
+                                                            .pressedButton ==
+                                                        'share') {
+                                                      if (!isWeb) {
+                                                        await SharePlus.instance
+                                                            .share(
+                                                          ShareParams(
+                                                            text:
+                                                                'Descoperă rugăciunea „${_model.currentPrayer?.title}” în aplicația „Rugăciuni și Cântări - CMD”! \nDescarcă aplicația din  App Store sau Google Play: '
+                                                                '\nhttps://play.google.com/store/apps/details?id=com.surorilecmd.rugaciunisicantari'
+                                                                '\nhttps://apps.apple.com/app/rugaciunisicantaricmd/id6758237098',
+                                                            subject: _model
+                                                                .currentPrayer
+                                                                ?.title,
+                                                            title:
+                                                                'Descoperă „${_model.currentPrayer?.title}” în aplicația „Rugăciuni și Cântări - CMD”!',
+                                                            sharePositionOrigin:
+                                                                getWidgetBoundingBox(
+                                                                    context),
+                                                          ),
+                                                        );
+                                                      }
+                                                    } else if (_model
+                                                            .pressedButton ==
+                                                        'save') {
+                                                      FFAppState().savedPrayer =
+                                                          SavedPrayerDataStruct(
+                                                        prayer: _model
+                                                            .currentPrayer,
+                                                        page: _pageManager
+                                                            .trackIndexNotifier
+                                                            .value,
+                                                        audioTime: _pageManager
+                                                            .currentProgressNotifier
+                                                            .value
+                                                            .inSeconds,
+                                                      );
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .clearSnackBars();
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        SnackBar(
+                                                          content: Text(
+                                                            'Semnul de carte către ${_model.currentPrayer!.title.isNotEmpty ? '„${_model.currentPrayer!.title}” - ' : ''}„${flattenedSections.elementAtOrNull(_pageManager.trackIndexNotifier.value)?.title}” a fost salvat!',
+                                                            style: PrayerTypography
+                                                                    .of(context)
+                                                                .style(
+                                                                  FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .labelMedium,
+                                                                  scaleFontSize:
+                                                                      false,
+                                                                )
+                                                                .copyWith(
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .alternate,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                ),
+                                                          ),
+                                                          duration:
+                                                              const Duration(
+                                                                  milliseconds:
+                                                                      5000),
+                                                          backgroundColor:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .primary,
+                                                          action:
+                                                              SnackBarAction(
+                                                            label: 'Anulează',
+                                                            textColor:
+                                                                FlutterFlowTheme.of(
+                                                                        context)
+                                                                    .alternate,
+                                                            onPressed:
+                                                                () async {
+                                                              FFAppState()
+                                                                  .deleteSavedPrayer();
+                                                              FFAppState()
+                                                                      .savedPrayer =
+                                                                  SavedPrayerDataStruct();
+                                                            },
+                                                          ),
+                                                        ),
+                                                      );
+                                                    } else if (_model
+                                                            .pressedButton ==
+                                                        'clear_save') {
+                                                      FFAppState()
+                                                          .deleteSavedPrayer();
+                                                      FFAppState().savedPrayer =
+                                                          SavedPrayerDataStruct();
+                                                    } else if (_model
+                                                            .pressedButton ==
+                                                        'reminder') {
+                                                      final prayer =
+                                                          _model.currentPrayer;
+                                                      if (prayer != null) {
+                                                        await openPrayerReminderFlow(
+                                                          context,
+                                                          prayer: prayer,
+                                                        );
+                                                      }
+                                                    }
+
+                                                    safeSetState(() {});
+                                                  },
+                                                ),
+                                              ),
+                                              const Hero(
+                                                  tag: "downloadIndicator",
+                                                  child:
+                                                      DownloadProgressIndicator())
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                  ],
+                                  centerTitle: true,
+                                  toolbarHeight: _appBarToolbarHeight,
+                                  elevation: 0.0,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                        body: ValueListenableBuilder<bool>(
+                          valueListenable: _chromeVisible,
+                          builder: (context, chromeVisible, child) {
+                            return SafeArea(
+                              top: _isTextMode && !chromeVisible,
+                              bottom: false,
+                              child: child!,
+                            );
+                          },
+                          child: SizedBox(
+                            height: double.infinity,
+                            child: Builder(
+                              builder: (context) {
+                                if (prayerLoaded) {
+                                  return SectionsViewWidget(
+                                    sections: _model.currentPrayer?.sections,
+                                    prayerTitle: _model.currentPrayer?.title,
+                                    prayerSubtitle:
+                                        _model.currentPrayer?.subtitle,
+                                    controlBarVisibilityNotifier:
+                                        _chromeVisible,
+                                    allowScrollNotifier: _allowScroll,
                                   );
-                                } else if (_model.pressedButton ==
-                                    'clear_save') {
-                                  FFAppState().deleteSavedPrayer();
-                                  FFAppState().savedPrayer =
-                                      SavedPrayerDataStruct();
-                                } else if (_model.pressedButton == 'reminder') {
-                                  final prayer = _model.currentPrayer;
-                                  if (prayer != null) {
-                                    await openPrayerReminderFlow(
-                                      context,
-                                      prayer: prayer,
-                                    );
-                                  }
                                 }
 
-                                safeSetState(() {});
+                                return Align(
+                                  alignment:
+                                      const AlignmentDirectional(0.0, 0.0),
+                                  child: SizedBox(
+                                    width: 64.0,
+                                    height: 64.0,
+                                    child: custom_widgets
+                                        .CustomCircularProgressIndicator(
+                                      width: 64.0,
+                                      height: 64.0,
+                                      color:
+                                          FlutterFlowTheme.of(context).primary,
+                                    ),
+                                  ),
+                                );
                               },
                             ),
                           ),
-                          const Hero(
-                              tag: "downloadIndicator",
-                              child: DownloadProgressIndicator())
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-              centerTitle: true,
-              toolbarHeight: _appBarToolbarHeight,
-              elevation: 0.0,
-            ),
                     );
                   },
                 ),
-          ],
-          body: ValueListenableBuilder<bool>(
-            valueListenable: _chromeVisible,
-            builder: (context, chromeVisible, child) {
-              return SafeArea(
-                top: _isTextMode && !chromeVisible,
-                bottom: false,
-                child: child!,
-              );
-            },
-            child: SizedBox(
-              height: double.infinity,
-              child: Builder(
-                builder: (context) {
-                  if (prayerLoaded) {
-                    return SectionsViewWidget(
-                      sections: _model.currentPrayer?.sections,
-                      prayerTitle: _model.currentPrayer?.title,
-                      prayerSubtitle: _model.currentPrayer?.subtitle,
-                      controlBarVisibilityNotifier: _chromeVisible,
-                      allowScrollNotifier: _allowScroll,
-                    );
-                  }
-
-                  return Align(
-                    alignment: const AlignmentDirectional(0.0, 0.0),
-                    child: SizedBox(
-                      width: 64.0,
-                      height: 64.0,
-                      child: custom_widgets.CustomCircularProgressIndicator(
-                        width: 64.0,
-                        height: 64.0,
-                        color: FlutterFlowTheme.of(context).primary,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-                ),
-                );
-              },
-            ),
-            if (prayerLoaded)
-              ValueListenableBuilder<bool>(
-                valueListenable: _chromeVisible,
-                builder: (context, chromeVisible, _) {
-                  return _buildPrimaryStatusBarFill(
-                    context,
-                    visible: _usePrimaryStatusBarFill(chromeVisible),
-                  );
-                },
-              ),
-            if (prayerLoaded && _isTextMode)
-              ValueListenableBuilder<int>(
-                valueListenable: _pageManager.trackIndexNotifier,
-                builder: (context, trackIndex, _) {
-                  final sectionHasAudio = _currentSectionHasAudio();
-                  return ValueListenableBuilder<bool>(
+                if (prayerLoaded)
+                  ValueListenableBuilder<bool>(
                     valueListenable: _chromeVisible,
                     builder: (context, chromeVisible, _) {
-
-                      final topInset = MediaQuery.viewPaddingOf(context).top;
-                      final top = topInset + (_chromeVisible.value ? 72.0 : 8.0);
-                      final showPlayPause = !chromeVisible && sectionHasAudio;
-                      return Positioned(
-                        top: top,
-                        right: 16.0,
-                        child: Material(
-                          type: MaterialType.transparency,
-                          elevation: 4.0,
-                          shadowColor: Colors.black26,
-                          borderRadius: BorderRadius.circular(18.0),
-                          child: _buildFloatingControlsOverlay(
-                            context,
-                            chromeVisible: chromeVisible,
-                            showPlayPause: showPlayPause,
-                          ),
-                        ),
+                      return _buildPrimaryStatusBarFill(
+                        context,
+                        visible: _usePrimaryStatusBarFill(chromeVisible),
                       );
                     },
-                  );
-                },
-              ),
-          ],
+                  ),
+                if (prayerLoaded && _isTextMode)
+                  ValueListenableBuilder<int>(
+                    valueListenable: _pageManager.trackIndexNotifier,
+                    builder: (context, trackIndex, _) {
+                      final sectionHasAudio = _currentSectionHasAudio();
+                      return ValueListenableBuilder<bool>(
+                        valueListenable: _chromeVisible,
+                        builder: (context, chromeVisible, _) {
+                          final topInset =
+                              MediaQuery.viewPaddingOf(context).top;
+                          final top =
+                              topInset + (_chromeVisible.value ? 72.0 : 8.0);
+                          final showPlayPause =
+                              !chromeVisible && sectionHasAudio;
+                          return Positioned(
+                            top: top,
+                            right: 16.0,
+                            child: Material(
+                              type: MaterialType.transparency,
+                              elevation: 4.0,
+                              shadowColor: Colors.black26,
+                              borderRadius: BorderRadius.circular(18.0),
+                              child: _buildFloatingControlsOverlay(
+                                context,
+                                chromeVisible: chromeVisible,
+                                showPlayPause: showPlayPause,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
-      ),
-    ),
     );
   }
 }

@@ -51,9 +51,8 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
   late final Animation<Offset> _introTitleSlide;
   late final Animation<double> _introCreditOpacity;
 
-  static const _appTitle = 'Rugăciuni și cântări';
-  static const _congregationTitle =
-      'Congregația Surorilor Maicii Domnului';
+  static const _appTitle = 'Rugăciuni și cântări Greco-Catolice';
+  static const _congregationTitle = 'Congregația Surorilor Maicii Domnului';
   static const _gradientEnd = Color(0xFF3C010C);
   static const _fontOptions = [
     'Crimson Pro',
@@ -145,11 +144,11 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
     _audioProgressListener = _syncAudioTextHighlight;
     _audioPlayStateListener = _syncAudioTextHighlight;
     getIt<PageManager>().currentProgressNotifier.addListener(
-      _audioProgressListener!,
-    );
+          _audioProgressListener!,
+        );
     getIt<PageManager>().playButtonNotifier.addListener(
-      _audioPlayStateListener!,
-    );
+          _audioPlayStateListener!,
+        );
   }
 
   void _syncAudioTextHighlight() {
@@ -190,7 +189,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
   }
 
   Future<void> _ensureAudioQueueReady() async {
-    if (_audioQueueReady || kIsWeb) {
+    if (_audioQueueReady) {
       return;
     }
     final preview = _audioPreview;
@@ -273,9 +272,8 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
     return Padding(
       padding: const EdgeInsets.only(bottom: 4.0),
       child: Material(
-        color: selected
-            ? theme.primary.withValues(alpha: 0.1)
-            : theme.alternate,
+        color:
+            selected ? theme.primary.withValues(alpha: 0.1) : theme.alternate,
         borderRadius: BorderRadius.circular(12.0),
         child: InkWell(
           borderRadius: BorderRadius.circular(12.0),
@@ -285,9 +283,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
             child: Row(
               children: [
                 Icon(
-                  selected
-                      ? Icons.check_circle_rounded
-                      : Icons.circle_outlined,
+                  selected ? Icons.check_circle_rounded : Icons.circle_outlined,
                   color: theme.primary,
                 ),
                 const SizedBox(width: 12.0),
@@ -299,6 +295,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                         lines.$1,
                         style: theme.titleSmall.override(
                           fontFamily: 'Merriweather',
+                          color: selected ? theme.primaryText : theme.primary,
                           letterSpacing: 0.0,
                         ),
                       ),
@@ -561,6 +558,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                       lines.$1,
                       style: theme.titleSmall.override(
                         fontFamily: 'Merriweather',
+                        color: theme.primaryText,
                         letterSpacing: 0.0,
                       ),
                     ),
@@ -742,8 +740,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
       return;
     }
 
-    final title =
-        prayer.title.isNotEmpty ? prayer.title : prayer.subtitle;
+    final title = prayer.title.isNotEmpty ? prayer.title : prayer.subtitle;
 
     final reminder = PrayerReminder(
       id: const Uuid().v4(),
@@ -833,6 +830,56 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
     );
   }
 
+  Widget _buildAppTitle(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final style = theme.headlineMedium.override(
+      fontFamily: 'Merriweather',
+      color: theme.alternate,
+      letterSpacing: 0.0,
+      useGoogleFonts: false,
+    );
+    const lineOne = 'Rugăciuni și Cântări';
+    const lineTwo = 'Greco-Catolice';
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final painter = TextPainter(
+          text: TextSpan(text: _appTitle, style: style),
+          maxLines: 1,
+          textDirection: Directionality.of(context),
+        )..layout(maxWidth: constraints.maxWidth);
+
+        if (!painter.didExceedMaxLines) {
+          return Text(
+            _appTitle,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            style: style,
+          );
+        }
+
+        return Column(
+          children: [
+            AutoSizeText(
+              lineOne,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              minFontSize: 20.0,
+              style: style,
+            ),
+            AutoSizeText(
+              lineTwo,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              minFontSize: 20.0,
+              style: style,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildIntroStep(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
 
@@ -842,68 +889,57 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-              FadeTransition(
-                opacity: _introLogoOpacity,
-                child: ScaleTransition(
-                  scale: _introLogoScale,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(28.0),
-                    child: Image.asset(
-                      'assets/images/logo.jpg',
-                      width: 168.0,
-                      height: 168.0,
-                      fit: BoxFit.cover,
-                    ),
+            FadeTransition(
+              opacity: _introLogoOpacity,
+              child: ScaleTransition(
+                scale: _introLogoScale,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28.0),
+                  child: Image.asset(
+                    'assets/images/logo.jpg',
+                    width: 168.0,
+                    height: 168.0,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
-              const SizedBox(height: 32.0),
-              FadeTransition(
-                opacity: _introTitleOpacity,
-                child: SlideTransition(
-                  position: _introTitleSlide,
-                  child: AutoSizeText(
-                    _appTitle,
+            ),
+            const SizedBox(height: 32.0),
+            FadeTransition(
+              opacity: _introTitleOpacity,
+              child: SlideTransition(
+                position: _introTitleSlide,
+                child: _buildAppTitle(context),
+              ),
+            ),
+            const SizedBox(height: 28.0),
+            FadeTransition(
+              opacity: _introCreditOpacity,
+              child: Column(
+                children: [
+                  Text(
+                    'Realizată de',
                     textAlign: TextAlign.center,
-                    maxLines: 2,
-                    minFontSize: 20.0,
-                    style: theme.headlineMedium.override(
-                      fontFamily: 'Merriweather',
-                      color: theme.alternate,
+                    style: theme.labelLarge.override(
+                      fontFamily: 'Inter',
+                      color: theme.alternate.withValues(alpha: 0.75),
                       letterSpacing: 0.0,
-                      useGoogleFonts: false,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 6.0),
+                  _buildCongregationTitle(context),
+                ],
               ),
-              const SizedBox(height: 28.0),
-              FadeTransition(
-                opacity: _introCreditOpacity,
-                child: Column(
-                  children: [
-                    Text(
-                      'Realizată de',
-                      textAlign: TextAlign.center,
-                      style: theme.labelLarge.override(
-                        fontFamily: 'Inter',
-                        color: theme.alternate.withValues(alpha: 0.75),
-                        letterSpacing: 0.0,
-                      ),
-                    ),
-                    const SizedBox(height: 6.0),
-                    _buildCongregationTitle(context),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
     );
   }
 
   Widget _buildWelcomeStep(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    
+
     const heading = 'Cuvânt de bun venit';
     const address =
         'Surorile Congregației Surorilor Maicii Domnului vă întâmpină cu bucurie și vă invită, pentru câteva clipe, la liniștea rugăciunii.';
@@ -916,7 +952,8 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
     const signOff =
         'Cu dragoste în Hristos,\nCongregația Surorilor Maicii Domnului';
 
-    TextStyle merriweatherBody({double? size, FontStyle? style, double alpha = 0.95}) {
+    TextStyle merriweatherBody(
+        {double? size, FontStyle? style, double alpha = 0.95}) {
       return theme.bodyMedium.override(
         fontFamily: 'Merriweather',
         color: theme.alternate.withValues(alpha: alpha),
@@ -932,63 +969,62 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
       padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 16.0),
       child: Column(
         children: [
-
-            const SizedBox(height: 12.0),
-            Text(
-              heading,
-              textAlign: TextAlign.center,
-              style: theme.headlineSmall.override(
-                fontFamily: 'Merriweather',
-                color: theme.alternate,
-                letterSpacing: 0.0,
-                useGoogleFonts: false,
-              ),
+          const SizedBox(height: 12.0),
+          Text(
+            heading,
+            textAlign: TextAlign.center,
+            style: theme.headlineSmall.override(
+              fontFamily: 'Merriweather',
+              color: theme.alternate,
+              letterSpacing: 0.0,
+              useGoogleFonts: false,
             ),
-            const SizedBox(height: 20.0),
-            Text(
-              address,
-              textAlign: TextAlign.center,
-              style: merriweatherBody(),
+          ),
+          const SizedBox(height: 20.0),
+          Text(
+            address,
+            textAlign: TextAlign.center,
+            style: merriweatherBody(),
+          ),
+          const SizedBox(height: 18.0),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: merriweatherBody(alpha: 0.92),
+          ),
+          const SizedBox(height: 18.0),
+          Text(
+            guide,
+            textAlign: TextAlign.center,
+            style: merriweatherBody(
+              style: FontStyle.italic,
+              alpha: 0.85,
             ),
-            const SizedBox(height: 18.0),
-            Text(
-              body,
-              textAlign: TextAlign.center,
-              style: merriweatherBody(alpha: 0.92),
+          ),
+          const SizedBox(height: 24.0),
+          Text(
+            blessing,
+            textAlign: TextAlign.center,
+            style: merriweatherBody(
+              style: FontStyle.italic,
             ),
-            const SizedBox(height: 18.0),
-            Text(
-              guide,
-              textAlign: TextAlign.center,
-              style: merriweatherBody(
-                style: FontStyle.italic,
-                alpha: 0.85,
-              ),
+          ),
+          const SizedBox(height: 20.0),
+          Text(
+            signOff,
+            textAlign: TextAlign.center,
+            style: theme.bodySmall.override(
+              fontFamily: 'Merriweather',
+              color: theme.alternate.withValues(alpha: 0.8),
+              letterSpacing: 0.0,
+              lineHeight: 1.5,
+              fontStyle: FontStyle.italic,
+              useGoogleFonts: false,
             ),
-            const SizedBox(height: 24.0),
-            Text(
-              blessing,
-              textAlign: TextAlign.center,
-              style: merriweatherBody(
-                style: FontStyle.italic,
-              ),
-            ),
-            const SizedBox(height: 20.0),
-            Text(
-              signOff,
-              textAlign: TextAlign.center,
-              style: theme.bodySmall.override(
-                fontFamily: 'Merriweather',
-                color: theme.alternate.withValues(alpha: 0.8),
-                letterSpacing: 0.0,
-                lineHeight: 1.5,
-                fontStyle: FontStyle.italic,
-                useGoogleFonts: false,
-              ),
-            ),
-            const SizedBox(height: 16.0),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16.0),
+        ],
+      ),
     );
   }
 
@@ -1052,7 +1088,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
         style: theme.bodyMedium.override(
           fontFamily: fontFamily,
           fontSize: baseSize,
-          color: theme.primaryText,
+          color: theme.primary,
           letterSpacing: 0.0,
           lineHeight: 1.55,
           useGoogleFonts: fontFamily != 'PlayBall',
@@ -1307,7 +1343,8 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                         borderRadius: BorderRadius.circular(12.0),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(12.0),
-                          onTap: () => setState(() => _selectedFavorite = prayer),
+                          onTap: () =>
+                              setState(() => _selectedFavorite = prayer),
                           child: Padding(
                             padding: const EdgeInsets.all(14.0),
                             child: Row(
@@ -1328,6 +1365,9 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                                         title,
                                         style: theme.titleSmall.override(
                                           fontFamily: 'Merriweather',
+                                          color: selected
+                                              ? theme.primaryText
+                                              : theme.primary,
                                           letterSpacing: 0.0,
                                         ),
                                       ),
@@ -1445,146 +1485,143 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
       context: context,
       icon: Icons.headphones_rounded,
       title: 'Ascultați rugăciunile',
-      body: 'Majoritatea rugăciunilor pot fi ascultate în aplicație. Apăsați redare pentru un scurt exemplu — primul mister din Rozariul de durere.',
+      body:
+          'Majoritatea rugăciunilor pot fi ascultate în aplicație. Apăsați redare pentru un scurt exemplu — primul mister din Rozariul de durere.',
       child: _loadingAudioPreview
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator(),
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          : preview == null || !preview.hasAudio
+              ? Text(
+                  'Nu am putut încărca exemplul audio acum. Puteți asculta rugăciuni din aplicație.',
+                  style: theme.bodyMedium.override(
+                    fontFamily: 'Inter',
+                    color: theme.secondaryText,
+                    letterSpacing: 0.0,
                   ),
                 )
-              : preview == null || !preview.hasAudio
-                  ? Text(
-                      'Nu am putut încărca exemplul audio acum. Puteți asculta rugăciuni din aplicație.',
-                      style: theme.bodyMedium.override(
-                        fontFamily: 'Inter',
-                        color: theme.secondaryText,
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: CachedSectionImage(
+                        imageUrl: preview.imageUrl,
+                        width: 132.0,
+                        height: 132.0,
+                        borderRadius: BorderRadius.circular(39.6),
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: typography.style(
+                        theme.headlineSmall,
+                        fontSize: sectionTitleSize,
+                        scaleFontSize: false,
                         letterSpacing: 0.0,
                       ),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Center(
-                          child: CachedSectionImage(
-                            imageUrl: preview.imageUrl,
-                            width: 132.0,
-                            height: 132.0,
-                            borderRadius: BorderRadius.circular(39.6),
-                          ),
-                        ),
-                        const SizedBox(height: 16.0),
-                        Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          style: typography.style(
-                            theme.headlineSmall,
-                            fontSize: sectionTitleSize,
-                            scaleFontSize: false,
-                            letterSpacing: 0.0,
-                          ),
-                        ),
-                        if (preview.subtitle.isNotEmpty) ...[
-                          const SizedBox(height: 6.0),
-                          Text(
-                            preview.subtitle,
-                            textAlign: TextAlign.center,
-                            style: typography.style(
-                              theme.bodyLarge,
-                              fontSize: sectionSubtitleSize,
-                              scaleFontSize: false,
-                              color: theme.secondaryText,
-                              fontStyle: FontStyle.italic,
-                              letterSpacing: 0.0,
-                            ),
-                          ),
-                        ],
-                        if (preview.previewText != null) ...[
-                          const SizedBox(height: 16.0),
-                          ValueListenableBuilder<ButtonState>(
-                            valueListenable:
-                                getIt<PageManager>().playButtonNotifier,
-                            builder: (context, buttonState, _) {
-                              final previewText = preview.previewText!;
-                              final textIndex =
-                                  preview.texts.indexOf(previewText);
-                              final isSynced = _audioQueueReady &&
-                                  buttonState == ButtonState.playing;
-
-                              return SectionTextBlockWidget(
-                                blockKey: ValueKey(
-                                  'onboarding_preview_text_$textIndex',
-                                ),
-                                text: previewText,
-                                textIndex: textIndex,
-                                highlightListenable: _audioHighlight,
-                                isAudioSynced: isSynced,
-                                initiallyExpanded: true,
-                                styles: PrayerTextStyles.of(context),
-                                onSeekBlock: () {},
-                                onSeekElement: (_) {},
-                              );
-                            },
-                          ),
-                        ],
-                        const SizedBox(height: 20.0),
-                        Center(
-                          child: ValueListenableBuilder<ButtonState>(
-                            valueListenable:
-                                getIt<PageManager>().playButtonNotifier,
-                            builder: (context, buttonState, _) {
-                              final isPlaying =
-                                  buttonState == ButtonState.playing;
-                              final isLoading =
-                                  buttonState == ButtonState.loading;
-
-                              return FilledButton.icon(
-                                onPressed: isLoading
-                                    ? null
-                                    : () => unawaited(_toggleOnboardingAudio()),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: theme.primary,
-                                  foregroundColor: theme.alternate,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 28.0,
-                                    vertical: 16.0,
-                                  ),
-                                ),
-                                icon: isLoading
-                                    ? SizedBox(
-                                        width: 20.0,
-                                        height: 20.0,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.0,
-                                          color: theme.alternate,
-                                        ),
-                                      )
-                                    : Icon(
-                                        isPlaying
-                                            ? Icons.pause_rounded
-                                            : Icons.play_arrow_rounded,
-                                      ),
-                                label: Text(
-                                  isPlaying ? 'Pauză' : 'Redare',
-                                  style: theme.titleSmall.override(
-                                    fontFamily: 'Inter',
-                                    color: theme.alternate,
-                                    letterSpacing: 0.0,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
                     ),
+                    if (preview.subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 6.0),
+                      Text(
+                        preview.subtitle,
+                        textAlign: TextAlign.center,
+                        style: typography.style(
+                          theme.bodyLarge,
+                          fontSize: sectionSubtitleSize,
+                          scaleFontSize: false,
+                          color: theme.secondaryText,
+                          fontStyle: FontStyle.italic,
+                          letterSpacing: 0.0,
+                        ),
+                      ),
+                    ],
+                    if (preview.previewText != null) ...[
+                      const SizedBox(height: 16.0),
+                      ValueListenableBuilder<ButtonState>(
+                        valueListenable:
+                            getIt<PageManager>().playButtonNotifier,
+                        builder: (context, buttonState, _) {
+                          final previewText = preview.previewText!;
+                          final textIndex = preview.texts.indexOf(previewText);
+                          final isSynced = _audioQueueReady &&
+                              buttonState == ButtonState.playing;
+
+                          return SectionTextBlockWidget(
+                            blockKey: ValueKey(
+                              'onboarding_preview_text_$textIndex',
+                            ),
+                            text: previewText,
+                            textIndex: textIndex,
+                            highlightListenable: _audioHighlight,
+                            isAudioSynced: isSynced,
+                            initiallyExpanded: true,
+                            styles: PrayerTextStyles.of(context),
+                            onSeekBlock: () {},
+                            onSeekElement: (_) {},
+                          );
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 20.0),
+                    Center(
+                      child: ValueListenableBuilder<ButtonState>(
+                        valueListenable:
+                            getIt<PageManager>().playButtonNotifier,
+                        builder: (context, buttonState, _) {
+                          final isPlaying = buttonState == ButtonState.playing;
+                          final isLoading = buttonState == ButtonState.loading;
+
+                          return FilledButton.icon(
+                            onPressed: isLoading
+                                ? null
+                                : () => unawaited(_toggleOnboardingAudio()),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: theme.primary,
+                              foregroundColor: theme.alternate,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 28.0,
+                                vertical: 16.0,
+                              ),
+                            ),
+                            icon: isLoading
+                                ? SizedBox(
+                                    width: 20.0,
+                                    height: 20.0,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.0,
+                                      color: theme.alternate,
+                                    ),
+                                  )
+                                : Icon(
+                                    isPlaying
+                                        ? Icons.pause_rounded
+                                        : Icons.play_arrow_rounded,
+                                  ),
+                            label: Text(
+                              isPlaying ? 'Pauză' : 'Redare',
+                              style: theme.titleSmall.override(
+                                fontFamily: 'Inter',
+                                color: theme.alternate,
+                                letterSpacing: 0.0,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
     );
   }
 
   Widget _buildClosingStep(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    const blessing =
-        'Vă dorim să aveți un timp binecuvântat de rugăciune!';
+    const blessing = 'Vă dorim să aveți un timp binecuvântat de rugăciune!';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
@@ -1604,28 +1641,24 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
               color: theme.alternate,
               letterSpacing: 0.0,
               useGoogleFonts: false,
-            ),),
-      
+            ),
+          ),
           const SizedBox(height: 20.0),
           _buildClosingDiscoverRow(
+              context: context,
+              leading: _buildClosingIconBadge(
+                context,
+                Icons.calendar_today_rounded,
+              ),
+              title: 'Calendar',
+              subtitle: 'Rugăciunile din fiecare zi'),
+          _buildClosingDiscoverRow(
             context: context,
-            leading: _buildClosingIconBadge(
-              context,
-              Icons.calendar_today_rounded,
-            ),
-            title: 'Calendar',
-            subtitle: 'Rugăciunile din fiecare zi'
-          ),
-                    _buildClosingDiscoverRow(
-            context: context,
-            leading: _buildClosingIconBadge(
-              context,
-              Icons.download_rounded
-            ),
+            leading: _buildClosingIconBadge(context, Icons.download_rounded),
             title: 'Descărcări',
-            subtitle: 'Descarcă rugăciuni și cântări pentru a le asculta offline.',
+            subtitle:
+                'Descarcă rugăciuni și cântări pentru a le asculta offline.',
           ),
-
           _buildClosingDiscoverRow(
             context: context,
             leading: _buildClosingIconBadge(
@@ -1633,6 +1666,15 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
               Icons.edit_note_rounded,
             ),
             title: 'Jurnal de rugăciune',
+          ),
+          _buildClosingDiscoverRow(
+            context: context,
+            leading: _buildClosingIconBadge(
+              context,
+              Icons.auto_stories_rounded,
+            ),
+            title: 'Ghid de rugăciune',
+            subtitle: 'Află pe scurt sensul și folosul fiecărei rugăciuni.',
           ),
           _buildClosingDiscoverRow(
             context: context,
@@ -1674,6 +1716,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
           final body = SafeArea(
             child: Column(
               children: [
+                const SizedBox(height: 8.0),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Row(
@@ -1758,9 +1801,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: i == _page
-                            ? (onGradientPage
-                                ? theme.alternate
-                                : theme.primary)
+                            ? (onGradientPage ? theme.alternate : theme.primary)
                             : (onGradientPage
                                 ? theme.alternate.withValues(alpha: 0.35)
                                 : theme.secondaryBackground),

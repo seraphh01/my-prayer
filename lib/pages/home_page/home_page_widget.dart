@@ -50,6 +50,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   static const double _homeCardGap = 12.0;
   static const double _homeAcasaSubsectionGap = 12.0;
   static const double _homeCatalogBreakTop = 8.0;
+  static const String _appTitle = 'Rugăciuni și cântări Greco-Catolice';
+  static const String _appTitleShort = 'Rugăciuni și cântări';
   static const String _congregationTitle =
       'Congregația Surorilor Maicii Domnului';
   double _headerExpandedHeightCache = 320.0;
@@ -75,12 +77,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
   bool get _searchActive => _searchPinned || _searchQuery.isNotEmpty;
 
-  bool get _showAudioPlayer =>
-      !_searchPinned && _searchQuery.isEmpty;
+  bool get _showAudioPlayer => !_searchPinned && _searchQuery.isEmpty;
 
   /// Trailing space at the end of the catalog scroll.
-  double get _catalogScrollBottomPadding =>
-      _searchActive ? 16.0 : 24.0;
+  double get _catalogScrollBottomPadding => _searchActive ? 16.0 : 24.0;
 
   Future<void> _loadPrayerTypes({bool forceRefresh = false}) async {
     if (mounted) {
@@ -253,7 +253,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       effectiveNow(),
       locale: FFLocalizations.of(context).languageCode,
     );
-    
+
     return dateLabel;
   }
 
@@ -279,13 +279,31 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     );
   }
 
+  Widget _buildHeaderAppTitleText(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return AutoSizeText(
+      _appTitle,
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      minFontSize: 14.0,
+      style: theme.titleLarge.override(
+        fontFamily: 'Merriweather',
+        color: theme.alternate,
+        fontSize: 21.0,
+        letterSpacing: 0.0,
+        useGoogleFonts: false,
+      ),
+    );
+  }
+
   Widget _buildHeaderCongregationText(BuildContext context) {
     return AutoSizeText(
       _congregationTitle,
       textAlign: TextAlign.center,
       maxLines: 2,
-      minFontSize: 12.0,
-      style: _headerBrandingTextStyle(context),
+      minFontSize: 10.0,
+      style: _headerBrandingTextStyle(context, fontSize: 16.0),
     );
   }
 
@@ -344,10 +362,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildHeaderCongregationText(context),
+                          _buildHeaderAppTitleText(context),
                           if (!isCollapsed) ...[
                             const SizedBox(height: 12.0),
                             _buildHeroLogo(_fixedLogoSize(context)),
+                            const SizedBox(height: 10.0),
+                            _buildHeaderCongregationText(context),
                           ],
                         ],
                       ),
@@ -441,7 +461,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Row(
             children: [
-              Icon(Icons.arrow_back_rounded, color: theme.alternate, size: 24.0),
+              Icon(Icons.arrow_back_rounded,
+                  color: theme.alternate, size: 24.0),
               const SizedBox(width: 8.0),
               Expanded(
                 child: Text(
@@ -464,13 +485,17 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
   Widget _buildSelectedTypeList(BuildContext context) {
     final currentType = _typeStack.last;
+    final sortedPrayers = currentType.prayers.toList()
+      ..sort((a, b) => a.sequence.compareTo(b.sequence));
+    final sortedSubtypes = currentType.subtypes.toList()
+      ..sort((a, b) => a.sequence.compareTo(b.sequence));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildTypeNavBackRow(context),
-        if (currentType.prayers.isNotEmpty)
-          ...currentType.prayers.map(
+        if (sortedPrayers.isNotEmpty)
+          ...sortedPrayers.map(
             (prayer) => Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: PrayerTypeCardWidget(
@@ -488,8 +513,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
               ),
             ),
           ),
-        if (currentType.subtypes.isNotEmpty)
-          ...currentType.subtypes.map(
+        if (sortedSubtypes.isNotEmpty)
+          ...sortedSubtypes.map(
             (subtype) => Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: PrayerTypeCardWidget(
@@ -512,8 +537,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   }
 
   Future<void> _openPrayerFromTypeNav(String prayerId) async {
-    _typeStack.clear();
-    safeSetState(() {});
     getIt<PrayerContentCache>().prefetch(prayerId);
     await _prepareToOpenPrayer();
     await context.pushNamed(
@@ -689,9 +712,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       safeSetState(() {});
-      if (FFAppState().isFirstTime &&
-          mounted &&
-          !_onboardingLaunchScheduled) {
+      if (FFAppState().isFirstTime && mounted && !_onboardingLaunchScheduled) {
         _onboardingLaunchScheduled = true;
         context.pushNamed('OnboardingPage');
       }
@@ -714,268 +735,271 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     _headerExpandedHeightCache = _headerExpandedHeight(context);
 
     return PopScope(
-      canPop: !_searchActive &&
-          _searchFocusNode.hasFocus == false &&
-          _typeStack.isEmpty,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          return;
-        }
-        if (_searchActive || _searchFocusNode.hasFocus) {
-          _exitSearch();
-          return;
-        }
-        if (_typeStack.isNotEmpty) {
-          _popTypeNav();
-        }
-      },
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTapDown: (details) {
-          final box =
-              _searchFieldKey.currentContext?.findRenderObject() as RenderBox?;
-          if (box != null) {
-            final topLeft = box.localToGlobal(Offset.zero);
-            final rect = topLeft & box.size;
-            if (rect.contains(details.globalPosition)) {
-              return;
-            }
+        canPop: !_searchActive &&
+            _searchFocusNode.hasFocus == false &&
+            _typeStack.isEmpty,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) {
+            return;
           }
           if (_searchActive || _searchFocusNode.hasFocus) {
             _exitSearch();
             return;
           }
-          FocusScope.of(context).unfocus();
-          FocusManager.instance.primaryFocus?.unfocus();
+          if (_typeStack.isNotEmpty) {
+            _popTypeNav();
+          }
         },
-        child: Scaffold(
-          key: scaffoldKey,
-          backgroundColor: FlutterFlowTheme.of(context).primary,
-          resizeToAvoidBottomInset: false,
-          drawer: Drawer(
-            backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-            child: SafeArea(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          FlutterFlowTheme.of(context).primary,
-                          const Color(0xFF3C010C)
-                        ],
-                        stops: const [0.0, 1.0],
-                        begin: const AlignmentDirectional(0.0, -1.0),
-                        end: const AlignmentDirectional(0, 1.0),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTapDown: (details) {
+            final box = _searchFieldKey.currentContext?.findRenderObject()
+                as RenderBox?;
+            if (box != null) {
+              final topLeft = box.localToGlobal(Offset.zero);
+              final rect = topLeft & box.size;
+              if (rect.contains(details.globalPosition)) {
+                return;
+              }
+            }
+            if (_searchActive || _searchFocusNode.hasFocus) {
+              _exitSearch();
+              return;
+            }
+            FocusScope.of(context).unfocus();
+            FocusManager.instance.primaryFocus?.unfocus();
+          },
+          child: Scaffold(
+            key: scaffoldKey,
+            backgroundColor: FlutterFlowTheme.of(context).primary,
+            resizeToAvoidBottomInset: false,
+            drawer: Drawer(
+              backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            FlutterFlowTheme.of(context).primary,
+                            const Color(0xFF3C010C)
+                          ],
+                          stops: const [0.0, 1.0],
+                          begin: const AlignmentDirectional(0.0, -1.0),
+                          end: const AlignmentDirectional(0, 1.0),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                            16.0, 24.0, 16.0, 24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12.0),
+                              child: Image.asset(
+                                'assets/images/logo.jpg',
+                                width: 64.0,
+                                height: 64.0,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(height: 12.0),
+                            AutoSizeText(
+                              _appTitleShort,
+                              textAlign: TextAlign.start,
+                              maxLines: 2,
+                              minFontSize: 13.0,
+                              style: FlutterFlowTheme.of(context)
+                                  .titleLarge
+                                  .override(
+                                    fontFamily: 'Merriweather',
+                                    color:
+                                        FlutterFlowTheme.of(context).alternate,
+                                    fontSize: 20.0,
+                                    letterSpacing: 0.0,
+                                    useGoogleFonts: false,
+                                  ),
+                            ),
+                            const SizedBox(height: 4.0),
+                            AutoSizeText(
+                              _congregationTitle,
+                              textAlign: TextAlign.start,
+                              maxLines: 2,
+                              minFontSize: 10.0,
+                              style: FlutterFlowTheme.of(context)
+                                  .bodySmall
+                                  .override(
+                                    fontFamily: 'Inter',
+                                    color:
+                                        FlutterFlowTheme.of(context).alternate,
+                                    fontSize: 13.0,
+                                    letterSpacing: 0.0,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(
-                          16.0, 24.0, 16.0, 24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12.0),
-                                child: Image.asset(
-                                  'assets/images/logo.jpg',
-                                  width: 56.0,
-                                  height: 56.0,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(width: 12.0),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Rugăciuni și cântări',
-                                      style: FlutterFlowTheme.of(context)
-                                          .titleLarge
-                                          .override(
-                                            fontFamily: 'Merriweather',
-                                            color: FlutterFlowTheme.of(context)
-                                                .alternate,
-                                            letterSpacing: 0.0,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4.0),
-                                    Text(
-                                      'Congregația Surorilor Maicii Domnului',
-                                      style: FlutterFlowTheme.of(context)
-                                          .bodySmall
-                                          .override(
-                                            fontFamily: 'Inter',
-                                            color:
-                                                FlutterFlowTheme.of(context)
-                                                    .alternate,
-                                            letterSpacing: 0.0,
-                                            fontWeight: FontWeight.w300,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                    Divider(
+                      height: 1.0,
+                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                    ),
+                    const SizedBox(height: 8.0),
+                    _drawerNavTile(
+                      context: context,
+                      icon: Icons.calendar_today_rounded,
+                      title: 'Calendar',
+                      routeName: 'CalendarPage',
+                    ),
+                    if (!kIsWeb)
+                      _drawerNavTile(
+                        context: context,
+                        icon: Icons.notifications_outlined,
+                        title: 'Memento',
+                        routeName: 'RemindersPage',
+                      ),
+                    if (!kIsWeb)
+                      _drawerNavTile(
+                        context: context,
+                        icon: Icons.download_rounded,
+                        title: 'Descărcări',
+                        routeName: 'DownloadedPrayersPage',
+                      ),
+                    _drawerNavTile(
+                      context: context,
+                      icon: Icons.menu_book_rounded,
+                      title: 'Jurnal',
+                      routeName: 'PrayerJournalPage',
+                    ),
+                    _drawerNavTile(
+                      context: context,
+                      icon: Icons.favorite_rounded,
+                      title: 'Favorite',
+                      routeName: 'FavoritePrayersPage',
+                    ),
+                    _drawerNavTile(
+                      context: context,
+                      icon: Icons.auto_stories_rounded,
+                      title: 'Ghid de rugăciune',
+                      routeName: 'PrayerGuidePage',
+                    ),
+                    Divider(
+                      height: 1.0,
+                      indent: 16.0,
+                      endIndent: 16.0,
+                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                    ),
+                    const Spacer(),
+                    _drawerNavTile(
+                      context: context,
+                      icon: Icons.settings_rounded,
+                      title: 'Setări',
+                      routeName: 'SettingsPage',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            body: SafeArea(
+              top: true,
+              bottom: true,
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      FlutterFlowTheme.of(context).primary,
+                      const Color(0xFF3C010C)
+                    ],
+                    stops: const [0.0, 1.0],
+                    begin: const AlignmentDirectional(0.0, -1.0),
+                    end: const AlignmentDirectional(0, 1.0),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    if (!_searchActive)
+                      Selector<FFAppState, bool>(
+                        selector: (_, state) => state.homeHeaderCollapsed,
+                        builder: (context, headerCollapsed, _) {
+                          return _buildHomeHeader(
+                            context,
+                            headerCollapsed: headerCollapsed,
+                          );
+                        },
+                      ),
+                    Expanded(
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          if (_searchActive) _buildSearchSliverAppBar(context),
+                          if (!_searchActive && _typeStack.isEmpty)
+                            SliverToBoxAdapter(
+                              child: _buildContinueHomeSection(context),
+                            ),
+                          if (!_searchActive && _typeStack.isEmpty)
+                            SliverToBoxAdapter(
+                              child: _buildTodayHomeSection(context),
+                            ),
+                          if (!_searchActive && _typeStack.isEmpty)
+                            SliverToBoxAdapter(
+                              child: _buildHomeCatalogSectionLabel(context),
+                            ),
+                          SliverPadding(
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                              _homeSectionHorizontalPadding,
+                              _homeSectionInnerGap,
+                              _homeSectionHorizontalPadding,
+                              0.0,
+                            ),
+                            sliver: _buildPrayerTypesSliver(context),
+                          ),
+                          if (!_searchActive && _typeStack.isEmpty)
+                            SliverToBoxAdapter(
+                              child: _buildFavoritesHomeSection(context),
+                            ),
+                          SliverToBoxAdapter(
+                            child: SizedBox(
+                              height: _catalogScrollBottomPadding,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  Divider(
-                    height: 1.0,
-                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                  ),
-                  const SizedBox(height: 8.0),
-                  _drawerNavTile(
-                    context: context,
-                    icon: Icons.calendar_today_rounded,
-                    title: 'Calendar',
-                    routeName: 'CalendarPage',
-                  ),
-                  if (!kIsWeb)
-                    _drawerNavTile(
-                      context: context,
-                      icon: Icons.notifications_outlined,
-                      title: 'Memento',
-                      routeName: 'RemindersPage',
-                    ),
-                  if (!kIsWeb)
-                    _drawerNavTile(
-                      context: context,
-                      icon: Icons.download_rounded,
-                      title: 'Descărcări',
-                      routeName: 'DownloadedPrayersPage',
-                    ),
-                  _drawerNavTile(
-                    context: context,
-                    icon: Icons.menu_book_rounded,
-                    title: 'Jurnal',
-                    routeName: 'PrayerJournalPage',
-                  ),
-                  _drawerNavTile(
-                    context: context,
-                    icon: Icons.favorite_rounded,
-                    title: 'Favorite',
-                    routeName: 'FavoritePrayersPage',
-                  ),
-                  Divider(
-                    height: 1.0,
-                    indent: 16.0,
-                    endIndent: 16.0,
-                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                  ),
-                  const Spacer(),
-                  _drawerNavTile(
-                    context: context,
-                    icon: Icons.settings_rounded,
-                    title: 'Setări',
-                    routeName: 'SettingsPage',
-                  ),
-                ],
-              ),
-            ),
-          ),
-          body: SafeArea(
-            top: true,
-            bottom: true,
-            child: Container(
-              width: double.infinity,
-              height: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    FlutterFlowTheme.of(context).primary,
-                    const Color(0xFF3C010C)
-                  ],
-                  stops: const [0.0, 1.0],
-                  begin: const AlignmentDirectional(0.0, -1.0),
-                  end: const AlignmentDirectional(0, 1.0),
-                ),
-              ),
-              child: Column(
-                children: [
-                  if (!_searchActive)
-                    Selector<FFAppState, bool>(
-                      selector: (_, state) => state.homeHeaderCollapsed,
-                      builder: (context, headerCollapsed, _) {
-                        return _buildHomeHeader(
-                          context,
-                          headerCollapsed: headerCollapsed,
+                    Selector<FFAppState, String>(
+                      selector: (_, state) => state.currentPrayerId,
+                      builder: (context, currentPrayerId, _) {
+                        if (!_showAudioPlayer || currentPrayerId.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            16.0,
+                            HomeAudioMiniPlayer.homeScreenMarginVertical / 2,
+                            16.0,
+                            HomeAudioMiniPlayer.homeScreenMarginVertical / 2,
+                          ),
+                          child: HomeAudioMiniPlayer(
+                            pageManager: _pageManager,
+                            audioHandler: _audioHandler,
+                            onClose: _closeAudioPlayer,
+                            onOpenPrayer: _openCurrentPrayerWithAudio,
+                          ),
                         );
                       },
                     ),
-                  Expanded(
-                    child: CustomScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      if (_searchActive) _buildSearchSliverAppBar(context),
-                      if (!_searchActive && _typeStack.isEmpty)
-                        SliverToBoxAdapter(
-                          child: _buildContinueHomeSection(context),
-                        ),
-                      if (!_searchActive && _typeStack.isEmpty)
-                        SliverToBoxAdapter(
-                          child: _buildTodayHomeSection(context),
-                        ),
-                      if (!_searchActive && _typeStack.isEmpty)
-                        SliverToBoxAdapter(
-                          child: _buildHomeCatalogSectionLabel(context),
-                        ),
-                      SliverPadding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
-                          _homeSectionHorizontalPadding,
-                          _homeSectionInnerGap,
-                          _homeSectionHorizontalPadding,
-                          0.0,
-                        ),
-                        sliver: _buildPrayerTypesSliver(context),
-                      ),
-                      if (!_searchActive && _typeStack.isEmpty)
-                        SliverToBoxAdapter(
-                          child: _buildFavoritesHomeSection(context),
-                        ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: _catalogScrollBottomPadding,
-                        ),
-                      ),
-                    ],
-                    ),
-                  ),
-                  Selector<FFAppState, String>(
-                    selector: (_, state) => state.currentPrayerId,
-                    builder: (context, currentPrayerId, _) {
-                      if (!_showAudioPlayer || currentPrayerId.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          16.0,
-                          HomeAudioMiniPlayer.homeScreenMarginVertical / 2,
-                          16.0,
-                          HomeAudioMiniPlayer.homeScreenMarginVertical / 2,
-                        ),
-                        child: HomeAudioMiniPlayer(
-                          pageManager: _pageManager,
-                          audioHandler: _audioHandler,
-                          onClose: _closeAudioPlayer,
-                          onOpenPrayer: _openCurrentPrayerWithAudio,
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ));
+        ));
   }
 
   Widget _buildSearchField(BuildContext context) {
@@ -1457,8 +1481,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   }
 
   (String, String?) _prayerCardTitleAndSubtitle(PrayerStruct prayer) {
-    final cardTitle =
-        prayer.title.isNotEmpty ? prayer.title : prayer.subtitle;
+    final cardTitle = prayer.title.isNotEmpty ? prayer.title : prayer.subtitle;
     final cardSubtitle = prayer.title.isNotEmpty &&
             prayer.subtitle.isNotEmpty &&
             prayer.subtitle != cardTitle
@@ -1544,7 +1567,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     ];
   }
 
-  Widget _buildSearchResultCard(BuildContext context, PrayerSearchEntry result) {
+  Widget _buildSearchResultCard(
+      BuildContext context, PrayerSearchEntry result) {
     final subtitle = result.displaySubtitle;
     return PrayerTypeCardWidget(
       title: result.prayer.subtitle.isNotEmpty

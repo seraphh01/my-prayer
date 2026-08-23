@@ -46,7 +46,7 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
   }
 
   void _openPrayer(BuildContext context, PrayerStruct prayer) {
-    context.openPrayerWithHomeOnStack(prayer.id);
+    context.openPrayer(prayer.id);
   }
 
   Widget _buildPrayerListTile(
@@ -149,127 +149,126 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 FlutterFlowCalendar(
-                    color: FlutterFlowTheme.of(context).secondary,
-                    iconColor: FlutterFlowTheme.of(context).primaryText,
-                    weekFormat: false,
-                    weekStartsMonday: true,
-                    initialDate: DateTime.fromMillisecondsSinceEpoch(
-                        getCurrentTimestamp.millisecondsSinceEpoch),
-                    rowHeight: 48.0,
-                    onChange: (DateTimeRange? newSelectedDate) async {
-                      if (_model.calendarSelectedDay == newSelectedDate) {
-                        return;
-                      }
-                      _model.calendarSelectedDay = newSelectedDate;
-                      await _model.setCurrentDate(
-                        context,
-                        dateTime: _model.calendarSelectedDay?.start,
-                      );
-                      safeSetState(() {});
-                    },
-                    titleStyle:
-                        FlutterFlowTheme.of(context).titleMedium.override(
-                              fontFamily: 'Merriweather',
-                              letterSpacing: 0.0,
-                            ),
-                    dayOfWeekStyle:
-                        FlutterFlowTheme.of(context).labelMedium.override(
-                              fontFamily: 'Inter',
-                              letterSpacing: 0.0,
-                            ),
-                    dateStyle: FlutterFlowTheme.of(context).bodyMedium.override(
-                          fontFamily: 'Inter',
-                          letterSpacing: 0.0,
-                        ),
-                    selectedDateStyle: FlutterFlowTheme.of(context)
-                        .titleSmall
-                        .override(
-                          fontFamily: 'Merriweather',
-                          color: FlutterFlowTheme.of(context).primaryBackground,
-                          letterSpacing: 0.0,
-                        ),
-                    inactiveDateStyle:
-                        FlutterFlowTheme.of(context).labelMedium.override(
-                              fontFamily: 'Inter',
-                              color: FlutterFlowTheme.of(context).secondaryText,
-                              letterSpacing: 0.0,
-                              fontWeight: FontWeight.w100,
-                            ),
-                    locale: FFLocalizations.of(context).languageCode,
-                  ),
-                  if (_model.dateGroups.isNotEmpty)
-                    Expanded(
-                      child: ListView.separated(
-                        key: const PageStorageKey<String>('calendar_prayers_list'),
-                        padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
-                        itemCount: _model.dateGroups.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8.0),
-                        itemBuilder: (context, dateGroupIndex) {
-                          final dateGroupItem = _model.dateGroups[dateGroupIndex];
-                          final nestedPrayerTypes =
-                              _model.nestedTypesForDateGroup(dateGroupItem);
+                  color: FlutterFlowTheme.of(context).secondary,
+                  iconColor: FlutterFlowTheme.of(context).primaryText,
+                  weekFormat: false,
+                  weekStartsMonday: true,
+                  initialDate: DateTime.fromMillisecondsSinceEpoch(
+                      getCurrentTimestamp.millisecondsSinceEpoch),
+                  rowHeight: 48.0,
+                  onChange: (DateTimeRange? newSelectedDate) async {
+                    if (_model.calendarSelectedDay == newSelectedDate) {
+                      return;
+                    }
+                    _model.calendarSelectedDay = newSelectedDate;
+                    await _model.setCurrentDate(
+                      context,
+                      dateTime: _model.calendarSelectedDay?.start,
+                    );
+                    safeSetState(() {});
+                  },
+                  titleStyle: FlutterFlowTheme.of(context).titleMedium.override(
+                        fontFamily: 'Merriweather',
+                        letterSpacing: 0.0,
+                      ),
+                  dayOfWeekStyle:
+                      FlutterFlowTheme.of(context).labelMedium.override(
+                            fontFamily: 'Inter',
+                            letterSpacing: 0.0,
+                          ),
+                  dateStyle: FlutterFlowTheme.of(context).bodyMedium.override(
+                        fontFamily: 'Inter',
+                        letterSpacing: 0.0,
+                      ),
+                  selectedDateStyle: FlutterFlowTheme.of(context)
+                      .titleSmall
+                      .override(
+                        fontFamily: 'Merriweather',
+                        color: FlutterFlowTheme.of(context).primaryBackground,
+                        letterSpacing: 0.0,
+                      ),
+                  inactiveDateStyle:
+                      FlutterFlowTheme.of(context).labelMedium.override(
+                            fontFamily: 'Inter',
+                            color: FlutterFlowTheme.of(context).secondaryText,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.w100,
+                          ),
+                  locale: FFLocalizations.of(context).languageCode,
+                ),
+                if (_model.dateGroups.isNotEmpty)
+                  Expanded(
+                    child: ListView.separated(
+                      key:
+                          const PageStorageKey<String>('calendar_prayers_list'),
+                      padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+                      itemCount: _model.dateGroups.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8.0),
+                      itemBuilder: (context, dateGroupIndex) {
+                        final dateGroupItem = _model.dateGroups[dateGroupIndex];
+                        final nestedPrayerTypes =
+                            _model.nestedTypesForDateGroup(dateGroupItem);
 
-                          if (dateGroupItem.prayers.isEmpty &&
-                              nestedPrayerTypes.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
+                        if (dateGroupItem.prayers.isEmpty &&
+                            nestedPrayerTypes.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
 
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              if (dateGroupItem.name.isNotEmpty)
-                                Text(
-                                  dateGroupItem.name,
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            if (dateGroupItem.name.isNotEmpty)
+                              Text(
+                                dateGroupItem.name,
+                                textAlign: TextAlign.center,
+                                style: FlutterFlowTheme.of(context)
+                                    .titleSmall
+                                    .override(
+                                      fontFamily: 'Merriweather',
+                                      letterSpacing: 0.0,
+                                    ),
+                              ),
+                            if (dateGroupItem.description.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 4.0,
+                                  bottom: 4.0,
+                                ),
+                                child: Text(
+                                  dateGroupItem.description,
                                   textAlign: TextAlign.center,
                                   style: FlutterFlowTheme.of(context)
-                                      .titleSmall
+                                      .labelMedium
                                       .override(
-                                        fontFamily: 'Merriweather',
+                                        fontFamily: 'Inter',
+                                        color: FlutterFlowTheme.of(context)
+                                            .secondaryText,
                                         letterSpacing: 0.0,
                                       ),
                                 ),
-                              if (dateGroupItem.description.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 4.0,
-                                    bottom: 4.0,
-                                  ),
-                                  child: Text(
-                                    dateGroupItem.description,
-                                    textAlign: TextAlign.center,
-                                    style: FlutterFlowTheme.of(context)
-                                        .labelMedium
-                                        .override(
-                                          fontFamily: 'Inter',
-                                          color: FlutterFlowTheme.of(context)
-                                              .secondaryText,
-                                          letterSpacing: 0.0,
-                                        ),
-                                  ),
-                                ),
-                              Divider(
-                                height: 1.0,
-                                thickness: 1.0,
-                                color:
-                                    FlutterFlowTheme.of(context).secondary,
                               ),
-                              if (nestedPrayerTypes.isNotEmpty)
-                                SubTypesViewWidget(
-                                  prayerTypes: nestedPrayerTypes,
-                                  onSelectPrayer: (prayerId) async {
-                                    context.openPrayerWithHomeOnStack(
-                                      prayerId,
-                                    );
-                                  },
-                                )
-                              else
-                                ..._buildPrayerGroupTiles(context, dateGroupItem),
-                            ],
-                          );
-                        },
-                      ),
+                            Divider(
+                              height: 1.0,
+                              thickness: 1.0,
+                              color: FlutterFlowTheme.of(context).secondary,
+                            ),
+                            if (nestedPrayerTypes.isNotEmpty)
+                              SubTypesViewWidget(
+                                prayerTypes: nestedPrayerTypes,
+                                onSelectPrayer: (prayerId) async {
+                                  context.openPrayer(
+                                    prayerId,
+                                  );
+                                },
+                              )
+                            else
+                              ..._buildPrayerGroupTiles(context, dateGroupItem),
+                          ],
+                        );
+                      },
                     ),
+                  ),
               ],
             ),
           ),

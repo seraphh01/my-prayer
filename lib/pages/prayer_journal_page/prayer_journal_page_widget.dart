@@ -147,7 +147,8 @@ class _PrayerJournalPageWidgetState extends State<PrayerJournalPageWidget> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(top: 12, bottom: 4),
+                              padding:
+                                  const EdgeInsets.only(top: 12, bottom: 4),
                               child: Text(
                                 '${_formatDay(day)} — ${items.length}',
                                 style: theme.labelMedium.override(
@@ -190,9 +191,7 @@ class _EntryTile extends StatelessWidget {
         child: Icon(Icons.check_rounded, color: theme.primary, size: 20),
       ),
       title: Text(
-        entry.prayerTitle.isNotEmpty
-            ? entry.prayerTitle
-            : entry.prayerSubtitle,
+        entry.prayerTitle.isNotEmpty ? entry.prayerTitle : entry.prayerSubtitle,
         style: theme.bodyLarge.override(
           fontFamily: 'Merriweather',
           letterSpacing: 0.0,
@@ -218,7 +217,7 @@ class _EntryTile extends StatelessWidget {
         ),
       ),
       onTap: () {
-        context.openPrayerWithHomeOnStack(entry.prayerId);
+        context.openPrayer(entry.prayerId);
       },
     );
   }

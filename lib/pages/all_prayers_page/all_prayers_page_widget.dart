@@ -13,7 +13,12 @@ import 'all_prayers_page_model.dart';
 export 'all_prayers_page_model.dart';
 
 class AllPrayersPageWidget extends StatefulWidget {
-  const AllPrayersPageWidget({super.key});
+  const AllPrayersPageWidget({
+    super.key,
+    this.typeId,
+  });
+
+  final int? typeId;
 
   @override
   State<AllPrayersPageWidget> createState() => _AllPrayersPageWidgetState();
@@ -48,6 +53,10 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
 
     try {
       final types = await _typesCache.load(forceRefresh: forceRefresh);
+      final initialPath = _findTypePath(types, widget.typeId);
+      if (_typeStack.isEmpty && initialPath != null) {
+        _typeStack.addAll(initialPath);
+      }
       _prayerTypes = types;
       _typesLoadFailed = types.isEmpty && forceRefresh;
     } catch (_) {
@@ -57,6 +66,26 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
         setState(() => _typesLoading = false);
       }
     }
+  }
+
+  List<PrayerTypeStruct>? _findTypePath(
+    List<PrayerTypeStruct> types,
+    int? targetId,
+  ) {
+    if (targetId == null) {
+      return null;
+    }
+
+    for (final type in types) {
+      if (type.id == targetId) {
+        return [type];
+      }
+      final childPath = _findTypePath(type.subtypes, targetId);
+      if (childPath != null) {
+        return [type, ...childPath];
+      }
+    }
+    return null;
   }
 
   @override
@@ -117,7 +146,8 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
 
   Widget _buildPageHeader(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    final title = _typeStack.isEmpty ? 'Toate rugăciunile' : _typeStack.last.type;
+    final title =
+        _typeStack.isEmpty ? 'Toate rugăciunile' : _typeStack.last.type;
 
     return Container(
       width: double.infinity,

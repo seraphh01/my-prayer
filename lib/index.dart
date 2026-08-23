@@ -15,3 +15,5 @@ export '/pages/onboarding_page/onboarding_page_widget.dart'
     show OnboardingPageWidget;
 export '/pages/prayer_journal_page/prayer_journal_page_widget.dart'
     show PrayerJournalPageWidget;
+export '/pages/prayer_guide_page/prayer_guide_page_widget.dart'
+    show PrayerGuidePageWidget;

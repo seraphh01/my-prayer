@@ -95,5 +95,5 @@ Future<void> _executePendingReminderNavigation() async {
     return;
   }
 
-  context.openPrayerWithHomeOnStack(resolvedId);
+  context.openPrayer(resolvedId);
 }

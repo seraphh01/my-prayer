@@ -59,15 +59,15 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
       refreshListenable: appStateNotifier,
       navigatorKey: appNavigatorKey,
       errorBuilder: (context, state) => AppSplashGate(
-            notifier: appStateNotifier,
-          ),
+        notifier: appStateNotifier,
+      ),
       routes: [
         FFRoute(
           name: '_initialize',
           path: '/',
           builder: (context, _) => AppSplashGate(
-                notifier: appStateNotifier,
-              ),
+            notifier: appStateNotifier,
+          ),
         ),
         FFRoute(
           name: 'HomePage',
@@ -114,7 +114,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: 'AllPrayersPage',
           path: '/allPrayersPage',
-          builder: (context, params) => const AllPrayersPageWidget(),
+          builder: (context, params) => AllPrayersPageWidget(
+            typeId: params.getParam('typeId', ParamType.int),
+          ),
         ),
         FFRoute(
           name: 'CalendarPage',
@@ -135,6 +137,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: 'PrayerJournalPage',
           path: '/prayerJournalPage',
           builder: (context, params) => const PrayerJournalPageWidget(),
+        ),
+        FFRoute(
+          name: 'PrayerGuidePage',
+          path: '/prayerGuidePage',
+          builder: (context, params) => const PrayerGuidePageWidget(),
         ),
         FFRoute(
           name: 'PrivacyPolicyPage',
@@ -168,20 +175,12 @@ extension NavigationExtensions on BuildContext {
     go('/');
   }
 
-  /// Opens [RosaryPage] with [HomePage] as the only route below it, so home
-  /// and system back skip intermediate pages (calendar, journal, etc.).
-  void openPrayerWithHomeOnStack(String prayerId) {
-    goHomeReplacingStack();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = appNavigatorKey.currentContext;
-      if (context == null || !context.mounted) {
-        return;
-      }
-      context.pushNamed(
-        'RosaryPage',
-        queryParameters: {'prayerId': prayerId}.withoutNulls,
-      );
-    });
+  /// Opens [RosaryPage] while preserving the current navigation stack.
+  void openPrayer(String prayerId) {
+    pushNamed(
+      'RosaryPage',
+      queryParameters: {'prayerId': prayerId}.withoutNulls,
+    );
   }
 }
 
