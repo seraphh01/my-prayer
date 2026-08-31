@@ -302,8 +302,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       _congregationTitle,
       textAlign: TextAlign.center,
       maxLines: 2,
-      minFontSize: 10.0,
-      style: _headerBrandingTextStyle(context, fontSize: 16.0),
+      minFontSize: 12.0,
+      style: _headerBrandingTextStyle(context, fontSize: 20.0),
     );
   }
 

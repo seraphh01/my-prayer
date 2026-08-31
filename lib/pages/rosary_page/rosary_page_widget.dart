@@ -573,7 +573,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       final artUri = section.imageUrl.isNotEmpty
           ? Uri.parse(section.imageUrl)
           : Uri.parse(
-              'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo.jpg');
+              'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo_new.jpg');
 
       if (!hasAudio) {
         return MediaItem(

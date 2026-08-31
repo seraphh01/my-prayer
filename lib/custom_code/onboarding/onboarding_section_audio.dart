@@ -90,7 +90,7 @@ class OnboardingSectionAudio {
       artUri: Uri.parse(
         section.imageUrl.isNotEmpty
             ? section.imageUrl
-            : 'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo.jpg',
+            : 'https://nrapqjwyqvwopwoxevlw.supabase.co/storage/v1/object/public/images/logo_new.jpg',
       ),
       duration: section.duration > 0
           ? Duration(seconds: section.duration)

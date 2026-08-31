@@ -38,7 +38,7 @@ class AppSplashScreen extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(24.0),
                     child: Image.asset(
-                      'assets/images/logo.jpg',
+                      'assets/images/app_launcher_icon.jpg',
                       width: 120.0,
                       height: 120.0,
                       fit: BoxFit.cover,
