@@ -26,6 +26,8 @@ class SettingsPageWidget extends StatefulWidget {
 class _SettingsPageWidgetState extends State<SettingsPageWidget> {
   late SettingsPageModel _model;
 
+  static const _lastContentUpdate = '04.09.2026, 16:00';
+
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -700,7 +702,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Politica de confidențialite',
+                                  'Politica de confidențialitate',
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
@@ -745,7 +747,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                             backgroundColor:
                                 FlutterFlowTheme.of(context).primaryBackground,
                             content: Text(
-                              'Aplicația este actualizată la ultima versiune.',
+                              'Aplicația este actualizată la ultima versiune.\nUltima actualizare: $_lastContentUpdate',
                               style: TextStyle(
                                 color: FlutterFlowTheme.of(context).alternate,
                               ),
@@ -801,6 +803,16 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                         letterSpacing: 0.0,
                                       ),
                                 ),
+                                    Text(
+                                      'Ultima actualizare: $_lastContentUpdate',
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodySmall
+                                          .override(
+                                            fontFamily: 'Inter',
+                                            fontSize: 14.0,
+                                            letterSpacing: 0.0,
+                                          ),
+                                    ),
                               ],
                             ),
                           ),

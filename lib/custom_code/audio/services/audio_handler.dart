@@ -428,7 +428,9 @@ class MyAudioHandler extends BaseAudioHandler {
     }
 
     // Text-only section: silence keeps queue indices aligned without I/O on iOS.
-    final placeholderDuration = (mediaItem != null && mediaItem.duration != null && mediaItem.duration! > Duration.zero)
+    final placeholderDuration = (mediaItem != null &&
+            mediaItem.duration != null &&
+            mediaItem.duration! > Duration.zero)
         ? mediaItem.duration!
         : const Duration(milliseconds: 1);
     return SilenceAudioSource(
@@ -470,6 +472,11 @@ class MyAudioHandler extends BaseAudioHandler {
     await _player.seek(Duration.zero, index: playerIndex);
     mediaItem.add(queue.value[index]);
     _publishDurationForCurrentItem();
+  }
+
+  Future<void> playQueueItem(int index) async {
+    await skipToQueueItem(index);
+    await _player.play();
   }
 
   @override

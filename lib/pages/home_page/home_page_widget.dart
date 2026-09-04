@@ -50,7 +50,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   static const double _homeCardGap = 12.0;
   static const double _homeAcasaSubsectionGap = 12.0;
   static const double _homeCatalogBreakTop = 8.0;
-  static const String _appTitle = 'Rugăciuni și cântări Greco-Catolice';
+  static const String _appTitle = 'Rugăciuni și cântări';
   static const String _appTitleShort = 'Rugăciuni și cântări';
   static const String _congregationTitle =
       'Congregația Surorilor Maicii Domnului';
@@ -113,7 +113,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   static const String _homeLogoHeroTag = 'homeLogo';
 
   double _fixedLogoSize(BuildContext context) {
-    return math.min(210.0, MediaQuery.sizeOf(context).width * 0.55);
+    return math.min(200.0, MediaQuery.sizeOf(context).width * 0.5);
   }
 
   Widget _buildAppLogo(double size) {
@@ -290,7 +290,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       style: theme.titleLarge.override(
         fontFamily: 'Merriweather',
         color: theme.alternate,
-        fontSize: 21.0,
+        fontSize: 22.0,
         letterSpacing: 0.0,
         useGoogleFonts: false,
       ),
@@ -301,9 +301,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     return AutoSizeText(
       _congregationTitle,
       textAlign: TextAlign.center,
-      maxLines: 2,
+      maxLines: 1,
       minFontSize: 12.0,
-      style: _headerBrandingTextStyle(context, fontSize: 20.0),
+      style: _headerBrandingTextStyle(context, fontSize: 22.0),
     );
   }
 
@@ -349,39 +349,32 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                 ),
               ),
               if (!inTypeNav)
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        16.0,
-                        0.0,
-                        16.0,
-                        showCollapseToggle && !isCollapsed ? 28.0 : 12.0,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 4.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isCollapsed) ...[
+                        _buildHeaderCongregationText(context),
+                        const SizedBox(height: 4.0),
+                        _buildHeroLogo(_fixedLogoSize(context)),
+                        const SizedBox(height: 4.0),
+                      ],
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildHeaderAppTitleText(context),
-                          if (!isCollapsed) ...[
-                            const SizedBox(height: 12.0),
-                            _buildHeroLogo(_fixedLogoSize(context)),
-                            const SizedBox(height: 10.0),
-                            _buildHeaderCongregationText(context),
-                          ],
+                          if (showCollapseToggle && !isCollapsed)
+                            const SizedBox(width: 38.0),
+                          Expanded(child: _buildHeaderAppTitleText(context)),
+                          if (showCollapseToggle && !isCollapsed)
+                            _buildHeaderCollapseToggle(
+                              context,
+                              isCollapsed: isCollapsed,
+                            ),
                         ],
                       ),
-                    ),
-                    if (showCollapseToggle && !isCollapsed)
-                      Positioned(
-                        right: 12.0,
-                        bottom: 4.0,
-                        child: _buildHeaderCollapseToggle(
-                          context,
-                          isCollapsed: isCollapsed,
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
             ],
           ),
@@ -558,7 +551,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     if (subtype.subtypes.isEmpty && subtype.prayers.isEmpty) {
       return;
     }
-    if (subtype.subtypes.isEmpty && subtype.prayers.length == 1) {
+    if (subtype.subtypes.isEmpty &&
+        subtype.prayers.length == 1 &&
+        subtype.prayers.first.mode != PrayerMode.audioOnly) {
       await _openPrayerFromTypeNav(subtype.prayers.first.id);
       return;
     }
@@ -712,7 +707,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       safeSetState(() {});
-      if (FFAppState().isFirstTime && mounted && !_onboardingLaunchScheduled) {
+      if (!kIsWeb &&
+          FFAppState().isFirstTime &&
+          mounted &&
+          !_onboardingLaunchScheduled) {
         _onboardingLaunchScheduled = true;
         context.pushNamed('OnboardingPage');
       }
@@ -886,6 +884,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       icon: Icons.auto_stories_rounded,
                       title: 'Ghid de rugăciune',
                       routeName: 'PrayerGuidePage',
+                    ),
+                    _drawerNavTile(
+                      context: context,
+                      icon: Icons.info_outline_rounded,
+                      title: 'Cine suntem',
+                      routeName: 'AboutPage',
                     ),
                     Divider(
                       height: 1.0,

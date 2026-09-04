@@ -46,7 +46,7 @@ class AppSplashScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24.0),
                   AutoSizeText(
-                    'Rugăciuni și cântări Greco-Catolice',
+                    'Rugăciuni și cântări',
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     minFontSize: 16.0,

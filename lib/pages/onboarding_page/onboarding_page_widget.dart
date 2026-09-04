@@ -51,7 +51,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
   late final Animation<Offset> _introTitleSlide;
   late final Animation<double> _introCreditOpacity;
 
-  static const _appTitle = 'Rugăciuni și cântări Greco-Catolice';
+  static const _appTitle = 'Rugăciuni și cântări';
   static const _congregationTitle = 'Congregația Surorilor Maicii Domnului';
   static const _gradientEnd = Color(0xFF3C010C);
   static const _fontOptions = [
@@ -904,7 +904,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                 ),
               ),
             ),
-            const SizedBox(height: 32.0),
+            const SizedBox(height: 20.0),
             FadeTransition(
               opacity: _introTitleOpacity,
               child: SlideTransition(

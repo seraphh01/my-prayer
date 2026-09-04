@@ -144,6 +144,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => const PrayerGuidePageWidget(),
         ),
         FFRoute(
+          name: 'AboutPage',
+          path: '/aboutPage',
+          builder: (context, params) => const AboutPageWidget(),
+        ),
+        FFRoute(
           name: 'PrivacyPolicyPage',
           path: '/privacyPolicyPage',
           builder: (context, params) => const PrivacyPolicyPageWidget(),

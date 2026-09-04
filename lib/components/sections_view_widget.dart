@@ -63,6 +63,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
   static const Duration _scrollbarHideDelay = Duration(seconds: 1);
   static const Duration _clippedAboveRecoverDelay =
       Duration(milliseconds: 2500);
+
   /// Elements taller than this fraction of the visible viewport scroll to their top.
   static const double kLargeElementViewportRatio = 0.4;
   static const double kPaddingBelowAppBar = 12.0;
@@ -270,7 +271,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     if (existing != null && existing.length == texts.length) {
       var matches = true;
       for (var textIndex = 0; textIndex < texts.length; textIndex++) {
-        if (existing[textIndex].length != texts[textIndex].textElements.length) {
+        if (existing[textIndex].length !=
+            texts[textIndex].textElements.length) {
           matches = false;
           break;
         }
@@ -415,6 +417,17 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     if (currentSectionIndex == _pageManager.trackIndexNotifier.value) {
       return;
     }
+    if (_model.displayAudioPage) {
+      final section = _model.flattenedSections
+          .elementAtOrNull(_pageManager.trackIndexNotifier.value);
+      if (section == null) {
+        return;
+      }
+      _model.currentSection = section;
+      currentSectionIndex = _pageManager.trackIndexNotifier.value;
+      safeSetState(() {});
+      return;
+    }
     final controller = _getActiveScrollController();
     if (controller != null && controller.hasClients) {
       controller.jumpTo(0.0);
@@ -448,7 +461,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     double topInset,
   ) {
     final viewportHeight = viewportBox.size.height;
-    final effectiveHeight = (viewportHeight - topInset).clamp(1.0, viewportHeight);
+    final effectiveHeight =
+        (viewportHeight - topInset).clamp(1.0, viewportHeight);
     if (effectiveHeight <= 0) {
       return false;
     }
@@ -546,9 +560,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     Scrollable.ensureVisible(
       elementContext,
       alignment: target.alignment,
-      duration: immediate
-          ? Duration.zero
-          : const Duration(milliseconds: 400),
+      duration: immediate ? Duration.zero : const Duration(milliseconds: 400),
       curve: Curves.easeOut,
     );
   }
@@ -577,8 +589,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     }
 
     final topInset = _scrollTopInset(elementContext);
-    final elementTop =
-        _elementTopInViewport(metrics.element, metrics.viewport);
+    final elementTop = _elementTopInViewport(metrics.element, metrics.viewport);
     if (!_isElementTopAboveVisibleArea(elementTop, topInset)) {
       return;
     }
@@ -607,8 +618,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     }
 
     final topInset = _scrollTopInset(elementContext);
-    final elementTop =
-        _elementTopInViewport(metrics.element, metrics.viewport);
+    final elementTop = _elementTopInViewport(metrics.element, metrics.viewport);
     if (!_isElementTopAboveVisibleArea(elementTop, topInset)) {
       return;
     }
@@ -875,32 +885,37 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
   }
 
   Widget _buildAudioContent(PrayerSectionStruct section) {
-    return Container(
-      height: double.infinity,
-      decoration: const BoxDecoration(),
-      child: wrapWithModel(
-        model: _model.audioPageModels.getModel(
-          section.id,
-          currentSectionIndex,
-        ),
-        updateCallback: () {
-          safeSetState(() {});
-        },
-        updateOnChange: true,
-        child: AudioPageWidget(
-          key: const Key('Keyvha_audioPage'),
-          title: valueOrDefault<String>(section.title, 'Titlu'),
-          audioUrl: section.audioUrl,
-          subtitle: section.subtitle,
-          imageUrl: section.imageUrl,
-          onAudioTimeChanged: (selectedAudioTime) async {
-            await getIt<PageManager>()
-                .seek(Duration(seconds: selectedAudioTime));
-            _updatePlaybackHighlight();
+    return Padding(
+      padding: EdgeInsets.only(
+        top: _needsScrollOverlap ? kAppBarToolbarHeight : 0.0,
+      ),
+      child: Container(
+        height: double.infinity,
+        decoration: const BoxDecoration(),
+        child: wrapWithModel(
+          model: _model.audioPageModels.getModel(
+            'audioPage',
+            0,
+          ),
+          updateCallback: () {
+            safeSetState(() {});
           },
-          imageUrls:
-              _model.flattenedSections.map((s) => s.imageUrl).toList(),
-          texts: section.texts,
+          updateOnChange: true,
+          child: AudioPageWidget(
+            key: const Key('Keyvha_audioPage'),
+            audioUrl: section.audioUrl,
+            prayerTitle: widget.prayerTitle,
+            prayerSubtitle: widget.prayerSubtitle,
+            imageUrl: section.imageUrl,
+            onAudioTimeChanged: (selectedAudioTime) async {
+              await getIt<PageManager>()
+                  .seek(Duration(seconds: selectedAudioTime));
+              _updatePlaybackHighlight();
+            },
+            imageUrls: _model.flattenedSections.map((s) => s.imageUrl).toList(),
+            texts: section.texts,
+            sections: _model.flattenedSections,
+          ),
         ),
       ),
     );
@@ -919,103 +934,107 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
           children: [
             Expanded(
               child: Builder(
-              builder: (context) {
-                if (_model.flattenedSections.isEmpty) {
-                  return const SizedBox.shrink();
-                }
+                builder: (context) {
+                  if (_model.flattenedSections.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
 
-                return SizedBox(
-                  width: double.infinity,
-                  height: double.infinity,
-                  child: Stack(
-                    children: [
-                      Builder(
-                        builder: (context) {
-                          if (_model.currentSection == null) {
-                            _setAllowScroll(true);
-                            return const SizedBox.shrink();
-                          }
+                  return SizedBox(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: Stack(
+                      children: [
+                        Builder(
+                          builder: (context) {
+                            if (_model.currentSection == null) {
+                              _setAllowScroll(true);
+                              return const SizedBox.shrink();
+                            }
 
-                          final section = _model.currentSection!;
-                          final hasAudioContent = section.audioUrl.isNotEmpty;
-                          final isAudioPage =
-                              _model.displayAudioPage && hasAudioContent;
-                          _setAllowScroll(!isAudioPage);
+                            final section = _model.currentSection!;
+                            final hasAudioContent = section.audioUrl.isNotEmpty;
+                            final isAudioPage =
+                                _model.displayAudioPage && hasAudioContent;
+                            _setAllowScroll(!isAudioPage);
 
-                          final showTextPage = (!_model.displayAudioPage ||
-                                  !hasAudioContent) &&
-                              section.texts.isNotEmpty;
+                            final showTextPage = (!_model.displayAudioPage ||
+                                    !hasAudioContent) &&
+                                section.texts.isNotEmpty;
 
-                          if (showTextPage) {
-                            return _buildTextContent(context, section);
-                          }
-                          return _buildAudioContent(section);
-                        },
-                      ),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: _isContentLoading,
-                        builder: (context, isLoading, _) {
-                          if (!isLoading || !_hasInitialContent) {
-                            return const SizedBox.shrink();
-                          }
-                          return Container(
-                            width: double.infinity,
-                            height: double.infinity,
-                            decoration: BoxDecoration(
-                              color: FlutterFlowTheme.of(context)
-                                  .primaryBackground,
-                            ),
-                            child: Align(
-                              child: SizedBox(
-                                width: 64.0,
-                                height: 64.0,
-                                child: custom_widgets
-                                    .CustomCircularProgressIndicator(
+                            if (showTextPage) {
+                              return _buildTextContent(context, section);
+                            }
+                            return _buildAudioContent(section);
+                          },
+                        ),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _isContentLoading,
+                          builder: (context, isLoading, _) {
+                            if (!isLoading || !_hasInitialContent) {
+                              return const SizedBox.shrink();
+                            }
+                            return Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                color: FlutterFlowTheme.of(context)
+                                    .primaryBackground,
+                              ),
+                              child: Align(
+                                child: SizedBox(
                                   width: 64.0,
                                   height: 64.0,
-                                  color:
-                                      FlutterFlowTheme.of(context).primary,
+                                  child: custom_widgets
+                                      .CustomCircularProgressIndicator(
+                                    width: 64.0,
+                                    height: 64.0,
+                                    color: FlutterFlowTheme.of(context).primary,
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-          ValueListenableBuilder<bool>(
-            valueListenable: _controlBarVisibility,
-            builder: (context, showControlBar, child) {
-              final bottomInset = MediaQuery.paddingOf(context).bottom;
-              final effectiveShowControlBar =
-                  _shouldShowControlBar &&
-                  (_model.displayAudioPage || showControlBar);
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                height: effectiveShowControlBar ? 80.0 + bottomInset : 0.0,
-                child: AnimatedSlide(
+            ValueListenableBuilder<bool>(
+              valueListenable: _controlBarVisibility,
+              builder: (context, showControlBar, child) {
+                final bottomInset = MediaQuery.paddingOf(context).bottom;
+                final effectiveShowControlBar = _shouldShowControlBar &&
+                    (_model.displayAudioPage || showControlBar);
+                final showAudioTimingBar = _model.displayAudioPage &&
+                    (_model.currentSection?.audioUrl.isNotEmpty ?? false);
+                final controlBarHeight = showAudioTimingBar ? 100.0 : 80.0;
+                return AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,
-                  offset: effectiveShowControlBar
-                      ? Offset.zero
-                      : const Offset(0.0, 1.0),
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
+                  height: effectiveShowControlBar
+                      ? controlBarHeight + bottomInset
+                      : 0.0,
+                  child: AnimatedSlide(
+                    duration: const Duration(milliseconds: 250),
                     curve: Curves.easeInOut,
-                    opacity: effectiveShowControlBar ? 1.0 : 0.0,
-                    child: SafeArea(
-                      top: false,
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 80.0,
-                        child: custom_widgets.SectionsControlBar(
+                    offset: effectiveShowControlBar
+                        ? Offset.zero
+                        : const Offset(0.0, 1.0),
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      opacity: effectiveShowControlBar ? 1.0 : 0.0,
+                      child: SafeArea(
+                        top: false,
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: controlBarHeight,
+                          child: custom_widgets.SectionsControlBar(
                             width: double.infinity,
                             height: double.infinity,
+                            showAudioTimingBar: showAudioTimingBar,
                             showingTextContent: !_model.displayAudioPage,
                             playbackRate: valueOrDefault<double>(
                               FFAppState().audioSpeed,
@@ -1024,11 +1043,21 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                             hasAudioContent:
                                 _model.currentSection?.audioUrl.isNotEmpty ??
                                     false,
-                            hasTextContent:
-                                _model.currentSection?.texts.isNotEmpty ??
-                                    false,
+                            hasTextContent: _model.displayAudioPage ||
+                                (_model.currentSection?.texts.isNotEmpty ??
+                                    false),
                             switchContent: () async {
                               final leavingAudioPage = _model.displayAudioPage;
+                              if (leavingAudioPage) {
+                                await setCurrentSection(
+                                  _pageManager.trackIndexNotifier.value,
+                                );
+                                if (!mounted ||
+                                    (_model.currentSection?.texts.isEmpty ??
+                                        true)) {
+                                  return;
+                                }
+                              }
                               _model.displayAudioPage =
                                   !_model.displayAudioPage;
                               FFAppState().isDisplayingAudio =
@@ -1041,8 +1070,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                               }
                             },
                             chooseChapter: () async {
-                              final index =
-                                  await showModalBottomSheet<int>(
+                              final index = await showModalBottomSheet<int>(
                                 isDismissible: true,
                                 useSafeArea: true,
                                 context: context,
@@ -1050,8 +1078,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                                   return ChooseChapterWidget(
                                     title:
                                         "${widget.prayerTitle}${widget.prayerTitle!.isNotEmpty ? ' - ' : ''}${widget.prayerSubtitle}",
-                                    currentChapterIndex: _pageManager
-                                        .trackIndexNotifier.value,
+                                    currentChapterIndex:
+                                        _pageManager.trackIndexNotifier.value,
                                     chapterOptions: _model.chapterOptions,
                                   );
                                 },
@@ -1066,12 +1094,12 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                       ),
                     ),
                   ),
-              );
-            },
-          ),
-        ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

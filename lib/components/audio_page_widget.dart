@@ -9,8 +9,6 @@ import 'package:my_prayer/service_locator.dart';
 import '/backend/schema/structs/index.dart';
 import '/custom_code/prayer/prayer_typography.dart';
 import '/components/section_text/cached_section_image.dart';
-import '/custom_code/widgets/index.dart' as custom_widgets;
-import '/flutter_flow/custom_functions.dart' as functions;
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'audio_page_model.dart';
@@ -20,24 +18,26 @@ export 'audio_page_model.dart';
 class AudioPageWidget extends StatefulWidget {
   const AudioPageWidget({
     super.key,
-    String? title,
-    String? subtitle,
+    String? prayerTitle,
+    String? prayerSubtitle,
     String? audioUrl,
     required this.onAudioTimeChanged,
     required this.imageUrls,
     required this.imageUrl,
     this.texts,
-  })  : title = title ?? 'Titlu',
-        subtitle = subtitle ?? 'Subtitlu',
+    this.sections = const [],
+  })  : prayerTitle = prayerTitle ?? '',
+        prayerSubtitle = prayerSubtitle ?? '',
         audioUrl = audioUrl ?? '';
 
-  final String title;
-  final String subtitle;
+  final String prayerTitle;
+  final String prayerSubtitle;
   final Future Function(int selectedAudioTime)? onAudioTimeChanged;
   final String? imageUrl;
   final List<String> imageUrls;
   final List<SectionTextStruct>? texts;
   final String? audioUrl;
+  final List<PrayerSectionStruct> sections;
 
   @override
   State<AudioPageWidget> createState() => _AudioPageWidgetState();
@@ -47,9 +47,8 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
   late AudioPageModel _model;
   final _pageManager = getIt<PageManager>();
   PageController? _pageViewController;
+  late final ScrollController _sectionListController;
   int _currentSection = 0;
-  bool _isSliding = false;
-  int _slideAudioTime = 0;
 
   @override
   void initState() {
@@ -58,6 +57,7 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
     _currentSection = _pageManager.trackIndexNotifier.value;
     _pageViewController =
         PageController(initialPage: _pageManager.trackIndexNotifier.value);
+    _sectionListController = ScrollController();
     _pageManager.trackIndexNotifier.addListener(_onTrackIndexChanged);
   }
 
@@ -71,49 +71,38 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
     if (controller == null || !controller.hasClients) {
       return;
     }
-    final currentPageIndex = controller.page?.round() ?? 0;
-    if ((target - currentPageIndex).abs() > 5) {
-      controller.jumpToPage(target);
-    } else {
-      controller.animateToPage(
-        target,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.ease,
-      );
-    }
+    controller.jumpToPage(target);
   }
 
   @override
   void dispose() {
     _pageManager.trackIndexNotifier.removeListener(_onTrackIndexChanged);
     _pageViewController?.dispose();
+    _sectionListController.dispose();
     _model.maybeDispose();
     super.dispose();
   }
-
-  static const double _sectionTitleSize = 22.0;
-  static const double _sectionSubtitleSize = 16.0;
 
   double _headerImageSize(BuildContext context) {
     final screenHeight = MediaQuery.sizeOf(context).height;
     return math.min(screenHeight * 0.26, 260.0);
   }
 
-  Widget _buildSectionHeader(
+  Widget _buildAlbumHeader(
     BuildContext context,
     PrayerTypography typography,
   ) {
-    final imageSize = _headerImageSize(context);
     final theme = FlutterFlowTheme.of(context);
+    final imageSize = _headerImageSize(context);
 
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Hero(
-          tag: 'sectionImageHero',
-          child: SizedBox(
-            height: imageSize,
+        SizedBox(
+          width: imageSize,
+          height: imageSize,
+          child: Hero(
+            tag: 'sectionImageHero',
             child: PageView.builder(
               controller: _pageViewController,
               onPageChanged: (pageIndex) async {
@@ -122,219 +111,171 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
               },
               itemCount: widget.imageUrls.length,
               itemBuilder: (context, index) {
-                return Center(
-                  child: CachedSectionImage(
-                    imageUrl: widget.imageUrls[index],
-                    width: imageSize,
-                    height: imageSize,
-                    borderRadius: BorderRadius.circular(imageSize * 0.3),
-                  ),
+                return CachedSectionImage(
+                  imageUrl: widget.imageUrls[index],
+                  width: imageSize,
+                  height: imageSize,
+                  borderRadius: BorderRadius.circular(imageSize * 0.3),
                 );
               },
             ),
           ),
         ),
-        const SizedBox(height: 32.0),
-        Text(
-          widget.title,
-          textAlign: TextAlign.center,
-          style: typography.style(
-            theme.headlineSmall,
-            fontSize: _sectionTitleSize,
-            scaleFontSize: false,
-            letterSpacing: 0.0,
-          ),
+        ValueListenableBuilder<int>(
+          valueListenable: _pageManager.trackIndexNotifier,
+          builder: (context, activeIndex, _) {
+            final section = widget.sections.elementAtOrNull(activeIndex);
+            if (section == null || section.title.trim().isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return Padding(
+              padding: const EdgeInsets.only(top: 10.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    section.title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: typography.style(
+                      theme.titleMedium,
+                      scaleFontSize: true,
+                      color: theme.primaryText,
+                      letterSpacing: 0.0,
+                    ),
+                  ),
+                  if (section.subtitle.trim().isNotEmpty)
+                    Text(
+                      section.subtitle,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.style(
+                        theme.labelLarge,
+                        fontStyle: FontStyle.italic,
+                        scaleFontSize: true,
+                        color: theme.secondaryText,
+                        letterSpacing: 0.0,
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
         ),
-        if (widget.subtitle.isNotEmpty) ...[
-          const SizedBox(height: 6.0),
-          Text(
-            widget.subtitle,
-            textAlign: TextAlign.center,
-            style: typography.style(
-              theme.bodyLarge,
-              fontSize: _sectionSubtitleSize,
-              scaleFontSize: false,
-              color: theme.secondaryText,
-              fontStyle: FontStyle.italic,
-              letterSpacing: 0.0,
-            ),
-          ),
-        ],
       ],
     );
   }
 
-  String _formatTime(int seconds) {
-    final hours = seconds >= 3600 ? '${seconds ~/ 3600}:' : '';
-    final minutes = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
-    final secs = (seconds % 60).toString().padLeft(2, '0');
-    return '$hours$minutes:$secs';
+  Widget _buildSectionList(
+    BuildContext context,
+    PrayerTypography typography,
+  ) {
+    final theme = FlutterFlowTheme.of(context);
+    return ValueListenableBuilder<int>(
+      valueListenable: _pageManager.trackIndexNotifier,
+      builder: (context, activeIndex, _) {
+        return ListView.separated(
+          controller: _sectionListController,
+          padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+          itemCount: widget.sections.length,
+          separatorBuilder: (_, __) => Divider(
+            height: 1.0,
+            color: theme.primary.withValues(alpha: 0.12),
+          ),
+          itemBuilder: (context, index) {
+            final section = widget.sections[index];
+            final isActive = index == activeIndex;
+            final tile = ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 4.0,
+              ),
+              leading: CircleAvatar(
+                backgroundColor: isActive
+                    ? theme.primary
+                    : theme.primary.withValues(alpha: 0.12),
+                child: Text(
+                  '${index + 1}',
+                  style: typography.style(
+                    theme.labelLarge,
+                    scaleFontSize: false,
+                    color: isActive ? theme.alternate : theme.primary,
+                    letterSpacing: 0.0,
+                  ),
+                ),
+              ),
+              title: Text(
+                section.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: typography.style(
+                  theme.titleSmall,
+                  scaleFontSize: false,
+                  color: theme.primaryText,
+                  letterSpacing: 0.0,
+                ),
+              ),
+              subtitle: section.subtitle.isEmpty
+                  ? null
+                  : Text(
+                      section.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+              onTap: () async {
+                await _pageManager.playAtIndex(index);
+              },
+            );
+            if (!isActive) {
+              return tile;
+            }
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              elevation: 1.0,
+              color: theme.secondaryBackground,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 4.0,
+                ),
+                leading: tile.leading,
+                title: tile.title,
+                subtitle: tile.subtitle,
+                onTap: tile.onTap,
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasAudio = widget.audioUrl != null && widget.audioUrl!.isNotEmpty;
+    final theme = FlutterFlowTheme.of(context);
     // Ensure this subtree rebuilds when the app font changes.
     final typography = PrayerTypography.of(context);
 
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: FlutterFlowTheme.of(context).primaryBackground,
+      color: theme.primaryBackground,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  child: _buildSectionHeader(context, typography),
-                ),
-              ),
-            ),
-            if (hasAudio)
-              _AudioControlsPanel(
-                pageManager: _pageManager,
-                texts: widget.texts,
-                isSliding: _isSliding,
-                slideAudioTime: _slideAudioTime,
-                onSlideStart: (value) async {
-                  setState(() {
-                    _isSliding = true;
-                    _slideAudioTime = functions.doubleToInt(value);
-                  });
-                },
-                onSlideEnd: (value) async {
-                  await widget.onAudioTimeChanged?.call(
-                    functions.doubleToInt(value),
-                  );
-                  if (!mounted) {
-                    return;
-                  }
-                  setState(() {
-                    _isSliding = false;
-                    _slideAudioTime = 0;
-                  });
-                },
-                onSeekToText: (time) async {
-                  await widget.onAudioTimeChanged?.call(time);
-                },
-                formatTime: _formatTime,
-              ),
+            _buildAlbumHeader(context, typography),
+            const SizedBox(height: 8.0),
+            Expanded(child: _buildSectionList(context, typography)),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _AudioControlsPanel extends StatelessWidget {
-  const _AudioControlsPanel({
-    required this.pageManager,
-    required this.texts,
-    required this.isSliding,
-    required this.slideAudioTime,
-    required this.onSlideStart,
-    required this.onSlideEnd,
-    required this.onSeekToText,
-    required this.formatTime,
-  });
-
-  final PageManager pageManager;
-  final List<SectionTextStruct>? texts;
-  final bool isSliding;
-  final int slideAudioTime;
-  final Future<void> Function(double value) onSlideStart;
-  final Future<void> Function(double value) onSlideEnd;
-  final Future<void> Function(int time)? onSeekToText;
-  final String Function(int seconds) formatTime;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-    final typography = PrayerTypography.of(context);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (texts != null && texts!.isNotEmpty)
-          _AudioTextNavigationRow(
-            pageManager: pageManager,
-            texts: texts!,
-            isSliding: isSliding,
-            slideAudioTime: slideAudioTime,
-            onSeekToText: onSeekToText,
-          ),
-        ValueListenableBuilder<Duration>(
-          valueListenable: pageManager.currentProgressNotifier,
-          builder: (context, progress, _) {
-            return ValueListenableBuilder<Duration>(
-              valueListenable: pageManager.bufferedTimeNotifier,
-              builder: (context, buffered, __) {
-                return ValueListenableBuilder<Duration>(
-                  valueListenable: pageManager.totalDurationNotifier,
-                  builder: (context, total, ___) {
-                    final currentSeconds = isSliding
-                        ? slideAudioTime
-                        : progress.inSeconds;
-                    final totalSeconds = total.inSeconds;
-
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: 32.0,
-                          child: custom_widgets.CustomSlider(
-                            width: double.infinity,
-                            height: 32.0,
-                            sliderValue: currentSeconds.toDouble(),
-                            bufferValue: buffered.inSeconds,
-                            minValue: 0,
-                            maxValue: totalSeconds,
-                            onValueChange: onSlideStart,
-                            onValueChangeEnd: onSlideEnd,
-                          ),
-                        ),
-                        Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 24.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                formatTime(currentSeconds),
-                                style: typography.style(
-                                  theme.bodySmall,
-                                  scaleFontSize: false,
-                                  color: theme.secondaryText,
-                                  letterSpacing: 0.0,
-                                ),
-                              ),
-                              Text(
-                                formatTime(totalSeconds),
-                                style: typography.style(
-                                  theme.bodySmall,
-                                  scaleFontSize: false,
-                                  color: theme.secondaryText,
-                                  letterSpacing: 0.0,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            );
-          },
-        ),
-      ],
     );
   }
 }
@@ -423,15 +364,19 @@ class _AudioTextNavigationRowState extends State<_AudioTextNavigationRow> {
     final hasNext = index < widget.texts.length - 1;
 
     return Padding(
-      padding: hasNext || hasPrevious ? EdgeInsets.zero : const EdgeInsets.only(bottom: 12.0),
+      padding: hasNext || hasPrevious
+          ? EdgeInsets.zero
+          : const EdgeInsets.only(bottom: 12.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
         children: [
-          if(!hasPrevious) 
-            const SizedBox(width: 48.0,),
-          if (hasPrevious) 
+          if (!hasPrevious)
+            const SizedBox(
+              width: 48.0,
+            ),
+          if (hasPrevious)
             IconButton(
               style: iconButtonStyle,
               onPressed: () async {
@@ -440,7 +385,6 @@ class _AudioTextNavigationRowState extends State<_AudioTextNavigationRow> {
               },
               icon: const Icon(Icons.skip_previous_rounded, size: 24.0),
             ),
-            
           Expanded(
             child: GestureDetector(
               onTap: () async {
@@ -460,8 +404,10 @@ class _AudioTextNavigationRowState extends State<_AudioTextNavigationRow> {
               ),
             ),
           ),
-          if(!hasNext) 
-            const SizedBox(width: 48.0,),
+          if (!hasNext)
+            const SizedBox(
+              width: 48.0,
+            ),
           if (hasNext)
             IconButton(
               style: iconButtonStyle,

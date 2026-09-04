@@ -217,7 +217,9 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
     if (subtype.subtypes.isEmpty && subtype.prayers.isEmpty) {
       return;
     }
-    if (subtype.subtypes.isEmpty && subtype.prayers.length == 1) {
+    if (subtype.subtypes.isEmpty &&
+      subtype.prayers.length == 1 &&
+      subtype.prayers.first.mode != PrayerMode.audioOnly) {
       await _openPrayer(subtype.prayers.first.id);
       return;
     }

@@ -17,3 +17,4 @@ export '/pages/prayer_journal_page/prayer_journal_page_widget.dart'
     show PrayerJournalPageWidget;
 export '/pages/prayer_guide_page/prayer_guide_page_widget.dart'
     show PrayerGuidePageWidget;
+export '/pages/about_page/about_page_widget.dart' show AboutPageWidget;

@@ -96,8 +96,7 @@ class PageManager {
 
     if (processingState == AudioProcessingState.completed) {
       final completedIndex = playbackState.queueIndex ?? 0;
-      if (_pendingTrackIndex != null &&
-          completedIndex != _pendingTrackIndex) {
+      if (_pendingTrackIndex != null && completedIndex != _pendingTrackIndex) {
         return;
       }
       if (trackIndexNotifier.value != completedIndex) {
@@ -213,6 +212,26 @@ class PageManager {
     if (index < queue.length) {
       await _audioHandler.skipToQueueItem(index);
     }
+  }
+
+  Future<void> playAtIndex(int index) async {
+    if (ensureQueueBeforePlay != null) {
+      await ensureQueueBeforePlay!();
+    }
+
+    final queue = _audioHandler.queue.value;
+    if (index < 0 || index >= queue.length) {
+      return;
+    }
+
+    setTrackIndex(index);
+    if (_audioHandler is MyAudioHandler) {
+      await (_audioHandler as MyAudioHandler).playQueueItem(index);
+      return;
+    }
+
+    await _audioHandler.skipToQueueItem(index);
+    await _audioHandler.play();
   }
 
   /// Sets the UI track index and ignores stale playback index updates until
