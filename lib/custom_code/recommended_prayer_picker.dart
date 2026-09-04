@@ -12,9 +12,6 @@ const int kTodayPrayersHomeMax = 4;
 /// Hour-tagged prayers appear this many minutes before the scheduled hour.
 const int kHourPrayerLeadMinutes = 15;
 
-/// Hour-tagged prayers stay visible this long after the scheduled hour (until HH+2:59).
-const int kHourPrayerTailMinutes = 2 * 60 + 59;
-
 class RecommendedPrayerResult {
   const RecommendedPrayerResult({
     required this.prayer,
@@ -121,38 +118,18 @@ List<HourScheduleSlot> buildHourSlots(List<DateGroupStruct> hourGroups) {
       .toList();
 }
 
-int _hourSlotWindowStartMinutes(
-  HourScheduleSlot slot, {
-  required bool isFirstSlot,
-}) {
-  if (isFirstSlot) {
-    return 0;
-  }
-  return slot.startMinutes - kHourPrayerLeadMinutes;
-}
-
-int _hourSlotWindowEndMinutesInclusive(
-  HourScheduleSlot slot, {
-  required bool isLastSlot,
-}) {
-  if (isLastSlot) {
-    return (24 * 60) - 1;
-  }
-  return slot.startMinutes + kHourPrayerTailMinutes;
+int _hourSlotWindowStartMinutes(HourScheduleSlot slot) {
+  return (slot.startMinutes - kHourPrayerLeadMinutes).clamp(0, 24 * 60);
 }
 
 bool _isHourSlotVisibleAt(
   HourScheduleSlot slot,
-  int nowMinutes, {
-  required bool isFirstSlot,
-  required bool isLastSlot,
-}) {
-  return nowMinutes >= _hourSlotWindowStartMinutes(slot, isFirstSlot: isFirstSlot) &&
-      nowMinutes <=
-          _hourSlotWindowEndMinutesInclusive(slot, isLastSlot: isLastSlot);
+  int nowMinutes,
+) {
+  return nowMinutes >= _hourSlotWindowStartMinutes(slot);
 }
 
-/// Hour slots whose visibility window contains [now] (windows may overlap).
+/// Hour slots visible from their lead time until the end of the current day.
 List<HourScheduleSlot> resolveVisibleHourSlots(
   List<HourScheduleSlot> slots,
   DateTime now,
@@ -170,8 +147,6 @@ List<HourScheduleSlot> resolveVisibleHourSlots(
       if (_isHourSlotVisibleAt(
         sorted[i],
         nowMinutes,
-        isFirstSlot: i == 0,
-        isLastSlot: i == sorted.length - 1,
       ))
         sorted[i],
   ];
@@ -215,6 +190,7 @@ List<TodayPrayerEntry> pickTodayPrayers(
   List<DateGroupStruct> groups, {
   required DateTime now,
   int maxEntries = kTodayPrayersHomeMax,
+  List<PrayerTypeStruct> prayerTypes = const [],
 }) {
   if (maxEntries <= 0 || groups.isEmpty) {
     return const [];
@@ -232,17 +208,12 @@ List<TodayPrayerEntry> pickTodayPrayers(
       .where((id) => id.isNotEmpty)
       .toSet();
 
-  final slots = buildHourSlots(hourTaggedGroups);
-  final visibleSlots = resolveVisibleHourSlots(slots, now);
+  final hourSlots = buildHourSlots(hourTaggedGroups);
 
   final entries = <TodayPrayerEntry>[];
   final seenPrayerIds = <String>{};
 
   bool addEntry(TodayPrayerEntry entry) {
-    if (entries.length >= maxEntries) {
-      return false;
-    }
-
     final prayerIds = entry.opensPrayerType
         ? entry.voicePrayers.map((prayer) => prayer.id)
         : [entry.prayer.id];
@@ -260,30 +231,17 @@ List<TodayPrayerEntry> pickTodayPrayers(
     return true;
   }
 
-  for (final slot in visibleSlots) {
+  for (final slot in hourSlots) {
     for (final entry in _entriesFromHourSlot(slot)) {
-      if (!addEntry(entry)) {
-        break;
-      }
-    }
-    if (entries.length >= maxEntries) {
-      break;
+      addEntry(entry);
     }
   }
 
   for (final group in dayOnlyGroups) {
-    if (entries.length >= maxEntries) {
-      break;
-    }
-
     final prayers = uniqueSortedPrayers(group.prayers)
         .where((prayer) => !hourPrayerIds.contains(prayer.id))
         .toList();
     for (final prayer in prayers) {
-      if (entries.length >= maxEntries) {
-        break;
-      }
-
       addEntry(
         TodayPrayerEntry(
           prayer: prayer,
@@ -295,7 +253,73 @@ List<TodayPrayerEntry> pickTodayPrayers(
     }
   }
 
-  return entries;
+  return _groupTodayPrayerEntries(entries, prayerTypes)
+      .take(maxEntries)
+      .toList();
+}
+
+List<TodayPrayerEntry> _groupTodayPrayerEntries(
+  List<TodayPrayerEntry> entries,
+  List<PrayerTypeStruct> prayerTypes,
+) {
+  if (entries.isEmpty || prayerTypes.isEmpty) {
+    return entries;
+  }
+
+  final groupedEntries = <String, List<TodayPrayerEntry>>{};
+  final orderedKeys = <String>[];
+
+  for (final entry in entries) {
+    final prayers = entry.opensPrayerType ? entry.voicePrayers : [entry.prayer];
+    final typeIds = prayers
+        .map((prayer) => _owningPrayerTypeId(prayerTypes, prayer.id))
+        .toSet();
+    final key = typeIds.length == 1 && typeIds.single != null
+        ? 'type:${typeIds.single}'
+        : 'prayer:${entry.prayer.id}';
+    final bucket = groupedEntries.putIfAbsent(key, () {
+      orderedKeys.add(key);
+      return <TodayPrayerEntry>[];
+    });
+    bucket.add(entry);
+  }
+
+  return [
+    for (final key in orderedKeys)
+      _combineTodayPrayerEntries(groupedEntries[key]!),
+  ];
+}
+
+int? _owningPrayerTypeId(List<PrayerTypeStruct> types, String prayerId) {
+  for (final type in types) {
+    if (type.prayers.any((prayer) => prayer.id == prayerId)) {
+      return type.id;
+    }
+    final nestedTypeId = _owningPrayerTypeId(type.subtypes, prayerId);
+    if (nestedTypeId != null) {
+      return nestedTypeId;
+    }
+  }
+  return null;
+}
+
+TodayPrayerEntry _combineTodayPrayerEntries(List<TodayPrayerEntry> entries) {
+  final first = entries.first;
+  final prayers = uniqueSortedPrayers(
+    entries.expand(
+      (entry) => entry.opensPrayerType ? entry.voicePrayers : [entry.prayer],
+    ),
+  );
+  if (prayers.length <= 1) {
+    return first;
+  }
+
+  return TodayPrayerEntry(
+    prayer: prayers.first,
+    groupLabel: first.groupLabel,
+    groupDescription: first.groupDescription,
+    voicePrayers: prayers,
+  );
 }
 
 List<TodayPrayerEntry> _entriesFromHourSlot(HourScheduleSlot slot) {
@@ -401,8 +425,12 @@ Future<List<TodayPrayerEntry>> fetchTodayPrayers() async {
     return const [];
   }
 
-  final entries = pickTodayPrayers(rawGroups, now: now);
   final catalog = await getIt<PrayerTypesCache>().load();
+  final entries = pickTodayPrayers(
+    rawGroups,
+    now: now,
+    prayerTypes: catalog,
+  );
   return entries.map((entry) => _withPrayerTypeLabel(entry, catalog)).toList();
 }
 

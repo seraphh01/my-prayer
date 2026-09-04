@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 /// Manual debug override. Set to `null` to use the real clock again.
 bool simulatedClockEnabled = false;
-DateTime? debugSimulatedNow = new DateTime(2026, 6, 15, 18, 45);
+DateTime? debugSimulatedNow = new DateTime(2026, 6, 15, 12, 45);
 
 /// Optional run-time override: `flutter run --dart-define=SIMULATED_TIME=02:55`
 const simulatedTimeFromEnvironment =

@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
-import 'package:my_prayer/components/choose_chapter_widget.dart';
 import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
+import 'package:my_prayer/custom_code/prayer/section_text_formatting.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_section_content_cache.dart';
 import 'package:my_prayer/custom_code/prayer/reading_anchor_presets.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_typography.dart';
@@ -887,7 +887,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
   Widget _buildAudioContent(PrayerSectionStruct section) {
     return Padding(
       padding: EdgeInsets.only(
-        top: _needsScrollOverlap ? kAppBarToolbarHeight : 0.0,
+        top: _needsScrollOverlap ? _scrollTopInset(context) : 0.0,
       ),
       child: Container(
         height: double.infinity,
@@ -906,19 +906,38 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
             audioUrl: section.audioUrl,
             prayerTitle: widget.prayerTitle,
             prayerSubtitle: widget.prayerSubtitle,
-            imageUrl: section.imageUrl,
             onAudioTimeChanged: (selectedAudioTime) async {
               await getIt<PageManager>()
                   .seek(Duration(seconds: selectedAudioTime));
               _updatePlaybackHighlight();
             },
-            imageUrls: _model.flattenedSections.map((s) => s.imageUrl).toList(),
             texts: section.texts,
             sections: _model.flattenedSections,
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _replayCurrentText() async {
+    final texts = _model.currentSection?.texts ?? const <SectionTextStruct>[];
+    final audioTimeSeconds =
+        _pageManager.currentProgressNotifier.value.inSeconds;
+    final activeTextIndex = findActiveTextIndex(texts, audioTimeSeconds);
+    if (activeTextIndex < 0) {
+      return;
+    }
+
+    final activeText = texts[activeTextIndex];
+    final isNearTextStart = audioTimeSeconds - activeText.startTime <=
+        const Duration(seconds: 2).inSeconds;
+    final targetTextIndex = isNearTextStart && activeTextIndex > 0
+        ? activeTextIndex - 1
+        : activeTextIndex;
+    await _pageManager.seek(
+      Duration(seconds: texts[targetTextIndex].startTime),
+    );
+    _updatePlaybackHighlight();
   }
 
   @override
@@ -1009,7 +1028,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                     (_model.displayAudioPage || showControlBar);
                 final showAudioTimingBar = _model.displayAudioPage &&
                     (_model.currentSection?.audioUrl.isNotEmpty ?? false);
-                final controlBarHeight = showAudioTimingBar ? 100.0 : 80.0;
+                final controlBarHeight = showAudioTimingBar ? 91.0 : 64.0;
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,
@@ -1046,6 +1065,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                             hasTextContent: _model.displayAudioPage ||
                                 (_model.currentSection?.texts.isNotEmpty ??
                                     false),
+                            replayCurrentText: _replayCurrentText,
                             switchContent: () async {
                               final leavingAudioPage = _model.displayAudioPage;
                               if (leavingAudioPage) {
@@ -1068,26 +1088,6 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                               } else {
                                 _resetScrollCursor();
                               }
-                            },
-                            chooseChapter: () async {
-                              final index = await showModalBottomSheet<int>(
-                                isDismissible: true,
-                                useSafeArea: true,
-                                context: context,
-                                builder: (context) {
-                                  return ChooseChapterWidget(
-                                    title:
-                                        "${widget.prayerTitle}${widget.prayerTitle!.isNotEmpty ? ' - ' : ''}${widget.prayerSubtitle}",
-                                    currentChapterIndex:
-                                        _pageManager.trackIndexNotifier.value,
-                                    chapterOptions: _model.chapterOptions,
-                                  );
-                                },
-                              );
-                              if (index == null) {
-                                return;
-                              }
-                              await _pageManager.skipToIndex(index);
                             },
                           ),
                         ),

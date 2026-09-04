@@ -21,6 +21,7 @@ import 'package:my_prayer/service_locator.dart';
 import '/backend/backend.dart';
 import '/backend/schema/enums/enums.dart';
 import '/backend/schema/structs/index.dart';
+import '/components/choose_chapter_widget.dart';
 import '/components/prayer_options_widget.dart';
 import '/components/sections_view_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -481,6 +482,47 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     );
   }
 
+  Widget _buildFloatingChapterButton(
+    BuildContext context,
+    double backgroundOpacity,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+          _onFloatingControlsInteraction();
+          final chapterOptions =
+              functions.convertPrayerSectionToChapterOption(flattenedSections);
+          final index = await showModalBottomSheet<int>(
+            context: context,
+            isDismissible: true,
+            useSafeArea: true,
+            builder: (context) => ChooseChapterWidget(
+              title:
+                  '${_model.currentPrayer?.title ?? ''}${(_model.currentPrayer?.title.isNotEmpty ?? false) ? ' - ' : ''}${_model.currentPrayer?.subtitle ?? ''}',
+              currentChapterIndex: _pageManager.trackIndexNotifier.value,
+              chapterOptions: chapterOptions,
+            ),
+          );
+          if (index != null) {
+            await _pageManager.skipToIndex(index);
+          }
+        },
+        borderRadius: BorderRadius.circular(18.0),
+        child: Container(
+          width: 36.0,
+          height: 36.0,
+          decoration: _floatingControlDecoration(context, backgroundOpacity),
+          child: Icon(
+            Icons.menu_book_rounded,
+            color: FlutterFlowTheme.of(context).primary,
+            size: 22.0,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildFloatingControlsOverlay(
     BuildContext context, {
     required bool chromeVisible,
@@ -502,6 +544,8 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                 chromeVisible,
                 backgroundOpacity,
               ),
+              const SizedBox(height: 8.0),
+              _buildFloatingChapterButton(context, backgroundOpacity),
               if (showPlayPause) ...[
                 const SizedBox(height: 8.0),
                 _buildFloatingPlayPauseButton(context, backgroundOpacity),

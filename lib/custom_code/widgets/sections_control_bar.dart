@@ -47,7 +47,7 @@ class SectionsControlBar extends StatefulWidget {
   final double? width;
   final double? height;
   final Future Function()? switchContent;
-  final Future Function()? chooseChapter;
+  final Future Function()? replayCurrentText;
   final bool showingTextContent;
   final bool hasTextContent;
   final bool hasAudioContent;
@@ -63,7 +63,7 @@ class SectionsControlBar extends StatefulWidget {
       required this.hasAudioContent,
       this.showAudioTimingBar = false,
       this.switchContent,
-      this.chooseChapter});
+      this.replayCurrentText});
 
   @override
   State<SectionsControlBar> createState() => _SectionsControlBarState();
@@ -99,6 +99,43 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     return '$hours$minutes:$secs';
   }
 
+  Widget _buildReplayCurrentTextButton(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    return Material(
+      color: theme.primaryBackground,
+      borderRadius: BorderRadius.circular(24.0),
+      child: InkWell(
+        onTap: widget.replayCurrentText,
+        borderRadius: BorderRadius.circular(24.0),
+        child: SizedBox(
+          width: 48.0,
+          height: 48.0,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                Icons.replay_rounded,
+                color: theme.primary,
+                size: 32.0,
+              ),
+              Positioned(
+                bottom: 14.0,
+                child: Text(
+                  'T',
+                  style: TextStyle(
+                    color: theme.primary,
+                    fontSize: 11.0,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAudioTimingBar(
     BuildContext context, {
     bool showSlider = true,
@@ -123,15 +160,15 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
                     if (showSlider)
                       SizedBox(
                         width: double.infinity,
-                        height: 20.0,
+                        height: 16.0,
                         child: CustomSlider(
                           width: double.infinity,
-                          height: 20.0,
+                          height: 16.0,
                           sliderValue: currentSeconds.toDouble(),
                           bufferValue: buffered.inSeconds,
                           minValue: 0,
                           maxValue: totalSeconds,
-                          padding: EdgeInsets.zero,
+                          padding: EdgeInsets.symmetric(horizontal: 32.0),
                           onValueChange: (value) async {
                             setState(() {
                               _isSliding = true;
@@ -153,7 +190,7 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
                       ),
                     if (showTimestamps)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 32.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -203,15 +240,6 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
       height: widget.height,
       decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).primaryBackground,
-        boxShadow: widget.showAudioTimingBar
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  offset: const Offset(0.0, -3.0),
-                  blurRadius: 8.0,
-                ),
-              ]
-            : null,
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -220,153 +248,130 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.showAudioTimingBar) ...[
-                const SizedBox(height: 10.0),
                 _buildAudioTimingBar(context, showSlider: false),
               ],
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      FlutterFlowIconButton(
-                        borderRadius: 24,
-                        buttonSize: 48,
-                        fillColor:
-                            FlutterFlowTheme.of(context).primaryBackground,
-                        icon: Icon(
-                          Icons.menu_book,
-                          color: FlutterFlowTheme.of(context).primary,
-                          size: 24,
-                        ),
-                        onPressed: widget.chooseChapter,
-                      ),
-                      FlutterFlowIconButton(
-                        borderRadius: 32,
-                        buttonSize: 64,
-                        fillColor:
-                            FlutterFlowTheme.of(context).primaryBackground,
-                        icon: Icon(
-                          Icons.navigate_before_rounded,
-                          color: FlutterFlowTheme.of(context).primary,
-                          size: 32,
-                        ),
-                        onPressed: () => _pageManager.previous(),
-                      ),
-                      SizedBox(
-                        width: 8,
-                      ),
-                      ValueListenableBuilder(
-                          valueListenable: _pageManager.playButtonNotifier,
-                          builder: (_, value, __) {
-                            switch (value) {
-                              case ButtonState.loading:
-                                return Container(
-                                  width: 60,
-                                  height: 60,
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                      color:
-                                          FlutterFlowTheme.of(context).primary,
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(30))),
-                                  child: CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      FlutterFlowTheme.of(context)
-                                          .primaryBackground,
-                                    ),
-                                  ),
-                                );
-                              case ButtonState.paused:
-                                return FlutterFlowIconButton(
-                                  borderRadius: 30,
-                                  buttonSize: 60,
-                                  fillColor:
-                                      FlutterFlowTheme.of(context).primary,
-                                  icon: Icon(
-                                    Icons.play_arrow,
-                                    color: FlutterFlowTheme.of(context)
-                                        .primaryBackground,
-                                    size: 32,
-                                  ),
-                                  onPressed: widget.hasAudioContent
-                                      ? _pageManager.play
-                                      : null,
-                                  disabledColor: FlutterFlowTheme.of(context)
-                                      .secondaryText,
-                                );
-                              case ButtonState.playing:
-                                return FlutterFlowIconButton(
-                                  borderRadius: 30,
-                                  buttonSize: 60,
-                                  fillColor:
-                                      FlutterFlowTheme.of(context).primary,
-                                  icon: Icon(
-                                    Icons.pause,
-                                    color: FlutterFlowTheme.of(context)
-                                        .primaryBackground,
-                                    size: 32,
-                                  ),
-                                  onPressed: widget.hasAudioContent
-                                      ? _pageManager.pause
-                                      : null,
-                                  disabledColor:
-                                      FlutterFlowTheme.of(context).secondary,
-                                );
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildReplayCurrentTextButton(context),
+                  FlutterFlowIconButton(
+                    borderRadius: 32,
+                    buttonSize: 64,
+                    fillColor: FlutterFlowTheme.of(context).primaryBackground,
+                    icon: Icon(
+                      Icons.navigate_before_rounded,
+                      color: FlutterFlowTheme.of(context).primary,
+                      size: 32,
+                    ),
+                    onPressed: () => _pageManager.previous(),
+                  ),
+                  SizedBox(
+                    width: 8,
+                  ),
+                  ValueListenableBuilder(
+                      valueListenable: _pageManager.playButtonNotifier,
+                      builder: (_, value, __) {
+                        switch (value) {
+                          case ButtonState.loading:
+                            return Container(
+                              width: 64,
+                              height: 64,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(32))),
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                ),
+                              ),
+                            );
+                          case ButtonState.paused:
+                            return FlutterFlowIconButton(
+                              borderRadius: 32,
+                              buttonSize: 64,
+                              fillColor: FlutterFlowTheme.of(context).primary,
+                              icon: Icon(
+                                Icons.play_arrow,
+                                color: FlutterFlowTheme.of(context)
+                                    .primaryBackground,
+                                size: 32,
+                              ),
+                              onPressed: widget.hasAudioContent
+                                  ? _pageManager.play
+                                  : null,
+                              disabledColor:
+                                  FlutterFlowTheme.of(context).secondaryText,
+                            );
+                          case ButtonState.playing:
+                            return FlutterFlowIconButton(
+                              borderRadius: 32,
+                              buttonSize: 64,
+                              fillColor: FlutterFlowTheme.of(context).primary,
+                              icon: Icon(
+                                Icons.pause,
+                                color: FlutterFlowTheme.of(context)
+                                    .primaryBackground,
+                                size: 32,
+                              ),
+                              onPressed: widget.hasAudioContent
+                                  ? _pageManager.pause
+                                  : null,
+                              disabledColor:
+                                  FlutterFlowTheme.of(context).secondary,
+                            );
 
-                              default:
-                                return Container();
-                            }
-                          }),
-                      SizedBox(
-                        width: 8,
-                      ),
-                      FlutterFlowIconButton(
-                        borderRadius: 32,
-                        buttonSize: 64,
-                        fillColor:
-                            FlutterFlowTheme.of(context).primaryBackground,
-                        icon: Icon(
-                          Icons.navigate_next_rounded,
-                          color: FlutterFlowTheme.of(context).primary,
-                          size: 32,
-                        ),
-                        onPressed: () => _pageManager.next(),
-                      ),
-                      FlutterFlowIconButton(
-                        borderRadius: 24,
-                        buttonSize: 48,
-                        fillColor:
-                            FlutterFlowTheme.of(context).primaryBackground,
-                        icon: Icon(
-                          widget.showingTextContent
-                              ? widget.hasAudioContent
-                                  ? Icons.audiotrack_rounded
-                                  : Icons.text_fields_rounded
-                              : widget.hasTextContent
-                                  ? Icons.text_fields_rounded
-                                  : Icons.audiotrack_rounded,
-                          color: FlutterFlowTheme.of(context).primary,
-                          size: 24,
-                        ),
-                        onPressed: (widget.showingTextContent &&
-                                    widget.hasAudioContent) ||
+                          default:
+                            return Container();
+                        }
+                      }),
+                  SizedBox(
+                    width: 8,
+                  ),
+                  FlutterFlowIconButton(
+                    borderRadius: 32,
+                    buttonSize: 64,
+                    fillColor: FlutterFlowTheme.of(context).primaryBackground,
+                    icon: Icon(
+                      Icons.navigate_next_rounded,
+                      color: FlutterFlowTheme.of(context).primary,
+                      size: 32,
+                    ),
+                    onPressed: () => _pageManager.next(),
+                  ),
+                  FlutterFlowIconButton(
+                    borderRadius: 24,
+                    buttonSize: 48,
+                    fillColor: FlutterFlowTheme.of(context).primaryBackground,
+                    icon: Icon(
+                      widget.showingTextContent
+                          ? widget.hasAudioContent
+                              ? Icons.audiotrack_rounded
+                              : Icons.text_fields_rounded
+                          : widget.hasTextContent
+                              ? Icons.text_fields_rounded
+                              : Icons.audiotrack_rounded,
+                      color: FlutterFlowTheme.of(context).primary,
+                      size: 24,
+                    ),
+                    onPressed:
+                        (widget.showingTextContent && widget.hasAudioContent) ||
                                 (!widget.showingTextContent &&
                                     widget.hasTextContent)
                             ? widget.switchContent
                             : null,
-                      )
-                    ].divide(SizedBox(width: 4)),
-                  ),
-                ),
+                  )
+                ].divide(SizedBox(width: 4)),
               ),
             ],
           ),
           if (widget.showAudioTimingBar)
             Positioned(
-              top: -10.0,
+              top: -14.0,
               left: 0.0,
               right: 0.0,
               child: _buildAudioTimingBar(context, showTimestamps: false),
