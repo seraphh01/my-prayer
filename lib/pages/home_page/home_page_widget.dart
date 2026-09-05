@@ -287,12 +287,13 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       textAlign: TextAlign.center,
       maxLines: 2,
       minFontSize: 14.0,
-      style: theme.titleLarge.override(
+      style: theme.labelLarge.override(
         fontFamily: 'Merriweather',
         color: theme.alternate,
-        fontSize: 22.0,
+        fontSize: 20.0,
         letterSpacing: 0.0,
-        useGoogleFonts: false,
+        lineHeight: 1.35,
+        fontWeight: FontWeight.w600,
       ),
     );
   }
@@ -303,7 +304,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       textAlign: TextAlign.center,
       maxLines: 1,
       minFontSize: 12.0,
-      style: _headerBrandingTextStyle(context, fontSize: 22.0),
+      style: _headerBrandingTextStyle(context),
     );
   }
 
@@ -811,14 +812,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               maxLines: 2,
                               minFontSize: 13.0,
                               style: FlutterFlowTheme.of(context)
-                                  .titleLarge
+                                  .titleMedium
                                   .override(
                                     fontFamily: 'Merriweather',
                                     color:
                                         FlutterFlowTheme.of(context).alternate,
-                                    fontSize: 20.0,
                                     letterSpacing: 0.0,
-                                    useGoogleFonts: false,
                                   ),
                             ),
                             const SizedBox(height: 4.0),
