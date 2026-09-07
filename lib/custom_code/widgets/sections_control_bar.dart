@@ -244,9 +244,13 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          Align(
+            alignment: widget.showAudioTimingBar
+                ? Alignment.topCenter
+                : Alignment.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               if (widget.showAudioTimingBar) ...[
                 _buildAudioTimingBar(context, showSlider: false),
               ],
@@ -367,7 +371,8 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
                   )
                 ].divide(SizedBox(width: 4)),
               ),
-            ],
+              ],
+            ),
           ),
           if (widget.showAudioTimingBar)
             Positioned(
