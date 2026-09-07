@@ -26,7 +26,7 @@ class SettingsPageWidget extends StatefulWidget {
 class _SettingsPageWidgetState extends State<SettingsPageWidget> {
   late SettingsPageModel _model;
 
-  static const _lastContentUpdate = '04.09.2026, 16:00';
+  static const _lastContentUpdate = '07.09.2026, 16:00';
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -745,11 +745,11 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                       ? () {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             backgroundColor:
-                                FlutterFlowTheme.of(context).primaryBackground,
+                                FlutterFlowTheme.of(context).primary,
                             content: Text(
                               'Aplicația este actualizată la ultima versiune.\nUltima actualizare: $_lastContentUpdate',
                               style: TextStyle(
-                                color: FlutterFlowTheme.of(context).alternate,
+                                color: FlutterFlowTheme.of(context).secondary,
                               ),
                             ),
                           ));

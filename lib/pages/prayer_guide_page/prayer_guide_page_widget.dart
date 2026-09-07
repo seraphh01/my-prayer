@@ -280,171 +280,151 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
       ),
       body: SafeArea(
         top: false,
-        child: Column(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 24.0),
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Ghid de rugăciune',
-                    style: theme.headlineSmall.override(
-                      fontFamily: 'Merriweather',
-                      letterSpacing: 0.0,
-                      useGoogleFonts: false,
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    'Acest ghid li se adresează tuturor celor care doresc să se apropie mai mult de Dumnezeu și să descopere bogăția rugăciunii Bisericii Române Unite cu Roma, Greco-Catolică, în tradiția de rugăciune a Congregației Surorilor Maicii Domnului.\n\nAplicația cuprinde rugăciuni și cântări care ne ajută să-I încredințăm lui Dumnezeu începutul și sfârșitul fiecărei zile, bucuriile, încercările și oamenii pe care îi purtăm în inimă.',
-                    style: theme.bodyMedium.override(
-                      fontFamily: 'Inter',
-                      color: theme.secondaryText,
-                      letterSpacing: 0.0,
-                      lineHeight: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  Container(
-                    padding: const EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
-                      color: theme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16.0),
-                      border: Border.all(
-                        color: theme.primary.withValues(alpha: 0.15),
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Fie ca aceste rugăciuni să ne apropie de Cristos, să ne deschidă inima către aproapele și să ne ajute să trăim fiecare zi în comuniune cu Biserica, sub ocrotirea Preasfintei Fecioare Maria.',
-                                style: theme.titleSmall.override(
-                                  fontFamily: 'Merriweather',
-                                  color: theme.primary,
-                                  letterSpacing: 0.0,
-                                  useGoogleFonts: false,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            Text(
+              'Ghid de rugăciune',
+              style: theme.headlineSmall.override(
+                fontFamily: 'Merriweather',
+                letterSpacing: 0.0,
+                useGoogleFonts: false,
               ),
             ),
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _loadFailed
-                      ? Center(
-                          child: FilledButton.icon(
-                            onPressed: () => unawaited(
-                              _loadCatalog(forceRefresh: true),
-                            ),
-                            icon: const Icon(Icons.refresh_rounded),
-                            label: const Text('Reîncearcă'),
-                          ),
-                        )
-                      : items.isEmpty
-                          ? Center(
-                              child: Text(
-                                'Nu am găsit niciun tip de rugăciune.',
-                                style: theme.bodyMedium.override(
-                                  fontFamily: 'Inter',
-                                  color: theme.secondaryText,
-                                  letterSpacing: 0.0,
-                                ),
-                              ),
-                            )
-                          : ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(
-                                16.0,
-                                4.0,
-                                16.0,
-                                24.0,
-                              ),
-                              itemCount: items.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 8.0),
-                              itemBuilder: (context, index) {
-                                final item = items[index];
-                                final type = item.type;
-                                final guide = _guideFor(item);
-                                final expanded = _expandedTypeId == type.id;
-
-                                return Material(
-                                  color: theme.alternate,
-                                  borderRadius: BorderRadius.circular(14.0),
-                                  child: ExpansionTile(
-                                    key: ValueKey('guide_${type.id}_$expanded'),
-                                    initiallyExpanded: expanded,
-                                    onExpansionChanged: (value) {
-                                      setState(
-                                        () => _expandedTypeId =
-                                            value ? type.id : null,
-                                      );
-                                    },
-                                    title: Text(
-                                      type.type,
-                                      style: theme.titleSmall.override(
-                                        fontFamily: 'Merriweather',
-                                        color: theme.primary,
-                                        letterSpacing: 0.0,
-                                        useGoogleFonts: false,
-                                      ),
-                                    ),
-                                    childrenPadding: const EdgeInsets.fromLTRB(
-                                      16.0,
-                                      0.0,
-                                      16.0,
-                                      16.0,
-                                    ),
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          top: 12.0,
-                                        ),
-                                        child: Text(
-                                          guide.meaning,
-                                          style: theme.bodyMedium.override(
-                                            fontFamily: 'Inter',
-                                            color: theme.primaryText,
-                                            letterSpacing: 0.0,
-                                            lineHeight: 1.55,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8.0),
-                                      Align(
-                                        alignment: Alignment.centerRight,
-                                        child: TextButton(
-                                          onPressed: () => unawaited(
-                                            _openPrayerType(type),
-                                          ),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: theme.primary,
-                                            backgroundColor: theme.primary
-                                                .withValues(alpha: 0.1),
-                                          ),
-                                          child: const Text(
-                                            'Vezi rugăciunile',
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+            const SizedBox(height: 8.0),
+            Text(
+              'Acest ghid li se adresează tuturor celor care doresc să se apropie mai mult de Dumnezeu și să descopere bogăția rugăciunii Bisericii Române Unite cu Roma, Greco-Catolică, în tradiția de rugăciune a Congregației Surorilor Maicii Domnului.\n\nAplicația cuprinde rugăciuni și cântări care ne ajută să-I încredințăm lui Dumnezeu începutul și sfârșitul fiecărei zile, bucuriile, încercările și oamenii pe care îi purtăm în inimă.',
+              style: theme.bodyMedium.override(
+                fontFamily: 'Inter',
+                color: theme.secondaryText,
+                letterSpacing: 0.0,
+                lineHeight: 1.5,
+              ),
             ),
+            const SizedBox(height: 16.0),
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(
+                  color: theme.primary.withValues(alpha: 0.15),
+                ),
+              ),
+              child: Text(
+                'Fie ca aceste rugăciuni să ne apropie de Cristos, să ne deschidă inima către aproapele și să ne ajute să trăim fiecare zi în comuniune cu Biserica, sub ocrotirea Preasfintei Fecioare Maria.',
+                style: theme.titleSmall.override(
+                  fontFamily: 'Merriweather',
+                  color: theme.primary,
+                  letterSpacing: 0.0,
+                  useGoogleFonts: false,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 32.0),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_loadFailed)
+              Center(
+                child: FilledButton.icon(
+                  onPressed: () => unawaited(
+                    _loadCatalog(forceRefresh: true),
+                  ),
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Reîncearcă'),
+                ),
+              )
+            else if (items.isEmpty)
+              Center(
+                child: Text(
+                  'Nu am găsit niciun tip de rugăciune.',
+                  style: theme.bodyMedium.override(
+                    fontFamily: 'Inter',
+                    color: theme.secondaryText,
+                    letterSpacing: 0.0,
+                  ),
+                ),
+              )
+            else
+              ...List.generate(items.length, (index) {
+                final item = items[index];
+                final type = item.type;
+                final guide = _guideFor(item);
+                final expanded = _expandedTypeId == type.id;
+
+                return Padding(
+                  padding: EdgeInsets.only(top: index == 0 ? 0.0 : 8.0),
+                  child: Material(
+                    color: theme.secondaryBackground,
+                    borderRadius: BorderRadius.circular(14.0),
+                    child: Theme(
+                      data: Theme.of(context).copyWith(
+                        dividerColor: Colors.transparent,
+                      ),
+                      child: ExpansionTile(
+                        key: ValueKey('guide_${type.id}_$expanded'),
+                        initiallyExpanded: expanded,
+                        onExpansionChanged: (value) {
+                          setState(
+                            () => _expandedTypeId = value ? type.id : null,
+                          );
+                        },
+                        title: Text(
+                          type.type,
+                          style: theme.titleSmall.override(
+                            fontFamily: 'Merriweather',
+                            color: theme.primaryText,
+                            letterSpacing: 0.0,
+                            useGoogleFonts: false,
+                          ),
+                        ),
+                        childrenPadding: const EdgeInsets.fromLTRB(
+                          16.0,
+                          0.0,
+                          16.0,
+                          16.0,
+                        ),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: 12.0,
+                            ),
+                            child: Text(
+                              guide.meaning,
+                              style: theme.bodyMedium.override(
+                                fontFamily: 'Inter',
+                                color: theme.secondaryText,
+                                letterSpacing: 0.0,
+                                lineHeight: 1.55,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8.0),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () => unawaited(
+                                _openPrayerType(type),
+                              ),
+                              style: TextButton.styleFrom(
+                                foregroundColor: theme.primary,
+                                backgroundColor:
+                                    theme.primary.withValues(alpha: 0.1),
+                              ),
+                              child: const Text(
+                                'Vezi rugăciunile',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
           ],
         ),
       ),

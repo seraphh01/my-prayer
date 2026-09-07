@@ -21,7 +21,7 @@ class _PrivacyPolicyPageWidgetState extends State<PrivacyPolicyPageWidget> {
   static const _privacyPolicyText =
     '''Politica de confidențialitate a aplicației Rugăciuni și cântări – CMD
 
-Ultima actualizare: 04.09.2026
+Ultima actualizare: 09.07.2026
 
 Introducere
 
