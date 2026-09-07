@@ -10,7 +10,7 @@ import 'flutter_flow/flutter_flow_util.dart';
 import '/custom_code/prayer/reading_anchor_presets.dart';
 
 /// Set to `false` before release. When `true`, onboarding runs on every cold start.
-const kForceOnboarding = true;
+const kForceOnboarding = false;
 
 class FFAppState extends ChangeNotifier {
   static FFAppState _instance = FFAppState._internal();
