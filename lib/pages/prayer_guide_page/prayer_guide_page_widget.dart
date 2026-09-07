@@ -67,7 +67,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     if (label.contains('utren')) {
       return (
         meaning:
-            'Utrenia este rugăciunea de dimineață a Bisericii, prin care Îi mulțumim lui Dumnezeu pentru darul unei noi zile și ne încredințăm Lui toate gândurile, lucrările și încercările. Prin psalmi, cântări și rugăciuni, sufletul este chemat să înceapă ziua în lumina lui Cristos.',
+            'Utrenia este rugăciunea de dimineață a Bisericii. Prin psalmi, cântări și rugăciuni, Îi mulțumim lui Dumnezeu pentru lumina unei noi zile și Îi încredințăm gândurile, lucrările și toate acțiunile noastre. Este chemarea de a începe fiecare zi în lumina lui Cristos.',
         whenToPray: '',
         howToPray: '',
       );
@@ -77,7 +77,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
         label.contains('canonic')) {
       return (
         meaning:
-            'Rugăciunea Orelor Canonice sfințește timpul și ne amintește că Dumnezeu este prezent în fiecare clipă a vieții noastre. Laudele, Ora a Treia, Ora a Șasea, Ora a Noua și celelalte momente de rugăciune ne ajută să întrerupem preocupările cotidiene și să ne îndreptăm inima către Dumnezeu.',
+            'Orele canonice (sau Ceasurile) așază rugăciunea în diferitele momente ale zilei și ne amintesc faptul că întreaga noastră viață Îi aparține lui Dumnezeu. Prin Ceasul întâi, al treilea, al șaselea și al nouălea, ne oprim din preocupările zilnice pentru a ne întoarce mintea și inima către El.',
         whenToPray: '',
         howToPray: '',
       );
@@ -85,7 +85,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     if (label.contains('vecern')) {
       return (
         meaning:
-            'Vecernia este rugăciunea Bisericii la sfârșitul zilei. Este un timp de mulțumire pentru binefacerile primite, de pocăință pentru greșelile săvârșite și de încredințare în mâinile lui Dumnezeu. În liniștea serii, credinciosul poate privi asupra zilei care a trecut și poate cere pace pentru suflet și pentru cei dragi.',
+            'Vecernia este rugăciunea de seară a Bisericii. Îi mulțumim lui Dumnezeu pentru binele primit, Îi cerem iertare pentru greșelile săvârșite și așezăm în mâinile Sale ziua care se încheie. În lumina blândă a serii, Îi încredințăm Lui viața noastră întreagă și pe toți cei dragi.',
         whenToPray: '',
         howToPray: '',
       );
@@ -93,7 +93,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     if (label.contains('rozar')) {
       return (
         meaning:
-            'Rozariul este o rugăciune meditativă centrată asupra tainelor vieții lui Isus Cristos, privite împreună cu Preasfânta Fecioară Maria. Repetarea rugăciunilor nu este o simplă rostire mecanică, ci o chemare la contemplarea Evangheliei și la apropierea inimii de Cristos.',
+            'Rozariul ne ajută să contemplăm tainele vieții lui Isus Cristos împreună cu Preasfânta Fecioară Maria. Repetarea rugăciunilor adună mintea și liniștește inima, pentru ca privirea noastră să rămână îndreptată spre Cristos și spre Evanghelia Sa.',
         whenToPray: '',
         howToPray: '',
       );
@@ -151,7 +151,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     if (label.contains('acatist')) {
       return (
         meaning:
-            'Acatistul Maicii Domnului este o rugăciune de laudă, cinstire și cerere, prin care credincioșii se apropie de Preasfânta Născătoare de Dumnezeu și îi cer mijlocirea înaintea Fiului ei, Isus Cristos. Este o rugăciune potrivită atât pentru mulțumire, cât și în momente de încercare, nevoie sau neliniște.',
+            'Acatistul este o rugăciune de laudă și cinstire adusă Preasfintei Născătoare de Dumnezeu și Pururea Fecioarei Maria. Este un imn prin care îi aducem mulțumire Maicii Domnului pentru tot ceea ce I-a permis lui Dumnezeu să înfăptuiască, prin ea, în economia mântuirii și îi cerem să mijlocească pentru noi înaintea Fiului său, Isus Cristos, în bucurii, în încercări și în toate nevoile vieții.',
         whenToPray: '',
         howToPray: '',
       );
@@ -159,7 +159,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     if (label.contains('paraclis')) {
       return (
         meaning:
-            'Paraclisul este o rugăciune de cerere și mângâiere, în care Biserica se îndreaptă către Maica Domnului, cerând ajutor, ocrotire și mijlocire. Prin această rugăciune, credinciosul își pune nădejdea în Dumnezeu și cere ca Maica Domnului să-l însoțească pe drumul vieții.',
+            'Paraclisul este rugăciunea celui care caută ajutor și mângâiere. Prin cuvintele acestei rugăciuni, ne îndreptăm către Maica Domnului și îi încredințăm suferințele, neliniștile și speranțele noastre, cerându-i să ne ocrotească și să ne călăuzească spre Cristos.',
         whenToPray: '',
         howToPray: '',
       );
@@ -177,7 +177,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     if (label.contains('liturgh') || label.contains('cânt')) {
       return (
         meaning:
-            'Cântarea este rugăciunea inimii și una dintre cele mai frumoase forme prin care credinciosul Îl laudă pe Dumnezeu. Cântările liturgice, pricesnele și colindele păstrează și transmit credința Bisericii, unind rugăciunea cu frumusețea tradiției creștine.',
+            'Cântarea este rugăciunea care se înalță din inimă. Cântările liturgice, pricesnele și colindele păstrează și transmit credința Bisericii, unind cuvântul rugăciunii cu frumusețea muzicii și a tradiției creștine.',
         whenToPray: '',
         howToPray: '',
       );
@@ -185,7 +185,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     if (label.contains('zilnic') || label.contains('rugăciuni zilnice')) {
       return (
         meaning:
-            'Rugăciunile zilnice sunt un sprijin pentru viața de credință: rugăciunea de dimineață și de seară, rugăciunea înainte și după masă, rugăciunile către îngerul păzitor, către Maica Domnului și către sfinți, precum și rugăciunile de mulțumire și de pocăință. Prin statornicie, rugăciunea devine nu doar un moment al zilei, ci un mod de a trăi în prezența lui Dumnezeu.',
+            'Această secțiune reunește rugăciuni specifice pentru diferitele momente și împrejurări ale vieții: dimineața și seara, înainte și după masă, în clipe de mulțumire, de încercare sau de pocăință. Rostită cu statornicie, rugăciunea nu rămâne doar un moment al zilei, ci devine un mod de a trăi în prezența lui Dumnezeu.',
         whenToPray: '',
         howToPray: '',
       );
@@ -297,7 +297,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
                   ),
                   const SizedBox(height: 8.0),
                   Text(
-                    'Acest ghid este un sprijin pentru credincioșii care doresc să-și rânduiască viața de rugăciune după tradiția Bisericii Române Unite cu Roma, Greco-Catolice. El adună rugăciuni, slujbe și cântări care ne însoțesc în fiecare zi, ajutându-ne să ne apropiem de Dumnezeu prin rugăciune, meditație și mijlocirea Preasfintei Fecioare Maria.',
+                    'Acest ghid li se adresează tuturor celor care doresc să se apropie mai mult de Dumnezeu și să descopere bogăția rugăciunii Bisericii Române Unite cu Roma, Greco-Catolică, în tradiția de rugăciune a Congregației Surorilor Maicii Domnului.\n\nAplicația cuprinde rugăciuni și cântări care ne ajută să-I încredințăm lui Dumnezeu începutul și sfârșitul fiecărei zile, bucuriile, încercările și oamenii pe care îi purtăm în inimă.',
                     style: theme.bodyMedium.override(
                       fontFamily: 'Inter',
                       color: theme.secondaryText,
@@ -323,22 +323,12 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '„Doamne, învață-ne să ne rugăm.”',
+                                'Fie ca aceste rugăciuni să ne apropie de Cristos, să ne deschidă inima către aproapele și să ne ajute să trăim fiecare zi în comuniune cu Biserica, sub ocrotirea Preasfintei Fecioare Maria.',
                                 style: theme.titleSmall.override(
                                   fontFamily: 'Merriweather',
                                   color: theme.primary,
                                   letterSpacing: 0.0,
                                   useGoogleFonts: false,
-                                ),
-                              ),
-                              const SizedBox(height: 6.0),
-                              Text(
-                                'Fie ca acest ghid să fie pentru fiecare credincios un ajutor în apropierea de Dumnezeu, în iubirea față de aproapele și în trăirea credinței în fiecare zi, în comuniune cu Biserica și sub ocrotirea Preasfintei Fecioare Maria.',
-                                style: theme.bodySmall.override(
-                                  fontFamily: 'Inter',
-                                  color: theme.primaryText,
-                                  letterSpacing: 0.0,
-                                  lineHeight: 1.45,
                                 ),
                               ),
                             ],

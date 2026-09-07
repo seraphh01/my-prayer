@@ -19,21 +19,21 @@ class _PrivacyPolicyPageWidgetState extends State<PrivacyPolicyPageWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   static const _privacyPolicyText =
-      '''Politica de confidențialitate - Rugăciuni și cântări - CMD
+    '''Politica de confidențialitate a aplicației Rugăciuni și cântări – CMD
 
 Ultima actualizare: 04.09.2026
 
 Introducere
 
-Aplicația „Rugăciuni și cântări - CMD” este pusă la dispoziție de Congregatia Surorilor Maicii Domnului. Această politică explică modul în care aplicația utilizează datele necesare funcționării sale.
+  Aplicația Rugăciuni și cântări – CMD este pusă la dispoziția utilizatorilor de către Congregația Surorilor Maicii Domnului. Această politică explică modul în care aplicația utilizează datele necesare funcționării sale.
 
 Date stocate pe dispozitiv
 
-Aplicația păstrează local, pe dispozitivul utilizatorului, preferințele de afișare și redare, rugăciunile favorite, descărcările pentru utilizare offline, jurnalul de rugăciune și mementourile configurate de utilizator. Jurnalul de rugăciune este păstrat local timp de cel mult 31 de zile. Aceste date nu sunt transmise de aplicație către noi.
+  Aplicația păstrează local, pe dispozitivul utilizatorului, preferințele de afișare și redare, rugăciunile favorite, descărcările pentru utilizare offline, jurnalul de rugăciune și mementourile configurate de utilizator. Jurnalul de rugăciune este păstrat local timp de cel mult 31 de zile.
 
 Notificări și redare audio
 
-Cu acordul utilizatorului, aplicația trimite notificări locale pentru mementourile de rugăciune. Informațiile necesare acestor notificări rămân pe dispozitiv. Aplicația poate reda audio în fundal și poate afișa controale de redare în sistemul de operare. Nu solicită acces la microfon.
+  Cu acordul utilizatorului, aplicația trimite notificări locale pentru mementourile de rugăciune. Informațiile necesare acestor notificări rămân pe dispozitiv. Aplicația poate reda audio în fundal și poate afișa controale de redare în sistemul de operare. Aplicația nu solicită acces la microfon.
 
 Conținut și conexiune la internet
 
@@ -45,17 +45,17 @@ Aplicația nu solicită crearea unui cont și nu colectează în mod intenționa
 
 Securitate și control
 
-Poți șterge datele stocate local prin eliminarea favoritelor, a jurnalului, a mementourilor și a descărcărilor din aplicație sau prin ștergerea datelor aplicației din setările dispozitivului. Permisiunea pentru notificări poate fi retrasă oricând din setările sistemului.
+Puteți șterge datele stocate local prin eliminarea favoritelor, a jurnalului, a mementourilor și a descărcărilor din aplicație sau prin ștergerea datelor aplicației din setările dispozitivului. Permisiunea pentru notificări poate fi retrasă oricând din setările sistemului.
 
 Contact
 
-Pentru întrebări legate de această politică, ne poți contacta la:
+Pentru întrebări legate de această politică, ne puteți contacta la:
 
 SeraphicApps
 Congregația Surorilor Maicii Domnului
 Email: sserafim.socaciu@gmail.com
 
-Această politică poate fi actualizată periodic. Orice modificare va fi publicată pe această pagină.''';
+Această politică poate fi actualizată periodic. Orice modificare survenită va fi publicată pe această pagină.''';
 
   @override
   void initState() {

@@ -940,17 +940,17 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
   Widget _buildWelcomeStep(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
 
-    const heading = 'Cuvânt de bun venit';
+    const heading = 'Cuvânt de bun-venit';
     const address =
-        'Surorile Congregației Surorilor Maicii Domnului vă întâmpină cu bucurie și vă invită, pentru câteva clipe, la liniștea rugăciunii.';
+        'Surorile Congregației Maicii Domnului vă întâmpină cu bucurie și vă invită să vă opriți, pentru câteva clipe, în liniștea rugăciunii.';
     const body =
-        'Această aplicație vă aduce aproape rugăciuni și cântări interpretate și înregistrate chiar de surorile din Congregație — un sprijin firesc pentru rugăciunea de fiecare zi.';
+        'În această aplicație veți găsi rugăciuni și cântări interpretate și înregistrate de Surori, astfel încât, zi de zi, oriunde v-ați afla, să puteți fi însoțiți de rugăciunea lor.';
     const guide =
-        'Vă vom arăta pe scurt câteva informații de folos pentru a vă ajuta să folosiți aplicația în modul cel mai potrivit pentru dumneavoastră.';
+        'În continuare, vă prezentăm câteva informații care vă vor ajuta să descoperiți conținutul aplicației și să îl folosiți potrivit nevoilor dumneavoastră sufletești.';
     const blessing =
-        'Fie ca Domnul să vă binecuvânteze, iar Preacurata Maica Sa să vă ocrotească.';
+        'Fie ca Domnul să vă binecuvânteze, iar Preacurata Fecioară Maria să vă păstreze sub ocrotirea ei!';
     const signOff =
-        'Cu dragoste în Hristos,\nCongregația Surorilor Maicii Domnului';
+        'Cu dragoste în Cristos,\nSurorile Congregației Maicii Domnului';
 
     TextStyle merriweatherBody(
         {double? size, FontStyle? style, double alpha = 0.95}) {

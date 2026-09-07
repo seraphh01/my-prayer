@@ -35,80 +35,34 @@ class AboutPageWidget extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 32.0),
           children: [
-            Text.rich(
-              TextSpan(
-                style: bodyStyle,
-                children: const [
-                  TextSpan(text: 'Această aplicație este un proiect al '),
-                  TextSpan(
-                    text: 'Congregației Surorilor Maicii Domnului (CMD)',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(
-                    text:
-                        ' din Cluj-Napoca, născut din dorința de a face mai accesibile rugăciunea, cântarea și bogăția spirituală a tradiției ',
-                  ),
-                  TextSpan(
-                    text: 'Bisericii Române Unite cu Roma, Greco-Catolică',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(text: '.'),
-                ],
-              ),
-            ),
             _Paragraph(
               text:
-                  'Congregația Surorilor Maicii Domnului a fost întemeiată la 2 februarie 1921, la Blaj, de Mitropolitul Dr. Vasile Suciu, sub ocrotirea Preasfintei Fecioare Maria. Încă de la început, viața Surorilor a fost întemeiată pe rugăciune, muncă și slujirea aproapelui.',
+                  'Această aplicație este un proiect al Congregației Surorilor Maicii Domnului, care își are sediul Casei Generale în Cluj-Napoca, România.',
               style: bodyStyle,
             ),
             _Paragraph(
               text:
-                  'Spiritualitatea Congregației se inspiră din Cuvântul lui Dumnezeu, din exemplul Preasfintei Fecioare Maria și din viața liturgică a Bisericii Greco-Catolice. Rugăciunea liturgică, celebrată după tradiția bizantină, ocupă un loc central în viața comunității și ritmează viața de zi cu zi a Surorilor.',
+                  'Congregația Surorilor Maicii Domnului (CMD) a fost întemeiată la Blaj, în 2 februarie 1921, de Mitropolitul Dr. Vasile Suciu, și așezată sub ocrotirea Preasfintei Fecioare Maria. De la începuturi, viața Surorilor s-a fundamentat pe rugăciune, muncă și slujirea aproapelui.',
               style: bodyStyle,
-            ),
-            Text.rich(
-              TextSpan(
-                style: bodyStyle,
-                children: const [
-                  TextSpan(
-                    text:
-                        'Prin această aplicație dorim să împărtășim această comoară spirituală tuturor celor care doresc să se roage, să descopere sau să aprofundeze ',
-                  ),
-                  TextSpan(
-                    text: 'rugăciunile și cântările greco-catolice',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(text: '.'),
-                ],
-              ),
             ),
             _Paragraph(
               text:
-                  'Aici puteți găsi rugăciuni pentru diferite momente ale zilei, slujbe și rânduieli de rugăciune, precum și cântări care însoțesc viața liturgică și devoțională a Bisericii. Ne dorim ca aplicația să fie un sprijin pentru rugăciunea personală și familială și, în același timp, o punte către frumusețea și profunzimea spiritualității bizantine.',
+                  'Spiritualitatea CMD își are izvorul în Cuvântul lui Dumnezeu, în viața liturgică a Bisericii și în exemplul Preasfintei Fecioare Maria.',
               style: bodyStyle,
-            ),
-            Text.rich(
-              TextSpan(
-                style: bodyStyle,
-                children: const [
-                  TextSpan(
-                    text:
-                        'Misiunea noastră este aceeași care animă comunitatea Surorilor Maicii Domnului: ',
-                  ),
-                  TextSpan(
-                    text: 'rugăciunea și slujirea',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(
-                    text:
-                        '. La Mănăstirea Maicii Domnului din Cluj-Napoca, Surorile desfășoară un apostolat al rugăciunii, se roagă pentru intențiile credincioșilor, oferă însoțire spirituală și se implică în apostolatul liturgic.',
-                  ),
-                ],
-              ),
             ),
             _Paragraph(
               text:
-                  'Prin această aplicație, dorim ca rugăciunea să poată însoți fiecare om, oriunde s-ar afla: acasă, în călătorie, în familie sau în momentele de liniște ale fiecărei zile.',
+                  'Rugăciunea liturgică, celebrată în tradiția bizantină, se află în centrul vieții comunităților CMD și dă ritm fiecărei zile. Prin această aplicație, Surorile împărtășesc o parte din comoara spirituală moștenită în cei peste 100 de ani de existență celor care vor să descopere sau să aprofundeze rugăciunile și cântările greco-catolice.',
+              style: bodyStyle,
+            ),
+            _Paragraph(
+              text:
+                  'Aplicația cuprinde rugăciuni pentru diferitele momente ale zilei, precum și cântări care însoțesc anul liturgic și însuflețesc evlavia credincioșilor. Ea poate să fie un ajutor pentru rugăciunea personală și familială și, totodată, o cale de apropiere de frumusețea și profunzimea spiritualității bizantine.',
+              style: bodyStyle,
+            ),
+            _Paragraph(
+              text:
+                  'La Mănăstirea Maicii Domnului – Sanctuar Arhiepiscopal Major din Cluj-Napoca, Surorile se roagă pentru intențiile încredințate lor, primesc și însoțesc persoanele care caută un cuvânt de lumină și slujesc viața liturgică a Bisericii.',
               style: bodyStyle,
             ),
             Padding(
@@ -125,7 +79,7 @@ class AboutPageWidget extends StatelessWidget {
             ),
             const SizedBox(height: 12.0),
             Text(
-              'Preasfântă Fecioară Maria, Maica lui Dumnezeu, păzește-ne sub ocrotirea ta. Călăuzește-ne către Fiul tău, Isus Cristos, și dăruiește-ne inimă curată, pace și statornicie în rugăciune. Amin.',
+              'Preasfântă Fecioară Maria, Maica lui Dumnezeu, păstrează-ne sub ocrotirea ta. Călăuzește-ne pașii către Fiul tău, Isus Cristos, și dobândește-ne o inimă curată, pace sufletească și statornicie în rugăciune. Amin.',
               style: bodyStyle,
             ),
           ],
