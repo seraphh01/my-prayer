@@ -13,38 +13,50 @@ class TextAutoScrollToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final enabled = FFAppState().textAutoScrollEnabled;
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        FFAppState(),
+        FlutterFlowTheme.themeModeNotifier,
+      ]),
+      builder: (context, _) {
+        final enabled = FFAppState().textAutoScrollEnabled;
+        final theme = FlutterFlowTheme.of(context);
 
-    return Padding(
-      padding: EdgeInsetsDirectional.fromSTEB(
-        compact ? 16.0 : 24.0,
-        compact ? 8.0 : 0.0,
-        compact ? 16.0 : 24.0,
-        0.0,
-      ),
-      child: SwitchListTile.adaptive(
+        return Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(
+            compact ? 16.0 : 24.0,
+            compact ? 8.0 : 0.0,
+            compact ? 16.0 : 24.0,
+            0.0,
+          ),
+          child: SwitchListTile(
             contentPadding: EdgeInsets.zero,
             value: enabled,
-            activeThumbColor: FlutterFlowTheme.of(context).primary,
+            activeThumbColor: theme.primary,
+            activeTrackColor: theme.primary.withValues(alpha: 0.5),
+            inactiveThumbColor: theme.alternate,
+            inactiveTrackColor: theme.secondaryText.withValues(alpha: 0.35),
             title: Text(
               'Derulare automată text',
-              style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    fontFamily: 'Inter',
-                    letterSpacing: 0.0,
-                  ),
+              style: theme.bodyMedium.override(
+                fontFamily: 'Inter',
+                letterSpacing: 0.0,
+              ),
             ),
             subtitle: Text(
               'Textul urmărește automat redarea audio',
-              style: FlutterFlowTheme.of(context).bodySmall.override(
-                    fontFamily: 'Inter',
-                    color: FlutterFlowTheme.of(context).secondaryText,
-                    letterSpacing: 0.0,
-                  ),
+              style: theme.bodySmall.override(
+                fontFamily: 'Inter',
+                color: theme.secondaryText,
+                letterSpacing: 0.0,
+              ),
             ),
             onChanged: (value) {
               FFAppState().textAutoScrollEnabled = value;
             },
           ),
+        );
+      },
     );
   }
 }

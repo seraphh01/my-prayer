@@ -708,7 +708,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       safeSetState(() {});
-      if (!kIsWeb &&
+      if (
           FFAppState().isFirstTime &&
           mounted &&
           !_onboardingLaunchScheduled) {

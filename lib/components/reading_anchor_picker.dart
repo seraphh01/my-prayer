@@ -18,75 +18,83 @@ class ReadingAnchorPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedPreset = ReadingAnchorPresets.presetForAlignment(
-      FFAppState().readingAnchorAlignment,
-    );
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        FFAppState(),
+        FlutterFlowTheme.themeModeNotifier,
+      ]),
+      builder: (context, _) {
+        final selectedPreset = ReadingAnchorPresets.presetForAlignment(
+          FFAppState().readingAnchorAlignment,
+        );
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (showTitle)
-          Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(
-              compact ? 0.0 : 24.0,
-              0.0,
-              0.0,
-              0.0,
-            ),
-            child: Text(
-              'Poziție derulare automată text',
-              style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    fontFamily: 'Inter',
-                    fontSize: 16.0,
-                    letterSpacing: 0.0,
-                  ),
-            ),
-          ),
-        if (showHint)
-          Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(
-              compact ? 0.0 : 24.0,
-              0.0,
-              compact ? 0.0 : 24.0,
-              0.0,
-            ),
-            child: Text(
-              'Unde se derulează automat textul când asculti o rugăciune',
-              style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    fontFamily: 'Inter',
-                    color: FlutterFlowTheme.of(context).secondaryText,
-                    letterSpacing: 0.0,
-                  ),
-            ),
-          ),
-        Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(
-            compact ? 16.0 : 24.0,
-            showTitle || showHint ? 12.0 : 0.0,
-            compact ? 16.0 : 24.0,
-            compact ? 0.0 : 0.0,
-          ),
-          child: Wrap(
-            spacing: 12.0,
-            runSpacing: 8.0,
-            alignment: WrapAlignment.center,
-            children: [
-              for (final preset in ReadingAnchorPresets.values)
-                buildThemeChip(
-                  context: context,
-                  label: ReadingAnchorPresets.labelFor(preset),
-                  icon: ReadingAnchorPresets.iconFor(preset),
-                  isSelected: selectedPreset == preset,
-                  onSelected: () {
-                    FFAppState().readingAnchorAlignment =
-                        ReadingAnchorPresets.alignmentFor(preset);
-                  },
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (showTitle)
+              Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(
+                  compact ? 0.0 : 24.0,
+                  0.0,
+                  0.0,
+                  0.0,
                 ),
-            ],
-          ),
-        ),
-      ],
+                child: Text(
+                  'Poziție derulare automată text',
+                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        fontFamily: 'Inter',
+                        fontSize: 16.0,
+                        letterSpacing: 0.0,
+                      ),
+                ),
+              ),
+            if (showHint)
+              Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(
+                  compact ? 0.0 : 24.0,
+                  0.0,
+                  compact ? 0.0 : 24.0,
+                  0.0,
+                ),
+                child: Text(
+                  'Unde se derulează automat textul când asculti o rugăciune',
+                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        fontFamily: 'Inter',
+                        color: FlutterFlowTheme.of(context).secondaryText,
+                        letterSpacing: 0.0,
+                      ),
+                ),
+              ),
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(
+                compact ? 16.0 : 24.0,
+                showTitle || showHint ? 12.0 : 0.0,
+                compact ? 16.0 : 24.0,
+                compact ? 0.0 : 0.0,
+              ),
+              child: Wrap(
+                spacing: 12.0,
+                runSpacing: 8.0,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final preset in ReadingAnchorPresets.values)
+                    buildThemeChip(
+                      context: context,
+                      label: ReadingAnchorPresets.labelFor(preset),
+                      icon: ReadingAnchorPresets.iconFor(preset),
+                      isSelected: selectedPreset == preset,
+                      onSelected: () {
+                        FFAppState().readingAnchorAlignment =
+                            ReadingAnchorPresets.alignmentFor(preset);
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

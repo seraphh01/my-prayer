@@ -17,8 +17,13 @@ const kThemeModeKey = 'app_theme_mode';
 SharedPreferences? _prefs;
 
 abstract class FlutterFlowTheme {
-  static Future initialize() async =>
-      _prefs = await SharedPreferences.getInstance();
+  static final ValueNotifier<AppThemeMode> themeModeNotifier =
+      ValueNotifier<AppThemeMode>(AppThemeMode.system);
+
+  static Future initialize() async {
+    _prefs = await SharedPreferences.getInstance();
+    themeModeNotifier.value = themeMode;
+  }
 
   static AppThemeMode get themeMode {
     final themeString = _prefs?.getString(kThemeModeKey);
@@ -52,6 +57,7 @@ abstract class FlutterFlowTheme {
         _prefs?.setString(kThemeModeKey, 'system');
         break;
     }
+    themeModeNotifier.value = mode;
   }
 
   static FlutterFlowTheme of(BuildContext context) {
