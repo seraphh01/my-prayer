@@ -205,8 +205,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       await _pageManager.seek(Duration(seconds: widget.initialAudioTime));
     }
     if (!widget.continueAudio || !_isAudioActivelyPlaying()) {
-      _pageManager.pause();
-      _pageManager.playButtonNotifier.value = ButtonState.paused;
+      await _pageManager.pause();
     }
   }
 
@@ -291,7 +290,6 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
     _audioQueueInitialized = false;
     _audioQueueInitFuture = null;
     _pageManager.clearPendingTrackIndex();
-    _pageManager.playButtonNotifier.value = ButtonState.paused;
     _pageManager.setTrackIndex(widget.page);
     _pageManager.currentProgressNotifier.value = Duration.zero;
     _pageManager.totalDurationNotifier.value = Duration.zero;
@@ -459,7 +457,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
             onTap: () async {
               _onFloatingControlsInteraction();
               if (isPlaying) {
-                _pageManager.pause();
+                await _pageManager.pause();
               } else {
                 await _pageManager.play();
               }
@@ -1236,7 +1234,7 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                           builder: (context, chromeVisible, child) {
                             return SafeArea(
                               top: _isTextMode && !chromeVisible,
-                              bottom: false,
+                              bottom: true,
                               child: child!,
                             );
                           },

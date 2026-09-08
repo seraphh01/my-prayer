@@ -29,6 +29,8 @@ class PageManager {
       ValueNotifier<AudioProcessingState>(AudioProcessingState.idle);
 
   final _audioHandler = getIt<AudioHandler>();
+  bool _isPausePending = false;
+  double? _pendingPlaybackSpeed;
   int? _pendingTrackIndex;
   int _lastQueueLength = 0;
 
@@ -71,6 +73,10 @@ class PageManager {
   void _handlePlaybackState(PlaybackState playbackState) {
     final isPlaying = playbackState.playing;
     final processingState = playbackState.processingState;
+
+    if (!isPlaying) {
+      _isPausePending = false;
+    }
 
     if (processingState == AudioProcessingState.loading ||
         processingState == AudioProcessingState.buffering) {
@@ -176,8 +182,18 @@ class PageManager {
     await _audioHandler.play();
   }
 
-  void pause() {
-    _audioHandler.pause();
+  Future<void> pause() async {
+    if (_isPausePending) {
+      return;
+    }
+
+    _isPausePending = true;
+    try {
+      await _audioHandler.pause();
+    } catch (_) {
+      _isPausePending = false;
+      rethrow;
+    }
   }
 
   Future<void> seek(Duration position) async =>
@@ -246,7 +262,20 @@ class PageManager {
   }
 
   Future<void> setPlaybackSpeed(double speed) async {
-    await _audioHandler.setSpeed(speed);
+    if (playbackSpeedNotifier.value == speed ||
+        _pendingPlaybackSpeed == speed) {
+      return;
+    }
+
+    _pendingPlaybackSpeed = speed;
+    try {
+      await _audioHandler.setSpeed(speed);
+      playbackSpeedNotifier.value = speed;
+    } finally {
+      if (_pendingPlaybackSpeed == speed) {
+        _pendingPlaybackSpeed = null;
+      }
+    }
   }
 
   void shuffle() {

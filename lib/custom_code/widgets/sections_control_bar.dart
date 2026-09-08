@@ -232,8 +232,8 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
   @override
   Widget build(BuildContext context) {
     if (widget.playbackRate != null &&
-        _pageManager.playBackStateNotifier.value != widget.playbackRate) {
-      _pageManager.setPlaybackSpeed(widget.playbackRate ?? 1.0);
+        _pageManager.playbackSpeedNotifier.value != widget.playbackRate) {
+      unawaited(_pageManager.setPlaybackSpeed(widget.playbackRate!));
     }
     return Container(
       width: widget.width,
@@ -251,126 +251,126 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-              if (widget.showAudioTimingBar) ...[
-                _buildAudioTimingBar(context, showSlider: false),
-              ],
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildReplayCurrentTextButton(context),
-                  FlutterFlowIconButton(
-                    borderRadius: 32,
-                    buttonSize: 64,
-                    fillColor: FlutterFlowTheme.of(context).primaryBackground,
-                    icon: Icon(
-                      Icons.navigate_before_rounded,
-                      color: FlutterFlowTheme.of(context).primary,
-                      size: 32,
+                if (widget.showAudioTimingBar) ...[
+                  _buildAudioTimingBar(context, showSlider: false),
+                ],
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildReplayCurrentTextButton(context),
+                    FlutterFlowIconButton(
+                      borderRadius: 32,
+                      buttonSize: 64,
+                      fillColor: FlutterFlowTheme.of(context).primaryBackground,
+                      icon: Icon(
+                        Icons.navigate_before_rounded,
+                        color: FlutterFlowTheme.of(context).primary,
+                        size: 32,
+                      ),
+                      onPressed: () => _pageManager.previous(),
                     ),
-                    onPressed: () => _pageManager.previous(),
-                  ),
-                  SizedBox(
-                    width: 8,
-                  ),
-                  ValueListenableBuilder(
-                      valueListenable: _pageManager.playButtonNotifier,
-                      builder: (_, value, __) {
-                        switch (value) {
-                          case ButtonState.loading:
-                            return Container(
-                              width: 64,
-                              height: 64,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                  color: FlutterFlowTheme.of(context).primary,
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(32))),
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  FlutterFlowTheme.of(context)
-                                      .primaryBackground,
+                    SizedBox(
+                      width: 8,
+                    ),
+                    ValueListenableBuilder(
+                        valueListenable: _pageManager.playButtonNotifier,
+                        builder: (_, value, __) {
+                          switch (value) {
+                            case ButtonState.loading:
+                              return Container(
+                                width: 64,
+                                height: 64,
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(32))),
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    FlutterFlowTheme.of(context)
+                                        .primaryBackground,
+                                  ),
                                 ),
-                              ),
-                            );
-                          case ButtonState.paused:
-                            return FlutterFlowIconButton(
-                              borderRadius: 32,
-                              buttonSize: 64,
-                              fillColor: FlutterFlowTheme.of(context).primary,
-                              icon: Icon(
-                                Icons.play_arrow,
-                                color: FlutterFlowTheme.of(context)
-                                    .primaryBackground,
-                                size: 32,
-                              ),
-                              onPressed: widget.hasAudioContent
-                                  ? _pageManager.play
-                                  : null,
-                              disabledColor:
-                                  FlutterFlowTheme.of(context).secondaryText,
-                            );
-                          case ButtonState.playing:
-                            return FlutterFlowIconButton(
-                              borderRadius: 32,
-                              buttonSize: 64,
-                              fillColor: FlutterFlowTheme.of(context).primary,
-                              icon: Icon(
-                                Icons.pause,
-                                color: FlutterFlowTheme.of(context)
-                                    .primaryBackground,
-                                size: 32,
-                              ),
-                              onPressed: widget.hasAudioContent
-                                  ? _pageManager.pause
-                                  : null,
-                              disabledColor:
-                                  FlutterFlowTheme.of(context).secondary,
-                            );
+                              );
+                            case ButtonState.paused:
+                              return FlutterFlowIconButton(
+                                borderRadius: 32,
+                                buttonSize: 64,
+                                fillColor: FlutterFlowTheme.of(context).primary,
+                                icon: Icon(
+                                  Icons.play_arrow,
+                                  color: FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                  size: 32,
+                                ),
+                                onPressed: widget.hasAudioContent
+                                    ? _pageManager.play
+                                    : null,
+                                disabledColor:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                              );
+                            case ButtonState.playing:
+                              return FlutterFlowIconButton(
+                                borderRadius: 32,
+                                buttonSize: 64,
+                                fillColor: FlutterFlowTheme.of(context).primary,
+                                icon: Icon(
+                                  Icons.pause,
+                                  color: FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                  size: 32,
+                                ),
+                                onPressed: widget.hasAudioContent
+                                    ? _pageManager.pause
+                                    : null,
+                                disabledColor:
+                                    FlutterFlowTheme.of(context).secondary,
+                              );
 
-                          default:
-                            return Container();
-                        }
-                      }),
-                  SizedBox(
-                    width: 8,
-                  ),
-                  FlutterFlowIconButton(
-                    borderRadius: 32,
-                    buttonSize: 64,
-                    fillColor: FlutterFlowTheme.of(context).primaryBackground,
-                    icon: Icon(
-                      Icons.navigate_next_rounded,
-                      color: FlutterFlowTheme.of(context).primary,
-                      size: 32,
+                            default:
+                              return Container();
+                          }
+                        }),
+                    SizedBox(
+                      width: 8,
                     ),
-                    onPressed: () => _pageManager.next(),
-                  ),
-                  FlutterFlowIconButton(
-                    borderRadius: 24,
-                    buttonSize: 48,
-                    fillColor: FlutterFlowTheme.of(context).primaryBackground,
-                    icon: Icon(
-                      widget.showingTextContent
-                          ? widget.hasAudioContent
-                              ? Icons.audiotrack_rounded
-                              : Icons.text_fields_rounded
-                          : widget.hasTextContent
-                              ? Icons.text_fields_rounded
-                              : Icons.audiotrack_rounded,
-                      color: FlutterFlowTheme.of(context).primary,
-                      size: 24,
+                    FlutterFlowIconButton(
+                      borderRadius: 32,
+                      buttonSize: 64,
+                      fillColor: FlutterFlowTheme.of(context).primaryBackground,
+                      icon: Icon(
+                        Icons.navigate_next_rounded,
+                        color: FlutterFlowTheme.of(context).primary,
+                        size: 32,
+                      ),
+                      onPressed: () => _pageManager.next(),
                     ),
-                    onPressed:
-                        (widget.showingTextContent && widget.hasAudioContent) ||
-                                (!widget.showingTextContent &&
-                                    widget.hasTextContent)
-                            ? widget.switchContent
-                            : null,
-                  )
-                ].divide(SizedBox(width: 4)),
-              ),
+                    FlutterFlowIconButton(
+                      borderRadius: 24,
+                      buttonSize: 48,
+                      fillColor: FlutterFlowTheme.of(context).primaryBackground,
+                      icon: Icon(
+                        widget.showingTextContent
+                            ? widget.hasAudioContent
+                                ? Icons.audiotrack_rounded
+                                : Icons.text_fields_rounded
+                            : widget.hasTextContent
+                                ? Icons.text_fields_rounded
+                                : Icons.audiotrack_rounded,
+                        color: FlutterFlowTheme.of(context).primary,
+                        size: 24,
+                      ),
+                      onPressed: (widget.showingTextContent &&
+                                  widget.hasAudioContent) ||
+                              (!widget.showingTextContent &&
+                                  widget.hasTextContent)
+                          ? widget.switchContent
+                          : null,
+                    )
+                  ].divide(SizedBox(width: 4)),
+                ),
               ],
             ),
           ),
