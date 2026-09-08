@@ -78,7 +78,7 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
   }) {
     return [
       if (downloaded) Icons.offline_pin_rounded,
-      ...prayerCardTrailingIcons(prayer),
+      Icons.chevron_right_rounded,
     ];
   }
 
@@ -135,8 +135,8 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                               TextButton(
                                 onPressed: () =>
                                     Navigator.pop(alertDialogContext),
-                                child:
-                                    const Text(FFAppConstants.ConfirmButtonText),
+                                child: const Text(
+                                    FFAppConstants.ConfirmButtonText),
                               ),
                             ],
                           );
@@ -161,7 +161,8 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                       ),
                     )
                   : ReorderableListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 24.0),
+                      padding:
+                          const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 24.0),
                       itemCount: favoritePrayers.length,
                       onReorder: _onReorder,
                       proxyDecorator: (child, index, animation) {
@@ -186,63 +187,68 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                           key: ValueKey(prayer.id),
                           color: Colors.transparent,
                           child: Padding(
-                          padding: EdgeInsets.only(
-                            bottom: index < favoritePrayers.length - 1
-                                ? 12.0
-                                : 0.0,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              ReorderableDragStartListener(
-                                index: index,
-                                child: Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                    end: 8.0,
-                                  ),
-                                  child: Icon(
-                                    Icons.drag_handle_rounded,
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryText,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Slidable(
-                                  endActionPane: ActionPane(
-                                    motion: const ScrollMotion(),
-                                    extentRatio: 0.25,
-                                    children: [
-                                      SlidableAction(
-                                        label: 'Șterge',
-                                        backgroundColor:
-                                            FlutterFlowTheme.of(context).error,
-                                        icon: Icons.favorite_border_rounded,
-                                        onPressed: (_) {
-                                          FFAppState()
-                                              .removeFavoriteById(prayer.id);
-                                          safeSetState(() {});
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                  child: PrayerTypeCardWidget(
-                                    onLightBackground: true,
-                                    title: cardLines.$1,
-                                    subtitle: cardLines.$2,
-                                    trailingText: null,
-                                    trailingIcons: _favoriteTrailingIcons(
-                                      prayer: prayer,
-                                      downloaded: downloaded,
+                            padding: EdgeInsets.only(
+                              bottom: index < favoritePrayers.length - 1
+                                  ? 12.0
+                                  : 0.0,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                ReorderableDragStartListener(
+                                  index: index,
+                                  child: Padding(
+                                    padding: const EdgeInsetsDirectional.only(
+                                      end: 8.0,
                                     ),
-                                    onTap: () =>
-                                        unawaited(_openPrayer(prayer.id)),
+                                    child: Icon(
+                                      Icons.drag_handle_rounded,
+                                      color: FlutterFlowTheme.of(context)
+                                          .secondaryText,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                                Expanded(
+                                  child: Slidable(
+                                    endActionPane: ActionPane(
+                                      motion: const ScrollMotion(),
+                                      extentRatio: 0.25,
+                                      children: [
+                                        SlidableAction(
+                                          label: 'Șterge',
+                                          backgroundColor:
+                                              FlutterFlowTheme.of(context)
+                                                  .error,
+                                          icon: Icons.favorite_border_rounded,
+                                          onPressed: (_) {
+                                            FFAppState()
+                                                .removeFavoriteById(prayer.id);
+                                            safeSetState(() {});
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    child: PrayerTypeCardWidget(
+                                      onLightBackground: true,
+                                      title: cardLines.$1,
+                                      subtitle: cardLines.$2,
+                                      leadingImageUrl:
+                                          prayer.imageUrl.isNotEmpty
+                                              ? prayer.imageUrl
+                                              : null,
+                                      trailingText: null,
+                                      trailingIcons: _favoriteTrailingIcons(
+                                        prayer: prayer,
+                                        downloaded: downloaded,
+                                      ),
+                                      onTap: () =>
+                                          unawaited(_openPrayer(prayer.id)),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
                         );
                       },
                     ),

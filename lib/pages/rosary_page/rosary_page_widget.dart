@@ -542,9 +542,9 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                 chromeVisible,
                 backgroundOpacity,
               ),
-              const SizedBox(height: 8.0),
-              _buildFloatingChapterButton(context, backgroundOpacity),
               if (showPlayPause) ...[
+                const SizedBox(height: 8.0),
+                _buildFloatingChapterButton(context, backgroundOpacity),
                 const SizedBox(height: 8.0),
                 _buildFloatingPlayPauseButton(context, backgroundOpacity),
               ],

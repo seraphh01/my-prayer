@@ -115,8 +115,8 @@ class _DownloadedPrayersPageWidgetState
                               TextButton(
                                 onPressed: () =>
                                     Navigator.pop(alertDialogContext),
-                                child:
-                                    const Text(FFAppConstants.ConfirmButtonText),
+                                child: const Text(
+                                    FFAppConstants.ConfirmButtonText),
                               ),
                             ],
                           );
@@ -175,8 +175,11 @@ class _DownloadedPrayersPageWidgetState
                             onLightBackground: true,
                             title: cardLines.$1,
                             subtitle: cardLines.$2,
+                            leadingImageUrl: prayer.imageUrl.isNotEmpty
+                                ? prayer.imageUrl
+                                : null,
                             trailingText: null,
-                            trailingIcons: prayerCardTrailingIcons(prayer),
+                            trailingIcons: const [Icons.chevron_right_rounded],
                             onTap: () => unawaited(_openPrayer(prayer.id)),
                           ),
                         );

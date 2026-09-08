@@ -23,6 +23,9 @@ class PrayersRow extends SupabaseDataRow {
   String get title => getField<String>('title')!;
   set title(String value) => setField<String>('title', value);
 
+  String? get imageUrl => getField<String>('image_url');
+  set imageUrl(String? value) => setField<String>('image_url', value);
+
   int? get prayerTypeId => getField<int>('prayer_type_id');
   set prayerTypeId(int? value) => setField<int>('prayer_type_id', value);
 

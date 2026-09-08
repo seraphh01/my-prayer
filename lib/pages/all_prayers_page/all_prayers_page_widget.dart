@@ -184,15 +184,7 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
   }
 
   List<IconData> _trailingIconsForPrayer(PrayerStruct prayer) {
-    if (prayer.mode == PrayerMode.audioAndText) {
-      return const [Icons.chevron_right_rounded];
-    }
-    return [
-      prayer.mode == PrayerMode.audioOnly
-          ? Icons.audiotrack_rounded
-          : Icons.text_snippet_rounded,
-      Icons.chevron_right_rounded,
-    ];
+    return const [Icons.chevron_right_rounded];
   }
 
   Future<void> _openPrayer(String prayerId) async {
@@ -218,8 +210,8 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
       return;
     }
     if (subtype.subtypes.isEmpty &&
-      subtype.prayers.length == 1 &&
-      subtype.prayers.first.mode != PrayerMode.audioOnly) {
+        subtype.prayers.length == 1 &&
+        subtype.prayers.first.mode != PrayerMode.audioOnly) {
       await _openPrayer(subtype.prayers.first.id);
       return;
     }
@@ -254,6 +246,8 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
               child: PrayerTypeCardWidget(
                 title: prayer.subtitle,
                 subtitle: null,
+                leadingImageUrl:
+                    prayer.imageUrl.isNotEmpty ? prayer.imageUrl : null,
                 trailingText: null,
                 trailingIcons: _trailingIconsForPrayer(prayer),
                 onTap: () => unawaited(_openPrayer(prayer.id)),
@@ -348,6 +342,8 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
                 return PrayerTypeCardWidget(
                   title: prayer.subtitle,
                   subtitle: null,
+                  leadingImageUrl:
+                      prayer.imageUrl.isNotEmpty ? prayer.imageUrl : null,
                   trailingText: null,
                   trailingIcons: _trailingIconsForPrayer(prayer),
                   onTap: () => unawaited(_openPrayer(prayer.id)),

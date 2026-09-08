@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:my_prayer/custom_code/audio/notifiers/play_button_notifier.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
-import 'package:my_prayer/custom_code/prayer/section_text_formatting.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_section_content_cache.dart';
 import 'package:my_prayer/custom_code/prayer/reading_anchor_presets.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_typography.dart';
@@ -11,6 +10,7 @@ import 'package:my_prayer/service_locator.dart';
 
 import '/backend/schema/structs/index.dart';
 import '/components/audio_page_widget.dart';
+import '/components/choose_chapter_widget.dart';
 import '/components/empty_list_component_widget.dart';
 import '/components/section_text/prayer_text_styles.dart';
 import '/components/section_text/section_header_widget.dart';
@@ -55,6 +55,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
   final _pageManager = getIt<PageManager>();
   final _sectionCache = getIt<PrayerSectionContentCache>();
   final ValueNotifier<bool> _isContentLoading = ValueNotifier(false);
+  final ValueNotifier<bool> _showAudioSectionList = ValueNotifier(true);
   bool _hasInitialContent = false;
 
   Timer? _clippedAboveDebounce;
@@ -786,6 +787,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
     _clippedAboveDebounce?.cancel();
     _scrollbarHideTimer?.cancel();
     _isContentLoading.dispose();
+    _showAudioSectionList.dispose();
     _model.maybeDispose();
     _pageManager.trackIndexNotifier.removeListener(onTrackIndexChanged);
     _pageManager.currentProgressNotifier
@@ -913,31 +915,11 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
             },
             texts: section.texts,
             sections: _model.flattenedSections,
+            showSectionListNotifier: _showAudioSectionList,
           ),
         ),
       ),
     );
-  }
-
-  Future<void> _replayCurrentText() async {
-    final texts = _model.currentSection?.texts ?? const <SectionTextStruct>[];
-    final audioTimeSeconds =
-        _pageManager.currentProgressNotifier.value.inSeconds;
-    final activeTextIndex = findActiveTextIndex(texts, audioTimeSeconds);
-    if (activeTextIndex < 0) {
-      return;
-    }
-
-    final activeText = texts[activeTextIndex];
-    final isNearTextStart = audioTimeSeconds - activeText.startTime <=
-        const Duration(seconds: 2).inSeconds;
-    final targetTextIndex = isNearTextStart && activeTextIndex > 0
-        ? activeTextIndex - 1
-        : activeTextIndex;
-    await _pageManager.seek(
-      Duration(seconds: texts[targetTextIndex].startTime),
-    );
-    _updatePlaybackHighlight();
   }
 
   @override
@@ -1065,7 +1047,29 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                             hasTextContent: _model.displayAudioPage ||
                                 (_model.currentSection?.texts.isNotEmpty ??
                                     false),
-                            replayCurrentText: _replayCurrentText,
+                            showChapterView: () async {
+                              if (_model.displayAudioPage) {
+                                _showAudioSectionList.value =
+                                    !_showAudioSectionList.value;
+                                return;
+                              }
+                              final selectedIndex =
+                                  await showModalBottomSheet<int>(
+                                context: context,
+                                isDismissible: true,
+                                useSafeArea: true,
+                                builder: (context) => ChooseChapterWidget(
+                                  title:
+                                      '${widget.prayerTitle ?? ''}${(widget.prayerTitle?.isNotEmpty ?? false) ? ' - ' : ''}${widget.prayerSubtitle ?? ''}',
+                                  currentChapterIndex:
+                                      _pageManager.trackIndexNotifier.value,
+                                  chapterOptions: _model.chapterOptions,
+                                ),
+                              );
+                              if (selectedIndex != null) {
+                                await _pageManager.skipToIndex(selectedIndex);
+                              }
+                            },
                             switchContent: () async {
                               final leavingAudioPage = _model.displayAudioPage;
                               if (leavingAudioPage) {

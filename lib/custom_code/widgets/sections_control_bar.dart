@@ -47,7 +47,7 @@ class SectionsControlBar extends StatefulWidget {
   final double? width;
   final double? height;
   final Future Function()? switchContent;
-  final Future Function()? replayCurrentText;
+  final Future Function()? showChapterView;
   final bool showingTextContent;
   final bool hasTextContent;
   final bool hasAudioContent;
@@ -63,7 +63,7 @@ class SectionsControlBar extends StatefulWidget {
       required this.hasAudioContent,
       this.showAudioTimingBar = false,
       this.switchContent,
-      this.replayCurrentText});
+      this.showChapterView});
 
   @override
   State<SectionsControlBar> createState() => _SectionsControlBarState();
@@ -88,52 +88,11 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     super.dispose();
   }
 
-  void _switchContent() {
-    widget.switchContent!();
-  }
-
   String _formatTime(int seconds) {
     final hours = seconds >= 3600 ? '${seconds ~/ 3600}:' : '';
     final minutes = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
     final secs = (seconds % 60).toString().padLeft(2, '0');
     return '$hours$minutes:$secs';
-  }
-
-  Widget _buildReplayCurrentTextButton(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-    return Material(
-      color: theme.primaryBackground,
-      borderRadius: BorderRadius.circular(24.0),
-      child: InkWell(
-        onTap: widget.replayCurrentText,
-        borderRadius: BorderRadius.circular(24.0),
-        child: SizedBox(
-          width: 48.0,
-          height: 48.0,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(
-                Icons.replay_rounded,
-                color: theme.primary,
-                size: 32.0,
-              ),
-              Positioned(
-                bottom: 14.0,
-                child: Text(
-                  'T',
-                  style: TextStyle(
-                    color: theme.primary,
-                    fontSize: 11.0,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildAudioTimingBar(
@@ -259,7 +218,17 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _buildReplayCurrentTextButton(context),
+                    FlutterFlowIconButton(
+                      borderRadius: 24,
+                      buttonSize: 48,
+                      fillColor: FlutterFlowTheme.of(context).primaryBackground,
+                      icon: Icon(
+                        Icons.menu_book_rounded,
+                        color: FlutterFlowTheme.of(context).primary,
+                        size: 24,
+                      ),
+                      onPressed: widget.showChapterView,
+                    ),
                     FlutterFlowIconButton(
                       borderRadius: 32,
                       buttonSize: 64,

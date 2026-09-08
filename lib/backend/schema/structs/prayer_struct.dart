@@ -11,6 +11,7 @@ class PrayerStruct extends FFFirebaseStruct {
   PrayerStruct({
     String? id,
     String? title,
+    String? imageUrl,
     List<PrayerSectionStruct>? sections,
     String? subtitle,
     int? sequence,
@@ -18,6 +19,7 @@ class PrayerStruct extends FFFirebaseStruct {
     FirestoreUtilData firestoreUtilData = const FirestoreUtilData(),
   })  : _id = id,
         _title = title,
+        _imageUrl = imageUrl,
         _sections = sections,
         _subtitle = subtitle,
         _sequence = sequence,
@@ -41,6 +43,13 @@ class PrayerStruct extends FFFirebaseStruct {
   set mode(PrayerMode val) => _mode = val;
 
   bool hasTitle() => _title != null;
+
+  // "image_url" field.
+  String? _imageUrl;
+  String get imageUrl => _imageUrl ?? '';
+  set imageUrl(String? val) => _imageUrl = val;
+
+  bool hasImageUrl() => _imageUrl != null;
 
   // "sections" field.
   List<PrayerSectionStruct>? _sections;
@@ -72,6 +81,7 @@ class PrayerStruct extends FFFirebaseStruct {
   static PrayerStruct fromMap(Map<String, dynamic> data) => PrayerStruct(
         id: data['id'] as String?,
         title: data['title'] as String?,
+        imageUrl: data['image_url'] as String?,
         sections: getStructList(
           data['sections'],
           PrayerSectionStruct.fromMap,
@@ -87,6 +97,7 @@ class PrayerStruct extends FFFirebaseStruct {
   Map<String, dynamic> toMap() => {
         'id': _id,
         'title': _title,
+        'image_url': _imageUrl,
         'sections': _sections?.map((e) => e.toMap()).toList(),
         'subtitle': _subtitle,
         'sequence': _sequence,
@@ -103,6 +114,10 @@ class PrayerStruct extends FFFirebaseStruct {
           _title,
           ParamType.String,
         ),
+        'image_url': serializeParam(
+          _imageUrl,
+          ParamType.String,
+        ),
         'sections': serializeParam(
           _sections,
           ParamType.DataStruct,
@@ -116,7 +131,7 @@ class PrayerStruct extends FFFirebaseStruct {
           _sequence,
           ParamType.int,
         ),
-                'mode': serializeParam(
+        'mode': serializeParam(
           _mode?.serialize(),
           ParamType.String,
         ),
@@ -124,13 +139,11 @@ class PrayerStruct extends FFFirebaseStruct {
 
   static PrayerStruct fromSerializableMap(Map<String, dynamic> data) =>
       PrayerStruct(
-        id: deserializeParam(
-          data['id'],
-          ParamType.String
-        ),
-        title: deserializeParam(
-          data['title'],
-          ParamType.String
+        id: deserializeParam(data['id'], ParamType.String),
+        title: deserializeParam(data['title'], ParamType.String),
+        imageUrl: deserializeParam(
+          data['image_url'],
+          ParamType.String,
         ),
         sections: deserializeStructParam<PrayerSectionStruct>(
           data['sections'],
@@ -149,7 +162,7 @@ class PrayerStruct extends FFFirebaseStruct {
           isList: false,
         ),
         mode: deserializeEnum<PrayerMode>(
-            data['mode'],
+          data['mode'],
         ),
       );
 
@@ -162,6 +175,7 @@ class PrayerStruct extends FFFirebaseStruct {
     return other is PrayerStruct &&
         id == other.id &&
         title == other.title &&
+        imageUrl == other.imageUrl &&
         listEquality.equals(sections, other.sections) &&
         subtitle == other.subtitle &&
         sequence == other.sequence &&
@@ -169,13 +183,15 @@ class PrayerStruct extends FFFirebaseStruct {
   }
 
   @override
-  int get hashCode =>
-      const ListEquality().hash([id, title, sections, subtitle, sequence, mode]);
+  int get hashCode => const ListEquality().hash(
+        [id, title, imageUrl, sections, subtitle, sequence, mode],
+      );
 }
 
 PrayerStruct createPrayerStruct({
   String? id,
   String? title,
+  String? imageUrl,
   String? subtitle,
   PrayerMode? mode,
   int? sequence,
@@ -187,6 +203,7 @@ PrayerStruct createPrayerStruct({
     PrayerStruct(
       id: id,
       title: title,
+      imageUrl: imageUrl,
       subtitle: subtitle,
       sequence: sequence,
       mode: mode,

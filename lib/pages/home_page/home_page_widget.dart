@@ -494,15 +494,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
               padding: const EdgeInsets.only(bottom: 12.0),
               child: PrayerTypeCardWidget(
                 title: prayer.subtitle,
+                leadingImageUrl:
+                    prayer.imageUrl.isNotEmpty ? prayer.imageUrl : null,
                 trailingText: null,
-                trailingIcons: prayer.mode != PrayerMode.audioAndText
-                    ? [
-                        prayer.mode == PrayerMode.audioOnly
-                            ? Icons.audiotrack_rounded
-                            : Icons.format_size_rounded,
-                        Icons.chevron_right_rounded,
-                      ]
-                    : const [Icons.chevron_right_rounded],
+                trailingIcons: const [Icons.chevron_right_rounded],
                 onTap: () => _openPrayerFromTypeNav(prayer.id),
               ),
             ),
@@ -1198,6 +1193,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           final prayer = type.prayers.first;
           return PrayerTypeCardWidget(
             title: prayer.subtitle,
+            leadingImageUrl:
+                prayer.imageUrl.isNotEmpty ? prayer.imageUrl : null,
             subtitle: null,
             trailingText: null,
             trailingIcons: _trailingIconsForPrayer(prayer),
@@ -1355,6 +1352,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             child: PrayerTypeCardWidget(
               title: cardLines.$1,
               subtitle: cardLines.$2,
+              leadingImageUrl:
+                  prayer.imageUrl.isNotEmpty ? prayer.imageUrl : null,
               trailingText: null,
               trailingIcons: _trailingIconsForPrayer(prayer),
               onTap: () => unawaited(_openPrayer(context, prayer.id)),
@@ -1430,6 +1429,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             child: PrayerTypeCardWidget(
               title: cardLines.$1,
               subtitle: cardLines.$2,
+              leadingImageUrl:
+                  entry.opensPrayerType || entry.prayer.imageUrl.isEmpty
+                      ? null
+                      : entry.prayer.imageUrl,
               trailingText: null,
               trailingIcons: entry.opensPrayerType
                   ? const [Icons.chevron_right_rounded]
@@ -1559,15 +1562,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   }
 
   List<IconData> _trailingIconsForPrayer(PrayerStruct prayer) {
-    if (prayer.mode == PrayerMode.audioAndText) {
-      return const [Icons.chevron_right_rounded];
-    }
-    return [
-      prayer.mode == PrayerMode.audioOnly
-          ? Icons.audiotrack_rounded
-          : Icons.text_fields_rounded,
-      Icons.chevron_right_rounded,
-    ];
+    return const [Icons.chevron_right_rounded];
   }
 
   Widget _buildSearchResultCard(
@@ -1578,6 +1573,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           ? result.prayer.subtitle
           : result.prayer.title,
       subtitle: subtitle.isEmpty ? null : subtitle,
+      leadingImageUrl:
+          result.prayer.imageUrl.isNotEmpty ? result.prayer.imageUrl : null,
       trailingText: null,
       trailingIcons: _trailingIconsForPrayer(result.prayer),
       onTap: () async {

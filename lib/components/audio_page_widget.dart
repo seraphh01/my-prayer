@@ -1,4 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:my_prayer/custom_code/audio/page_manager.dart';
 import 'package:my_prayer/custom_code/prayer/section_text_formatting.dart';
@@ -22,6 +23,7 @@ class AudioPageWidget extends StatefulWidget {
     required this.onAudioTimeChanged,
     this.texts,
     this.sections = const [],
+    this.showSectionListNotifier,
   })  : prayerTitle = prayerTitle ?? '',
         prayerSubtitle = prayerSubtitle ?? '',
         audioUrl = audioUrl ?? '';
@@ -32,6 +34,7 @@ class AudioPageWidget extends StatefulWidget {
   final List<SectionTextStruct>? texts;
   final String? audioUrl;
   final List<PrayerSectionStruct> sections;
+  final ValueListenable<bool>? showSectionListNotifier;
 
   @override
   State<AudioPageWidget> createState() => _AudioPageWidgetState();
@@ -55,7 +58,6 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
     _model.maybeDispose();
     super.dispose();
   }
-
 
   Widget _buildPinnedSectionHeader(
     BuildContext context,
@@ -113,13 +115,11 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: typography.style(
-                              theme.titleLarge,
-                              scaleFontSize: true,
-                              color: theme.primaryText,
-                              letterSpacing: 0.0,
-                              fontSize: 22.0
-                            ),
+                            style: typography.style(theme.titleLarge,
+                                scaleFontSize: true,
+                                color: theme.primaryText,
+                                letterSpacing: 0.0,
+                                fontSize: 22.0),
                           ),
                         if (hasSubtitle)
                           Text(
@@ -127,14 +127,12 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
                             textAlign: TextAlign.center,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: typography.style(
-                              theme.labelLarge,
-                              fontStyle: FontStyle.italic,
-                              scaleFontSize: true,
-                              color: theme.secondaryText,
-                              letterSpacing: 0.0,
-                              fontSize: 18.0
-                            ),
+                            style: typography.style(theme.labelLarge,
+                                fontStyle: FontStyle.italic,
+                                scaleFontSize: true,
+                                color: theme.secondaryText,
+                                letterSpacing: 0.0,
+                                fontSize: 18.0),
                           ),
                       ],
                     ),
@@ -241,8 +239,29 @@ class _AudioPageWidgetState extends State<AudioPageWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildPinnedSectionHeader(context, typography),
-            Expanded(child: _buildSectionList(context, typography)),
+            if (widget.showSectionListNotifier == null) ...[
+              _buildPinnedSectionHeader(context, typography),
+              Expanded(child: _buildSectionList(context, typography)),
+            ] else
+              Expanded(
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: widget.showSectionListNotifier!,
+                  builder: (context, showSectionList, _) {
+                    if (!showSectionList) {
+                      return Center(
+                        child: _buildPinnedSectionHeader(context, typography),
+                      );
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildPinnedSectionHeader(context, typography),
+                        Expanded(child: _buildSectionList(context, typography)),
+                      ],
+                    );
+                  },
+                ),
+              ),
           ],
         ),
       ),

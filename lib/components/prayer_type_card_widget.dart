@@ -24,6 +24,7 @@ class PrayerTypeCardWidget extends StatefulWidget {
   final List<IconData>? trailingIcons;
   final IconData? prefixIcon;
   final String? leadingImageUrl;
+
   /// Use on pages with a light scaffold background (e.g. favorites, downloads).
   final bool onLightBackground;
 
@@ -68,8 +69,7 @@ class _PrayerTypeCardWidgetState extends State<PrayerTypeCardWidget>
         onTapUp: (_) => _setPressed(false),
         onTap: widget.onTap,
         child: Container(
-          padding:
-              const EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 12.0),
+          padding: const EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 12.0),
           decoration: BoxDecoration(
             color: surfaceColor,
             borderRadius: BorderRadius.circular(16.0),
@@ -91,17 +91,7 @@ class _PrayerTypeCardWidgetState extends State<PrayerTypeCardWidget>
           ),
           child: Row(
             children: [
-              if (widget.leadingImageUrl != null)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 12.0),
-                  child: CachedSectionImage(
-                    imageUrl: widget.leadingImageUrl!,
-                    width: 44.0,
-                    height: 44.0,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                )
-              else if (widget.prefixIcon != null)
+              if (widget.prefixIcon != null)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: 8.0),
                   child: Icon(
@@ -131,22 +121,33 @@ class _PrayerTypeCardWidgetState extends State<PrayerTypeCardWidget>
                           widget.subtitle!,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                fontFamily: 'Inter',
-                                color: FlutterFlowTheme.of(context)
-                                    .primary
-                                    .withValues(alpha: 0.62),
-                                fontSize: 14.0,
-                                letterSpacing: 0.0,
-                                lineHeight: 1.35,
-                                fontWeight: FontWeight.w400,
-                              ),
+                          style:
+                              FlutterFlowTheme.of(context).bodyMedium.override(
+                                    fontFamily: 'Inter',
+                                    color: FlutterFlowTheme.of(context)
+                                        .primary
+                                        .withValues(alpha: 0.62),
+                                    fontSize: 14.0,
+                                    letterSpacing: 0.0,
+                                    lineHeight: 1.35,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                         ),
                       ),
                   ],
                 ),
               ),
-              if (widget.trailingText != null)
+              if (widget.leadingImageUrl != null)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 12.0),
+                  child: CachedSectionImage(
+                    imageUrl: widget.leadingImageUrl!,
+                    width: 44.0,
+                    height: 44.0,
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+              if (widget.trailingText != null && widget.leadingImageUrl == null)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: 8.0),
                   child: Text(
@@ -158,15 +159,19 @@ class _PrayerTypeCardWidgetState extends State<PrayerTypeCardWidget>
                         ),
                   ),
                 ),
-                if(widget.trailingIcons != null)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: widget.trailingIcons!.map((icon) => Icon(
-                  icon,
-                  size: 24.0,
-                  color: FlutterFlowTheme.of(context).primary,
-                )).toList().divide(const SizedBox(width: 4.0)),
-              ),
+              if (widget.trailingIcons != null &&
+                  widget.leadingImageUrl == null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: widget.trailingIcons!
+                      .map((icon) => Icon(
+                            icon,
+                            size: 24.0,
+                            color: FlutterFlowTheme.of(context).primary,
+                          ))
+                      .toList()
+                      .divide(const SizedBox(width: 4.0)),
+                ),
             ],
           ),
         ),

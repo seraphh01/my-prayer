@@ -1,9 +1,8 @@
-import '/backend/schema/enums/enums.dart';
 import '/backend/schema/structs/index.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
-import 'package:flutter/material.dart';
 
-(String title, String? subtitle) prayerCardTitleAndSubtitle(PrayerStruct prayer) {
+(String title, String? subtitle) prayerCardTitleAndSubtitle(
+    PrayerStruct prayer) {
   final cardTitle = prayer.title.isNotEmpty ? prayer.title : prayer.subtitle;
   final cardSubtitle = prayer.title.isNotEmpty &&
           prayer.subtitle.isNotEmpty &&
@@ -11,18 +10,6 @@ import 'package:flutter/material.dart';
       ? prayer.subtitle
       : null;
   return (cardTitle, cardSubtitle);
-}
-
-List<IconData> prayerCardTrailingIcons(PrayerStruct prayer) {
-  if (prayer.mode == PrayerMode.audioAndText) {
-    return const [Icons.chevron_right_rounded];
-  }
-  return [
-    prayer.mode == PrayerMode.audioOnly
-        ? Icons.audiotrack_rounded
-        : Icons.text_snippet_rounded,
-    Icons.chevron_right_rounded,
-  ];
 }
 
 PrayerSectionStruct? savedPrayerSection(SavedPrayerDataStruct saved) {
@@ -47,8 +34,7 @@ PrayerSectionStruct? savedPrayerSection(SavedPrayerDataStruct saved) {
     return ('', null, null);
   }
 
-  final prayerTitle =
-      prayer.title.isNotEmpty ? prayer.title : prayer.subtitle;
+  final prayerTitle = prayer.title.isNotEmpty ? prayer.title : prayer.subtitle;
   final section = savedPrayerSection(saved);
   final sectionTitle =
       section != null && section.title.isNotEmpty ? section.title : null;
