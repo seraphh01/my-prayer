@@ -113,72 +113,74 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
                 final currentSeconds =
                     _isSliding ? _slideAudioTime : progress.inSeconds;
                 final totalSeconds = total.inSeconds;
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
+                return SizedBox(
+                  height: showSlider ? 32.0 : 18.0,
+                  child: Row(
                   children: [
+                    if (showTimestamps)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16.0),
+                        child: Text(
+                          _formatTime(currentSeconds),
+                          style: FlutterFlowTheme.of(context)
+                              .bodySmall
+                              .override(
+                                fontFamily: 'Merriweather',
+                                color: theme.primary,
+                                fontSize: 14.0,
+                                letterSpacing: 0.0,
+                              ),
+                        ),
+                      ),
                     if (showSlider)
-                      SizedBox(
-                        width: double.infinity,
-                        height: 16.0,
-                        child: CustomSlider(
-                          width: double.infinity,
-                          height: 16.0,
-                          sliderValue: currentSeconds.toDouble(),
-                          bufferValue: buffered.inSeconds,
-                          minValue: 0,
-                          maxValue: totalSeconds,
-                          padding: EdgeInsets.symmetric(horizontal: 32.0),
-                          onValueChange: (value) async {
-                            setState(() {
-                              _isSliding = true;
-                              _slideAudioTime = value.round();
-                            });
-                          },
-                          onValueChangeEnd: (value) async {
-                            await _pageManager.seek(
-                              Duration(seconds: value.round()),
-                            );
-                            if (mounted) {
+                      Expanded(
+                        child: SizedBox(
+                          height: 44.0,
+                          child: CustomSlider(
+                            width: double.infinity,
+                            height: 32.0,
+                            sliderValue: currentSeconds.toDouble(),
+                            bufferValue: buffered.inSeconds,
+                            minValue: 0,
+                            maxValue: totalSeconds,
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            onValueChange: (value) async {
                               setState(() {
-                                _isSliding = false;
-                                _slideAudioTime = 0;
+                                _isSliding = true;
+                                _slideAudioTime = value.round();
                               });
-                            }
-                          },
+                            },
+                            onValueChangeEnd: (value) async {
+                              await _pageManager.seek(
+                                Duration(seconds: value.round()),
+                              );
+                              if (mounted) {
+                                setState(() {
+                                  _isSliding = false;
+                                  _slideAudioTime = 0;
+                                });
+                              }
+                            },
+                          ),
                         ),
                       ),
                     if (showTimestamps)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _formatTime(currentSeconds),
-                              style: FlutterFlowTheme.of(context)
-                                  .bodySmall
-                                  .override(
-                                    fontFamily: 'Merriweather',
-                                    color: theme.primary,
-                                    fontSize: 14.0,
-                                    letterSpacing: 0.0,
-                                  ),
-                            ),
-                            Text(
-                              _formatTime(totalSeconds),
-                              style: FlutterFlowTheme.of(context)
-                                  .bodySmall
-                                  .override(
-                                    fontFamily: 'Merriweather',
-                                    color: theme.primary,
-                                    fontSize: 14.0,
-                                    letterSpacing: 0.0,
-                                  ),
-                            ),
-                          ],
+                        padding: const EdgeInsets.only(right: 16.0),
+                        child: Text(
+                          _formatTime(totalSeconds),
+                          style: FlutterFlowTheme.of(context)
+                              .bodySmall
+                              .override(
+                                fontFamily: 'Merriweather',
+                                color: theme.primary,
+                                fontSize: 14.0,
+                                letterSpacing: 0.0,
+                              ),
                         ),
                       ),
                   ],
+                  ),
                 );
               },
             );
@@ -197,22 +199,20 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
     return Container(
       width: widget.width,
       height: widget.height,
+      padding: const EdgeInsets.only(bottom: 12.0),
       decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).primaryBackground,
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Align(
-            alignment: widget.showAudioTimingBar
-                ? Alignment.topCenter
-                : Alignment.center,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.showAudioTimingBar) ...[
-                  _buildAudioTimingBar(context, showSlider: false),
-                ],
+      child: Align(
+        alignment: widget.showAudioTimingBar
+            ? Alignment.topCenter
+            : Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.showAudioTimingBar) ...[
+              _buildAudioTimingBar(context),
+            ],
                 Row(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -340,17 +340,8 @@ class _SectionsControlBarState extends State<SectionsControlBar> {
                     )
                   ].divide(SizedBox(width: 4)),
                 ),
-              ],
-            ),
-          ),
-          if (widget.showAudioTimingBar)
-            Positioned(
-              top: -14.0,
-              left: 0.0,
-              right: 0.0,
-              child: _buildAudioTimingBar(context, showTimestamps: false),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

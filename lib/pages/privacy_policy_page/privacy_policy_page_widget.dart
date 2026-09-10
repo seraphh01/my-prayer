@@ -29,11 +29,11 @@ Introducere
 
 Date stocate pe dispozitiv
 
-  Aplicația păstrează local, pe dispozitivul utilizatorului, preferințele de afișare și redare, rugăciunile favorite, descărcările pentru utilizare offline, jurnalul de rugăciune și mementourile configurate de utilizator. Jurnalul de rugăciune este păstrat local timp de cel mult 31 de zile.
+  Aplicația păstrează local, pe dispozitivul utilizatorului, preferințele de afișare și redare, rugăciunile favorite, descărcările pentru utilizare offline, jurnalul de rugăciune și program de rugăciune configurat de utilizator. Jurnalul de rugăciune este păstrat local timp de cel mult 31 de zile.
 
 Notificări și redare audio
 
-  Cu acordul utilizatorului, aplicația trimite notificări locale pentru mementourile de rugăciune. Informațiile necesare acestor notificări rămân pe dispozitiv. Aplicația poate reda audio în fundal și poate afișa controale de redare în sistemul de operare. Aplicația nu solicită acces la microfon.
+  Cu acordul utilizatorului, aplicația trimite notificări locale pentru program de rugăciune al utilizatorului. Informațiile necesare acestor notificări rămân pe dispozitiv. Aplicația poate reda audio în fundal și poate afișa controale de redare în sistemul de operare. Aplicația nu solicită acces la microfon.
 
 Conținut și conexiune la internet
 
@@ -45,7 +45,7 @@ Aplicația nu solicită crearea unui cont și nu colectează în mod intenționa
 
 Securitate și control
 
-Puteți șterge datele stocate local prin eliminarea favoritelor, a jurnalului, a mementourilor și a descărcărilor din aplicație sau prin ștergerea datelor aplicației din setările dispozitivului. Permisiunea pentru notificări poate fi retrasă oricând din setările sistemului.
+Puteți șterge datele stocate local prin eliminarea favoritelor, a jurnalului, a programului de rugăciune și a descărcărilor din aplicație sau prin ștergerea datelor aplicației din setările dispozitivului. Permisiunea pentru notificări poate fi retrasă oricând din setările sistemului.
 
 Contact
 

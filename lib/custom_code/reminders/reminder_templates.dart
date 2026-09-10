@@ -49,7 +49,7 @@ List<ReminderTemplate> get defaultReminderTemplates => [
         minute: 0,
         prayerId: PrayerReminder.templatePickPrayerId,
         prayerTitle: 'Alege rugăciunea',
-        prayerSubtitle: 'Deschide mementoul pentru a selecta',
+        prayerSubtitle: 'Deschide înregistrarea pentru a selecta',
       ),
       ReminderTemplate(
         label: 'Seara',
@@ -57,7 +57,7 @@ List<ReminderTemplate> get defaultReminderTemplates => [
         minute: 0,
         prayerId: PrayerReminder.templatePickPrayerId,
         prayerTitle: 'Alege rugăciunea',
-        prayerSubtitle: 'Deschide mementoul pentru a selecta',
+        prayerSubtitle: 'Deschide înregistrarea pentru a selecta',
       ),
       const ReminderTemplate(
         label: 'Rozariul zilei',

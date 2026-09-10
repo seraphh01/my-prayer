@@ -142,8 +142,8 @@ class _PrayerTypeCardWidgetState extends State<PrayerTypeCardWidget>
                   padding: const EdgeInsetsDirectional.only(start: 12.0),
                   child: CachedSectionImage(
                     imageUrl: widget.leadingImageUrl!,
-                    width: 44.0,
-                    height: 44.0,
+                    width: 52.0,
+                    height: 52.0,
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                 ),

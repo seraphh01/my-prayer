@@ -55,7 +55,7 @@
 
 
 	<key>PermissionGroupNotification</key>
-    <string>Permite notificările pentru mementourile de rugăciune la orele setate de tine.</string>
+    <string>Permite notificările pentru programul de rugăciune la orele setate de tine.</string>
 
 
 	<key>UILaunchStoryboardName</key>

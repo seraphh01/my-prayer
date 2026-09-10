@@ -130,7 +130,7 @@ class PrayerReminderService {
 
     const androidDetails = AndroidNotificationDetails(
       'prayer_reminders',
-      'Memento rugăciune',
+      'Programul meu de rugăciune',
       channelDescription: 'Notificări locale pentru rugăciuni programate',
       importance: Importance.high,
       priority: Priority.high,

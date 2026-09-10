@@ -50,6 +50,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   static const double _homeCardGap = 12.0;
   static const double _homeAcasaSubsectionGap = 12.0;
   static const double _homeCatalogBreakTop = 8.0;
+  static const _homeExcludedPrayerTypeNames = {
+    'utrenia',
+    'orele canonice',
+    'slujba vecerniei',
+    'rozariul maicii domnului',
+  };
   static const String _appTitle = 'Rugăciuni și cântări';
   static const String _appTitleShort = 'Rugăciuni și cântări';
   static const String _congregationTitle =
@@ -843,15 +849,15 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     const SizedBox(height: 8.0),
                     _drawerNavTile(
                       context: context,
-                      icon: Icons.calendar_today_rounded,
-                      title: 'Calendar',
-                      routeName: 'CalendarPage',
+                      icon: Icons.menu_book_rounded,
+                      title: 'Toate rugăciunile',
+                      routeName: 'AllPrayersPage',
                     ),
                     if (!kIsWeb)
                       _drawerNavTile(
                         context: context,
-                        icon: Icons.notifications_outlined,
-                        title: 'Memento',
+                        icon: Icons.calendar_month_rounded,
+                        title: 'Programul meu de rugăciune',
                         routeName: 'RemindersPage',
                       ),
                     if (!kIsWeb)
@@ -863,20 +869,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       ),
                     _drawerNavTile(
                       context: context,
-                      icon: Icons.menu_book_rounded,
-                      title: 'Jurnal',
-                      routeName: 'PrayerJournalPage',
-                    ),
-                    _drawerNavTile(
-                      context: context,
-                      icon: Icons.favorite_rounded,
-                      title: 'Favorite',
-                      routeName: 'FavoritePrayersPage',
-                    ),
-                    _drawerNavTile(
-                      context: context,
                       icon: Icons.auto_stories_rounded,
-                      title: 'Ghid de rugăciune',
+                      title: 'Îndrumar',
                       routeName: 'PrayerGuidePage',
                     ),
                     _drawerNavTile(
@@ -949,15 +943,32 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             SliverToBoxAdapter(
                               child: _buildHomeCatalogSectionLabel(context),
                             ),
-                          SliverPadding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                              _homeSectionHorizontalPadding,
-                              _homeSectionInnerGap,
-                              _homeSectionHorizontalPadding,
-                              0.0,
+                            SliverPadding(
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                _homeSectionHorizontalPadding,
+                                _homeSectionInnerGap,
+                                _homeSectionHorizontalPadding,
+                                0.0,
+                              ),
+                              sliver: _buildPrayerTypesSliver(context),
                             ),
-                            sliver: _buildPrayerTypesSliver(context),
-                          ),
+                          if (!_searchActive && _typeStack.isEmpty)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0),
+                                child: PrayerTypeCardWidget(
+                                  title: 'Toate rugăciunile',
+                                  subtitle: null,
+                                  trailingText: null,
+                                  trailingIcons: const [
+                                    Icons.chevron_right_rounded,
+                                  ],
+                                  onTap: () => unawaited(
+                                    context.pushNamed('AllPrayersPage'),
+                                  ),
+                                ),
+                              ),
+                            ),
                           if (!_searchActive && _typeStack.isEmpty)
                             SliverToBoxAdapter(
                               child: _buildFavoritesHomeSection(context),
@@ -970,7 +981,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         ],
                       ),
                     ),
-                    Selector<FFAppState, String>(
+                    Selector<FFAppState, String>( 
                       selector: (_, state) => state.currentPrayerId,
                       builder: (context, currentPrayerId, _) {
                         if (!_showAudioPlayer || currentPrayerId.isEmpty) {
@@ -1181,7 +1192,13 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
 
     final visibleTypes = _prayerTypes!
-        .where((type) => type.subtypes.isNotEmpty || type.prayers.isNotEmpty)
+        .where(
+          (type) =>
+              (type.subtypes.isNotEmpty || type.prayers.isNotEmpty) &&
+              !_homeExcludedPrayerTypeNames.contains(
+                type.type.trim().toLowerCase(),
+              ),
+        )
         .toList();
 
     return SliverList.separated(

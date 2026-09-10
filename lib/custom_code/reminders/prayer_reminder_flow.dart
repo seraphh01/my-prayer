@@ -20,11 +20,11 @@ Future<bool> _confirmDuplicateReminder(
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Memento existent'),
+      title: const Text('Înregistrare existentă'),
       content: Text(
         existing.length == 1
-            ? 'Ai deja un memento pentru această rugăciune:\n$lines\n\nVrei să adaugi încă unul?'
-            : 'Ai deja ${existing.length} mementouri pentru această rugăciune:\n$lines\n\nVrei să adaugi încă unul?',
+            ? 'Ai deja o înregistrare pentru această rugăciune:\n$lines\n\nVrei să adaugi încă una în program?'
+            : 'Ai deja ${existing.length} înregistrări pentru această rugăciune:\n$lines\n\nVrei să adaugi încă una în program?',
       ),
       actions: [
         TextButton(
@@ -58,7 +58,7 @@ Future<void> openPrayerReminderFlow(
   if (kIsWeb) {
     ScaffoldMessenger.of(hostContext).showSnackBar(
       const SnackBar(
-        content: Text('Mementourile sunt disponibile doar pe telefon.'),
+        content: Text('Programul de rugăciune este disponibil doar pe telefon.'),
       ),
     );
     return;
@@ -111,7 +111,7 @@ Future<void> openPrayerReminderFlow(
 
   ScaffoldMessenger.of(hostContext).showSnackBar(
     SnackBar(
-      content: Text('Memento salvat pentru „${prayer.title}”.'),
+      content: Text('Înregistrare salvată pentru „${prayer.title}”.'),
     ),
   );
 }

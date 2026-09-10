@@ -324,7 +324,7 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    isEditing ? 'Editează mementoul' : 'Memento nou',
+                    isEditing ? 'Editează înregistrarea' : 'Înregistrare nouă',
                     style: theme.titleLarge.override(
                       fontFamily: 'Merriweather',
                       letterSpacing: 0.0,

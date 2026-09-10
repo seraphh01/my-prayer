@@ -1270,7 +1270,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
     return _buildStepShell(
       context: context,
       icon: Icons.notifications_outlined,
-      title: 'Memento de rugăciune',
+      title: 'Programul meu de rugăciune',
       body: kIsWeb
           ? 'Amintirile sunt disponibile doar din aplicație. Pe web puteți continua; le veți putea configura din Setări pe dispozitivul mobil.'
           : 'Opțional: setați o amintire pentru o rugăciune de astăzi. Ora și zilele sunt completate automat, și le puteți modifica ulterior.',

@@ -126,9 +126,9 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Șterge mementoul?'),
+        title: const Text('Șterge înregistrarea?'),
         content: Text(
-          'Memento pentru „${reminder.prayerTitle}” la ${reminder.timeLabel} va fi șters.',
+          'Înregistrarea pentru „${reminder.prayerTitle}” la ${reminder.timeLabel} va fi ștearsă.',
         ),
         actions: [
           TextButton(
@@ -170,9 +170,9 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
   Widget build(BuildContext context) {
     if (kIsWeb) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Memento rugăciune')),
+        appBar: AppBar(title: const Text('Program rugăciune')),
         body: const Center(
-          child: Text('Mementourile sunt disponibile doar pe telefon.'),
+          child: Text('Programul de rugăciune este disponibil doar pe telefon.'),
         ),
       );
     }
@@ -192,7 +192,7 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
               color: FlutterFlowTheme.of(context).alternate,
             ),
             title: Text(
-              'Memento rugăciune',
+              'Programul meu de rugăciune',
               style: FlutterFlowTheme.of(context).titleLarge.override(
                     fontFamily: 'Merriweather',
                     color: FlutterFlowTheme.of(context).alternate,
@@ -265,7 +265,7 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
                               child: Padding(
                                 padding: const EdgeInsets.all(24.0),
                                 child: Text(
-                                  'Nu ai mementouri. Apasă + pentru a adăuga unul.',
+                                  'Nu ai un program stabilit. Apasă + pentru a începe.',
                                   textAlign: TextAlign.center,
                                   style: FlutterFlowTheme.of(context)
                                       .bodyLarge

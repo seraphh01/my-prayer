@@ -235,12 +235,16 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
 
   Widget _buildSelectedTypeList(BuildContext context) {
     final currentType = _typeStack.last;
+    final sortedPrayers = [...currentType.prayers]
+      ..sort((first, second) => first.sequence.compareTo(second.sequence));
+    final sortedSubtypes = [...currentType.subtypes]
+      ..sort((first, second) => first.sequence.compareTo(second.sequence));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (currentType.prayers.isNotEmpty)
-          ...currentType.prayers.map(
+        if (sortedPrayers.isNotEmpty)
+          ...sortedPrayers.map(
             (prayer) => Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: PrayerTypeCardWidget(
@@ -254,8 +258,8 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
               ),
             ),
           ),
-        if (currentType.subtypes.isNotEmpty)
-          ...currentType.subtypes.map(
+        if (sortedSubtypes.isNotEmpty)
+          ...sortedSubtypes.map(
             (subtype) => Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: PrayerTypeCardWidget(
@@ -408,13 +412,6 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
                           24.0,
                         ),
                         children: [
-                          if (_typeStack.isEmpty) ...[
-                            _buildSectionLabel(
-                              context,
-                              'Rugăciuni și cântări',
-                            ),
-                            const SizedBox(height: 8.0),
-                          ],
                           _buildCatalogContent(context),
                         ],
                       ),
