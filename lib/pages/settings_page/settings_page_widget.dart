@@ -26,7 +26,7 @@ class SettingsPageWidget extends StatefulWidget {
 class _SettingsPageWidgetState extends State<SettingsPageWidget> {
   late SettingsPageModel _model;
 
-  static const _lastContentUpdate = '07.09.2026, 16:00';
+  static const _lastContentUpdate = '12.09.2026, 16:00';
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -755,9 +755,14 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                           ));
                         }
                       : () async {
-                          var url = Platform.isAndroid
+                          var url = isAndroid
                               ? 'https://play.google.com/store/apps/details?id=com.surorilecmd.rugaciunisicantari'
-                              : 'https://apps.apple.com/app/rugaciunisicantaricmd/id6758237098';
+                              : isiOS
+                                  ? 'https://apps.apple.com/app/rugaciunisicantaricmd/id6758237098'
+                                  : '';
+                                  if (url.isEmpty) {
+                                    return;
+                                  }
                           await launchURL(url);
                         },
                   child: Container(

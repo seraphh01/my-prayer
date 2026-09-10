@@ -1010,7 +1010,7 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
                     (_model.displayAudioPage || showControlBar);
                 final showAudioTimingBar = _model.displayAudioPage &&
                     (_model.currentSection?.audioUrl.isNotEmpty ?? false);
-                final controlBarHeight = showAudioTimingBar ? 120.0 : 92.0;
+                final controlBarHeight = showAudioTimingBar ? 104.0 : 80.0;
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,

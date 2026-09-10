@@ -268,8 +268,9 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
       appBar: AppBar(
         backgroundColor: theme.primary,
         foregroundColor: theme.alternate,
+        centerTitle: true,
         title: Text(
-          'Ghid de rugăciune',
+          'Îndrumar',
           style: theme.titleMedium.override(
             fontFamily: 'Merriweather',
             color: theme.alternate,
@@ -284,16 +285,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
           padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 24.0),
           children: [
             Text(
-              'Ghid de rugăciune',
-              style: theme.headlineSmall.override(
-                fontFamily: 'Merriweather',
-                letterSpacing: 0.0,
-                useGoogleFonts: false,
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              'Acest ghid li se adresează tuturor celor care doresc să se apropie mai mult de Dumnezeu și să descopere bogăția rugăciunii Bisericii Române Unite cu Roma, Greco-Catolică, în tradiția de rugăciune a Congregației Surorilor Maicii Domnului.\n\nAplicația cuprinde rugăciuni și cântări care ne ajută să-I încredințăm lui Dumnezeu începutul și sfârșitul fiecărei zile, bucuriile, încercările și oamenii pe care îi purtăm în inimă.',
+              'Acest îndrumar li se adresează tuturor celor care doresc să se apropie mai mult de Dumnezeu și să descopere bogăția rugăciunii Bisericii Române Unite cu Roma, Greco-Catolică, în tradiția de rugăciune a Congregației Surorilor Maicii Domnului.\n\nAplicația cuprinde rugăciuni și cântări care ne ajută să-I încredințăm lui Dumnezeu începutul și sfârșitul fiecărei zile, bucuriile, încercările și oamenii pe care îi purtăm în inimă.',
               style: theme.bodyMedium.override(
                 fontFamily: 'Inter',
                 color: theme.secondaryText,

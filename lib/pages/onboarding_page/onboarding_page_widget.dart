@@ -1673,7 +1673,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
               context,
               Icons.auto_stories_rounded,
             ),
-            title: 'Ghid de rugăciune',
+            title: 'Îndrumar',
             subtitle: 'Află pe scurt sensul și folosul fiecărei rugăciuni.',
           ),
           _buildClosingDiscoverRow(

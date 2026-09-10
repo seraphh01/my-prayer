@@ -161,6 +161,7 @@ class PageManager {
   }
 
   Future<void> play() async {
+    _isPausePending = false;
     if (ensureQueueBeforePlay != null) {
       await ensureQueueBeforePlay!();
     }
@@ -190,9 +191,8 @@ class PageManager {
     _isPausePending = true;
     try {
       await _audioHandler.pause();
-    } catch (_) {
+    } finally {
       _isPausePending = false;
-      rethrow;
     }
   }
 
@@ -223,6 +223,7 @@ class PageManager {
     if (index < 0) {
       return;
     }
+    _isPausePending = false;
     setTrackIndex(index);
     final queue = _audioHandler.queue.value;
     if (index < queue.length) {
@@ -231,6 +232,7 @@ class PageManager {
   }
 
   Future<void> playAtIndex(int index) async {
+    _isPausePending = false;
     if (ensureQueueBeforePlay != null) {
       await ensureQueueBeforePlay!();
     }

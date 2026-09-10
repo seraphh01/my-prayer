@@ -99,7 +99,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     try {
       final types = await _typesCache.load(forceRefresh: forceRefresh);
       _prayerTypes = types;
-      _searchIndex = PrayerSearchIndex.build(types);
+      _searchIndex = null;
       _typesLoadFailed = types.isEmpty && forceRefresh;
     } catch (_) {
       _typesLoadFailed = true;
@@ -108,6 +108,17 @@ class _HomePageWidgetState extends State<HomePageWidget> {
         setState(() => _typesLoading = false);
       }
     }
+  }
+
+  PrayerSearchIndex? get _effectiveSearchIndex {
+    if (_searchIndex != null) {
+      return _searchIndex;
+    }
+    if (_prayerTypes != null && _prayerTypes!.isNotEmpty) {
+      _searchIndex = PrayerSearchIndex.build(_prayerTypes!);
+      return _searchIndex;
+    }
+    return null;
   }
 
   double _headerExpandedHeight(BuildContext context) {
@@ -643,15 +654,21 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     super.initState();
     _model = createModel(context, () => HomePageModel());
     _model.todayPrayersFuture = fetchTodayPrayers().then((entries) {
-      for (final entry in entries) {
-        final prayerId = entry.prayer.id;
+      for (var i = 0; i < entries.length; i++) {
+        final prayerId = entries[i].prayer.id;
         if (prayerId.isNotEmpty) {
-          getIt<PrayerContentCache>().prefetch(prayerId);
+          Future.delayed(Duration(milliseconds: 300 * i), () {
+            getIt<PrayerContentCache>().prefetch(prayerId);
+          });
         }
       }
       return entries;
     });
-    unawaited(_loadPrayerTypes());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(_loadPrayerTypes());
+      }
+    });
     _scrollController.addListener(() {
       if (!_searchActive || !_scrollController.hasClients || _isAutoScrolling) {
         return;
@@ -1164,7 +1181,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
     final query = _debouncedSearchQuery.toLowerCase().trim();
     if (query.isNotEmpty) {
-      final searchResults = _searchIndex?.search(query) ?? const [];
+      final searchResults = _effectiveSearchIndex?.search(query) ?? const [];
       if (searchResults.isEmpty) {
         return SliverToBoxAdapter(
           child: Padding(
@@ -1350,11 +1367,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     required List<PrayerStruct> favoritePrayers,
   }) {
     final preview = favoritePrayers.take(3).toList();
-    for (final prayer in preview) {
-      if (prayer.id.isNotEmpty) {
-        getIt<PrayerContentCache>().prefetch(prayer.id);
-      }
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

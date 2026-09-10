@@ -51,6 +51,9 @@ class _FlutterFlowIconButtonState extends State<FlutterFlowIconButton> {
   void didUpdateWidget(FlutterFlowIconButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     _updateIcon();
+    if (!widget.showLoadingIndicator) {
+      loading = false;
+    }
   }
 
   void _updateIcon() {
@@ -123,6 +126,8 @@ class _FlutterFlowIconButtonState extends State<FlutterFlowIconButton> {
       }),
     );
 
+    final showLoading = widget.showLoadingIndicator && loading;
+
     return SizedBox(
       width: widget.buttonSize,
       height: widget.buttonSize,
@@ -132,9 +137,9 @@ class _FlutterFlowIconButtonState extends State<FlutterFlowIconButton> {
           useMaterial3: true,
         ),
         child: IgnorePointer(
-          ignoring: (widget.showLoadingIndicator && loading),
+          ignoring: showLoading,
           child: IconButton(
-            icon: (widget.showLoadingIndicator && loading)
+            icon: showLoading
                 ? SizedBox(
                     width: iconSize,
                     height: iconSize,
@@ -148,6 +153,10 @@ class _FlutterFlowIconButtonState extends State<FlutterFlowIconButton> {
             onPressed: widget.onPressed == null
                 ? null
                 : () async {
+                    if (!widget.showLoadingIndicator) {
+                      await widget.onPressed!();
+                      return;
+                    }
                     if (loading) {
                       return;
                     }
