@@ -146,19 +146,14 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
       return;
     }
 
-    if (_shouldForceAudioMode()) {
-      FFAppState().isDisplayingAudio = true;
-      _displayingAudio = true;
-      return;
-    }
-
     if (_shouldOpenInTextMode()) {
       FFAppState().isDisplayingAudio = false;
       _displayingAudio = false;
       return;
     }
 
-    _displayingAudio = FFAppState().isDisplayingAudio;
+    FFAppState().isDisplayingAudio = true;
+    _displayingAudio = true;
   }
 
   bool _isAudioActivelyPlaying() {
