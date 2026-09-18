@@ -174,6 +174,45 @@ void main() {
     );
   });
 
+  test(
+      'pickTodayPrayers groups canonical hours nested under subtypes into one entry',
+      () {
+    final groups = [
+      _group('Ora 06', hour: 6, prayers: [_prayer('first')]),
+      _group('Ora 09', hour: 9, prayers: [_prayer('third')]),
+      _group('Ora 12', hour: 12, prayers: [_prayer('sixth')]),
+      _group('Ora 15', hour: 15, prayers: [_prayer('ninth')]),
+    ];
+    final prayerTypes = [
+      PrayerTypeStruct(
+        id: 1,
+        type: 'Orele canonice',
+        subtypes: [
+          PrayerTypeStruct(id: 2, type: 'Ceasul I', prayers: [_prayer('first')]),
+          PrayerTypeStruct(
+              id: 3, type: 'Ceasul III', prayers: [_prayer('third')]),
+          PrayerTypeStruct(
+              id: 4, type: 'Ceasul VI', prayers: [_prayer('sixth')]),
+          PrayerTypeStruct(
+              id: 5, type: 'Ceasul IX', prayers: [_prayer('ninth')]),
+        ],
+      ),
+    ];
+
+    final entries = pickTodayPrayers(
+      groups,
+      now: DateTime(2026, 6, 14, 16),
+      prayerTypes: prayerTypes,
+    );
+
+    expect(entries, hasLength(1));
+    expect(entries.single.opensPrayerType, isTrue);
+    expect(
+      entries.single.voicePrayers.map((prayer) => prayer.id).toList(),
+      ['first', 'third', 'sixth', 'ninth'],
+    );
+  });
+
   test('pickTodayPrayers keeps earlier hour slots visible through the day', () {
     final groups = [
       _group('Ora 18',

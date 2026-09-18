@@ -290,17 +290,24 @@ List<TodayPrayerEntry> _groupTodayPrayerEntries(
   ];
 }
 
+/// Top-level type id owning [prayerId], even if nested under subtypes — so
+/// e.g. all canonical hours group under "Orele canonice" instead of splitting
+/// per hour subtype.
 int? _owningPrayerTypeId(List<PrayerTypeStruct> types, String prayerId) {
   for (final type in types) {
-    if (type.prayers.any((prayer) => prayer.id == prayerId)) {
+    if (_typeContainsPrayer(type, prayerId)) {
       return type.id;
-    }
-    final nestedTypeId = _owningPrayerTypeId(type.subtypes, prayerId);
-    if (nestedTypeId != null) {
-      return nestedTypeId;
     }
   }
   return null;
+}
+
+bool _typeContainsPrayer(PrayerTypeStruct type, String prayerId) {
+  if (type.prayers.any((prayer) => prayer.id == prayerId)) {
+    return true;
+  }
+  return type.subtypes
+      .any((subtype) => _typeContainsPrayer(subtype, prayerId));
 }
 
 TodayPrayerEntry _combineTodayPrayerEntries(List<TodayPrayerEntry> entries) {
