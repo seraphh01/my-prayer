@@ -2,6 +2,7 @@ import '/backend/schema/structs/index.dart';
 import '/custom_code/calendar/fetch_date_group_prayers.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Single subtle row: opens Calendar with a one-line summary of today.
@@ -33,7 +34,7 @@ class _HomeTodayPrayersTileState extends State<HomeTodayPrayersTile> {
     return FutureBuilder<String>(
       future: _summaryFuture,
       builder: (context, snapshot) {
-        final summary = snapshot.data ?? 'Se încarcă…';
+        final summary = snapshot.data ?? AppLocalizations.of(context).loading;
 
         return Material(
           color: Colors.transparent,
@@ -46,7 +47,7 @@ class _HomeTodayPrayersTileState extends State<HomeTodayPrayersTile> {
               size: 22.0,
             ),
             title: Text(
-              'Rugăciuni de azi',
+              AppLocalizations.of(context).todayPrayersTileTitle,
               style: theme.titleSmall.override(
                 fontFamily: 'Merriweather',
                 letterSpacing: 0.0,

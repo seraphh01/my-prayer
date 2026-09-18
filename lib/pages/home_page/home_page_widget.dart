@@ -21,6 +21,7 @@ import '/components/prayer_type_card_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import '/backend/schema/structs/index.dart';
 import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -56,10 +57,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     'slujba vecerniei',
     'rozariul maicii domnului',
   };
-  static const String _appTitle = 'Rugăciuni și cântări';
-  static const String _appTitleShort = 'Rugăciuni și cântări';
-  static const String _congregationTitle =
-      'Congregația Surorilor Maicii Domnului';
   double _headerExpandedHeightCache = 320.0;
   final _downloadManager = getIt<DownloadManager>();
   final _typesCache = getIt<PrayerTypesCache>();
@@ -229,7 +226,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
     return Semantics(
       button: true,
-      label: isCollapsed ? 'Extinde antetul' : 'Restrânge antetul',
+      label: isCollapsed
+          ? AppLocalizations.of(context).expandHeader
+          : AppLocalizations.of(context).collapseHeader,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -300,7 +299,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     final theme = FlutterFlowTheme.of(context);
 
     return AutoSizeText(
-      _appTitle,
+      AppLocalizations.of(context).appTitle,
       textAlign: TextAlign.center,
       maxLines: 2,
       minFontSize: 14.0,
@@ -317,7 +316,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
   Widget _buildHeaderCongregationText(BuildContext context) {
     return AutoSizeText(
-      _congregationTitle,
+      AppLocalizations.of(context).congregationTitle,
       textAlign: TextAlign.center,
       maxLines: 1,
       minFontSize: 12.0,
@@ -825,7 +824,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             ),
                             const SizedBox(height: 12.0),
                             AutoSizeText(
-                              _appTitleShort,
+                              AppLocalizations.of(context).appTitle,
                               textAlign: TextAlign.start,
                               maxLines: 2,
                               minFontSize: 13.0,
@@ -840,7 +839,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             ),
                             const SizedBox(height: 4.0),
                             AutoSizeText(
-                              _congregationTitle,
+                              AppLocalizations.of(context).congregationTitle,
                               textAlign: TextAlign.start,
                               maxLines: 2,
                               minFontSize: 10.0,
@@ -867,33 +866,33 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     _drawerNavTile(
                       context: context,
                       icon: Icons.menu_book_rounded,
-                      title: 'Toate rugăciunile',
+                      title: AppLocalizations.of(context).allPrayersPageTitle,
                       routeName: 'AllPrayersPage',
                     ),
                     if (!kIsWeb)
                       _drawerNavTile(
                         context: context,
                         icon: Icons.calendar_month_rounded,
-                        title: 'Programul meu de rugăciune',
+                        title: AppLocalizations.of(context).remindersPageTitle,
                         routeName: 'RemindersPage',
                       ),
                     if (!kIsWeb)
                       _drawerNavTile(
                         context: context,
                         icon: Icons.download_rounded,
-                        title: 'Descărcări',
+                        title: AppLocalizations.of(context).downloadsMenuTitle,
                         routeName: 'DownloadedPrayersPage',
                       ),
                     _drawerNavTile(
                       context: context,
                       icon: Icons.auto_stories_rounded,
-                      title: 'Îndrumar',
+                      title: AppLocalizations.of(context).guidePageTitle,
                       routeName: 'PrayerGuidePage',
                     ),
                     _drawerNavTile(
                       context: context,
                       icon: Icons.info_outline_rounded,
-                      title: 'Cine suntem',
+                      title: AppLocalizations.of(context).aboutPageTitle,
                       routeName: 'AboutPage',
                     ),
                     Divider(
@@ -906,7 +905,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     _drawerNavTile(
                       context: context,
                       icon: Icons.settings_rounded,
-                      title: 'Setări',
+                      title: AppLocalizations.of(context).settingsPageTitle,
                       routeName: 'SettingsPage',
                     ),
                   ],
@@ -974,7 +973,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               child: Padding(
                                 padding: const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0),
                                 child: PrayerTypeCardWidget(
-                                  title: 'Toate rugăciunile',
+                                  title: AppLocalizations.of(context)
+                                      .allPrayersPageTitle,
                                   subtitle: null,
                                   trailingText: null,
                                   trailingIcons: const [
@@ -1052,7 +1052,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             letterSpacing: 0.0,
           ),
       decoration: InputDecoration(
-        hintText: 'Caută rugăciuni și cântări',
+        hintText: AppLocalizations.of(context).searchHint,
         hintStyle: FlutterFlowTheme.of(context).labelMedium.override(
               fontFamily: 'Inter',
               color: isActive
@@ -1147,7 +1147,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             Padding(
               padding: const EdgeInsetsDirectional.only(top: 12.0),
               child: Text(
-                'Rugăciunile nu au putut fi încărcate. Vă rugăm să încercați din nou mai târziu sau verificați conexiunea la internet.',
+                AppLocalizations.of(context).prayersLoadError,
                 style: FlutterFlowTheme.of(context).labelMedium.override(
                       fontFamily: 'Inter',
                       color: FlutterFlowTheme.of(context).alternate,
@@ -1162,7 +1162,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
               ),
               onPressed: () => unawaited(_loadPrayerTypes(forceRefresh: true)),
               child: Text(
-                'Reîncearcă',
+                AppLocalizations.of(context).retry,
                 style: FlutterFlowTheme.of(context).labelMedium.override(
                       fontFamily: 'Inter',
                       color: FlutterFlowTheme.of(context).primary,
@@ -1187,7 +1187,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           child: Padding(
             padding: const EdgeInsetsDirectional.only(top: 12.0),
             child: Text(
-              'Nu există rugăciuni cu acest nume.',
+              AppLocalizations.of(context).noSearchResults,
               style: FlutterFlowTheme.of(context).labelMedium.override(
                     fontFamily: 'Inter',
                     color: FlutterFlowTheme.of(context).alternate,
@@ -1280,7 +1280,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
         _homeSectionHorizontalPadding,
         0.0,
       ),
-      child: _buildHomeSectionLabel(context, 'Rugăciuni și cântări'),
+      child: _buildHomeSectionLabel(context, AppLocalizations.of(context).homeCatalogSectionTitle),
     );
   }
 
@@ -1348,7 +1348,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHomeSectionLabel(context, 'Continuă de unde ai rămas'),
+        _buildHomeSectionLabel(context, AppLocalizations.of(context).continueWhereYouLeftOff),
         SizedBox(height: _homeSectionInnerGap),
         PrayerTypeCardWidget(
           title: savedCard.$1,
@@ -1371,7 +1371,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHomeSectionLabel(context, 'Favorite'),
+        _buildHomeSectionLabel(context, AppLocalizations.of(context).favorites),
         SizedBox(height: _homeSectionInnerGap),
         ...List.generate(preview.length, (index) {
           final prayer = preview[index];
@@ -1433,7 +1433,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           _buildTodaySectionLabel(context),
           SizedBox(height: _homeSectionInnerGap),
           Text(
-            'Nicio recomandare pentru astăzi. Deschide calendarul pentru rugăciunile zilei.',
+            AppLocalizations.of(context).noTodayRecommendation,
             style: theme.labelMedium.override(
               fontFamily: 'Inter',
               color: theme.alternate,
@@ -1511,7 +1511,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     final dateLabel = _todayFormattedDate(context);
     return _buildHomeSectionLabel(
       context,
-      'Pentru astăzi · $dateLabel',
+      AppLocalizations.of(context).todaySectionLabel(dateLabel),
     );
   }
 
@@ -1540,7 +1540,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
         SnackBar(
           backgroundColor: FlutterFlowTheme.of(context).alternate,
           content: Text(
-            'Rugăciunea salvată nu este validă. Vă rugăm să salvați o rugăciune din nou.',
+            AppLocalizations.of(context).invalidSavedPrayer,
             style: FlutterFlowTheme.of(context).labelMedium.override(
                   fontFamily: 'Inter',
                   color: FlutterFlowTheme.of(context).primary,

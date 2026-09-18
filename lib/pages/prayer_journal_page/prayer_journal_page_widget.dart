@@ -2,6 +2,7 @@ import '/custom_code/journal/prayer_journal_entry.dart';
 import '/custom_code/journal/prayer_journal_storage.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class PrayerJournalPageWidget extends StatefulWidget {
@@ -35,16 +36,16 @@ class _PrayerJournalPageWidgetState extends State<PrayerJournalPageWidget> {
     }
   }
 
-  String _formatDay(DateTime day) {
+  String _formatDay(BuildContext context, DateTime day) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final d = DateTime(day.year, day.month, day.day);
     if (d == today) {
-      return 'Astăzi';
+      return AppLocalizations.of(context).journalToday;
     }
     if (d == yesterday) {
-      return 'Ieri';
+      return AppLocalizations.of(context).journalYesterday;
     }
     return dateTimeFormat('d MMMM yyyy', d, locale: 'ro');
   }
@@ -59,7 +60,7 @@ class _PrayerJournalPageWidgetState extends State<PrayerJournalPageWidget> {
         backgroundColor: theme.primary,
         iconTheme: IconThemeData(color: theme.alternate),
         title: Text(
-          'Jurnal de rugăciune',
+          AppLocalizations.of(context).journalPageTitle,
           style: theme.titleLarge.override(
             fontFamily: 'Merriweather',
             color: theme.alternate,
@@ -86,7 +87,7 @@ class _PrayerJournalPageWidgetState extends State<PrayerJournalPageWidget> {
                             size: 64, color: theme.secondaryText),
                         const SizedBox(height: 16),
                         Text(
-                          'Nicio rugăciune înregistrată',
+                          AppLocalizations.of(context).journalEmptyTitle,
                           style: theme.titleMedium.override(
                             fontFamily: 'Merriweather',
                             letterSpacing: 0.0,
@@ -94,7 +95,7 @@ class _PrayerJournalPageWidgetState extends State<PrayerJournalPageWidget> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Rugăciunile deschise apar aici automat.',
+                          AppLocalizations.of(context).journalEmptySubtitle,
                           textAlign: TextAlign.center,
                           style: theme.bodyMedium.override(
                             fontFamily: 'Inter',
@@ -114,7 +115,8 @@ class _PrayerJournalPageWidgetState extends State<PrayerJournalPageWidget> {
                     children: [
                       if (_today.isNotEmpty) ...[
                         Text(
-                          'Astăzi — ${_today.length} rugăciuni',
+                          AppLocalizations.of(context)
+                              .journalTodayCount(_today.length),
                           style: theme.labelLarge.override(
                             fontFamily: 'Inter',
                             color: theme.primary,
@@ -129,7 +131,7 @@ class _PrayerJournalPageWidgetState extends State<PrayerJournalPageWidget> {
                         const SizedBox(height: 12),
                       ],
                       Text(
-                        'Istoric (ultima lună)',
+                        AppLocalizations.of(context).journalHistoryTitle,
                         style: theme.titleSmall.override(
                           fontFamily: 'Merriweather',
                           letterSpacing: 0.0,
@@ -150,7 +152,7 @@ class _PrayerJournalPageWidgetState extends State<PrayerJournalPageWidget> {
                               padding:
                                   const EdgeInsets.only(top: 12, bottom: 4),
                               child: Text(
-                                '${_formatDay(day)} — ${items.length}',
+                                '${_formatDay(context, day)} — ${items.length}',
                                 style: theme.labelMedium.override(
                                   fontFamily: 'Inter',
                                   color: theme.secondaryText,

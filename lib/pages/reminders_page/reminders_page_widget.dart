@@ -10,6 +10,7 @@ import '/custom_code/reminders/prayer_reminder_service.dart';
 import '/custom_code/reminders/reminder_storage.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'add_reminder_dialog.dart';
 import 'reminders_page_model.dart';
 export 'reminders_page_model.dart';
@@ -68,9 +69,9 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
   Future<void> _addOrEditReminder({PrayerReminder? existing}) async {
     if (_prayerTypes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Nu s-a putut încărca lista de rugăciuni. Verifică conexiunea.',
+            AppLocalizations.of(context).remindersLoadError,
           ),
         ),
       );
@@ -126,19 +127,22 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Șterge înregistrarea?'),
+        title: Text(AppLocalizations.of(context).reminderDeleteConfirmTitle),
         content: Text(
-          'Înregistrarea pentru „${reminder.prayerTitle}” la ${reminder.timeLabel} va fi ștearsă.',
+          AppLocalizations.of(context).reminderDeleteConfirmBody(
+            reminder.prayerTitle,
+            reminder.timeLabel,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Anulează'),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
-              'Șterge',
+              AppLocalizations.of(context).delete,
               style: TextStyle(color: theme.primary),
             ),
           ),
@@ -170,9 +174,11 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
   Widget build(BuildContext context) {
     if (kIsWeb) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Program rugăciune')),
-        body: const Center(
-          child: Text('Programul de rugăciune este disponibil doar pe telefon.'),
+        appBar: AppBar(
+            title: Text(AppLocalizations.of(context).remindersPageTitleWeb)),
+        body: Center(
+          child:
+              Text(AppLocalizations.of(context).remindersUnavailableOnWeb),
         ),
       );
     }
@@ -192,7 +198,7 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
               color: FlutterFlowTheme.of(context).alternate,
             ),
             title: Text(
-              'Programul meu de rugăciune',
+              AppLocalizations.of(context).remindersPageTitle,
               style: FlutterFlowTheme.of(context).titleLarge.override(
                     fontFamily: 'Merriweather',
                     color: FlutterFlowTheme.of(context).alternate,
@@ -212,7 +218,9 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
                     _isEditMode ? Icons.check : Icons.edit_outlined,
                     color: FlutterFlowTheme.of(context).alternate,
                   ),
-                  tooltip: _isEditMode ? 'Gata' : 'Editează',
+                  tooltip: _isEditMode
+                      ? AppLocalizations.of(context).remindersDoneEditing
+                      : AppLocalizations.of(context).remindersEdit,
                 ),
             ],
           ),
@@ -222,7 +230,7 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
           backgroundColor: FlutterFlowTheme.of(context).primary,
           foregroundColor: FlutterFlowTheme.of(context).alternate,
           icon: const Icon(Icons.add),
-          label: const Text('Adaugă'),
+          label: Text(AppLocalizations.of(context).remindersAdd),
         ),
         body: SafeArea(
           child: _model.isLoading
@@ -242,7 +250,8 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  'Activează notificările în setările telefonului.',
+                                  AppLocalizations.of(context)
+                                      .remindersEnableNotificationsPrompt,
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
@@ -253,7 +262,9 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
                               ),
                               TextButton(
                                 onPressed: openAppSettings,
-                                child: const Text('Setări'),
+                                child: Text(
+                                    AppLocalizations.of(context)
+                                        .remindersOpenSettings),
                               ),
                             ],
                           ),
@@ -265,7 +276,8 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
                               child: Padding(
                                 padding: const EdgeInsets.all(24.0),
                                 child: Text(
-                                  'Nu ai un program stabilit. Apasă + pentru a începe.',
+                                  AppLocalizations.of(context)
+                                      .remindersEmptyState,
                                   textAlign: TextAlign.center,
                                   style: FlutterFlowTheme.of(context)
                                       .bodyLarge
@@ -371,7 +383,9 @@ class _RemindersPageWidgetState extends State<RemindersPageWidget> {
                                                     Icons.delete_outline,
                                                     color: theme.primary,
                                                   ),
-                                                  tooltip: 'Șterge',
+                                                  tooltip: AppLocalizations
+                                                      .of(context)
+                                                      .delete,
                                                   visualDensity:
                                                       VisualDensity.compact,
                                                   padding: EdgeInsets.zero,

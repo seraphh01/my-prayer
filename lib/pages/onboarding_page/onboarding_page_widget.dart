@@ -29,6 +29,7 @@ import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/form_field_controller.dart';
+import '/l10n/generated/app_localizations.dart';
 import '/service_locator.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
@@ -51,8 +52,6 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
   late final Animation<Offset> _introTitleSlide;
   late final Animation<double> _introCreditOpacity;
 
-  static const _appTitle = 'Rugăciuni și cântări';
-  static const _congregationTitle = 'Congregația Surorilor Maicii Domnului';
   static const _gradientEnd = Color(0xFF3C010C);
   static const _fontOptions = [
     'Crimson Pro',
@@ -369,7 +368,9 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                   IconButton(
                     visualDensity: VisualDensity.compact,
                     padding: const EdgeInsets.all(8.0),
-                    tooltip: expanded ? 'Restrânge' : 'Extinde',
+                    tooltip: expanded
+                        ? AppLocalizations.of(context).onboardingExpandGroup
+                        : AppLocalizations.of(context).onboardingCollapseGroup,
                     icon: Icon(
                       expanded
                           ? Icons.keyboard_arrow_up_rounded
@@ -448,7 +449,9 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
         return [_buildReminderPrayerTile(context, prayers.first)];
       }
 
-      final typeLabel = type.type.isNotEmpty ? type.type : 'Rugăciune';
+      final typeLabel = type.type.isNotEmpty
+          ? type.type
+          : AppLocalizations.of(context).onboardingDefaultPrayerTypeLabel;
       final children = <Widget>[
         ...prayers.map((prayer) => _buildReminderPrayerTile(context, prayer)),
         if (hasSubtypes)
@@ -577,7 +580,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
               IconButton(
                 visualDensity: VisualDensity.compact,
                 padding: const EdgeInsets.all(8.0),
-                tooltip: 'Alegeți altă rugăciune',
+                tooltip: AppLocalizations.of(context).onboardingChangePrayer,
                 icon: Icon(
                   Icons.close_rounded,
                   color: theme.secondaryText,
@@ -800,20 +803,21 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
       letterSpacing: 0.0,
       useGoogleFonts: false,
     );
-    const lineOne = 'Congregația Surorilor';
-    const lineTwo = 'Maicii Domnului';
+    final lineOne = AppLocalizations.of(context).onboardingCongregationLine1;
+    final lineTwo = AppLocalizations.of(context).onboardingCongregationLine2;
+    final congregationTitle = AppLocalizations.of(context).congregationTitle;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final painter = TextPainter(
-          text: TextSpan(text: _congregationTitle, style: style),
+          text: TextSpan(text: congregationTitle, style: style),
           maxLines: 1,
           textDirection: Directionality.of(context),
         )..layout(maxWidth: constraints.maxWidth);
 
         if (!painter.didExceedMaxLines) {
           return Text(
-            _congregationTitle,
+            congregationTitle,
             textAlign: TextAlign.center,
             maxLines: 1,
             style: style,
@@ -838,20 +842,21 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
       letterSpacing: 0.0,
       useGoogleFonts: false,
     );
-    const lineOne = 'Rugăciuni și Cântări';
-    const lineTwo = 'Greco-Catolice';
+    final lineOne = AppLocalizations.of(context).onboardingAppTitleLine1;
+    final lineTwo = AppLocalizations.of(context).onboardingAppTitleLine2;
+    final appTitle = AppLocalizations.of(context).appTitle;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final painter = TextPainter(
-          text: TextSpan(text: _appTitle, style: style),
+          text: TextSpan(text: appTitle, style: style),
           maxLines: 1,
           textDirection: Directionality.of(context),
         )..layout(maxWidth: constraints.maxWidth);
 
         if (!painter.didExceedMaxLines) {
           return Text(
-            _appTitle,
+            appTitle,
             textAlign: TextAlign.center,
             maxLines: 1,
             style: style,
@@ -918,7 +923,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
               child: Column(
                 children: [
                   Text(
-                    'Realizată de',
+                    AppLocalizations.of(context).onboardingMadeBy,
                     textAlign: TextAlign.center,
                     style: theme.labelLarge.override(
                       fontFamily: 'Inter',
@@ -939,18 +944,14 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
 
   Widget _buildWelcomeStep(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
+    final l10n = AppLocalizations.of(context);
 
-    const heading = 'Cuvânt de bun-venit';
-    const address =
-        'Surorile Congregației Maicii Domnului vă întâmpină cu bucurie și vă invită să vă opriți, pentru câteva clipe, în liniștea rugăciunii.';
-    const body =
-        'În această aplicație veți găsi rugăciuni și cântări interpretate și înregistrate de Surori, astfel încât, zi de zi, oriunde v-ați afla, să puteți fi însoțiți de rugăciunea lor.';
-    const guide =
-        'În continuare, vă prezentăm câteva informații care vă vor ajuta să descoperiți conținutul aplicației și să îl folosiți potrivit nevoilor dumneavoastră sufletești.';
-    const blessing =
-        'Fie ca Domnul să vă binecuvânteze, iar Preacurata Fecioară Maria să vă păstreze sub ocrotirea ei!';
-    const signOff =
-        'Cu dragoste în Cristos,\nSurorile Congregației Maicii Domnului';
+    final heading = l10n.onboardingWelcomeHeading;
+    final address = l10n.onboardingWelcomeAddress;
+    final body = l10n.onboardingWelcomeBody;
+    final guide = l10n.onboardingWelcomeGuide;
+    final blessing = l10n.onboardingWelcomeBlessing;
+    final signOff = l10n.onboardingWelcomeSignOff;
 
     TextStyle merriweatherBody(
         {double? size, FontStyle? style, double alpha = 0.95}) {
@@ -1084,7 +1085,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
         borderRadius: BorderRadius.circular(16.0),
       ),
       child: Text(
-        '„Tatăl nostru, care ești în ceruri, sfințească-se numele Tău…”',
+        AppLocalizations.of(context).onboardingReadingPreviewQuote,
         style: theme.bodyMedium.override(
           fontFamily: fontFamily,
           fontSize: baseSize,
@@ -1106,14 +1107,13 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
         return _buildStepShell(
           context: context,
           icon: Icons.text_fields_rounded,
-          title: 'Personalizați textul',
-          body:
-              'Adaptați fontul și mărimea textului acum sau oricând din Setări.',
+          title: AppLocalizations.of(context).onboardingTextStepTitle,
+          body: AppLocalizations.of(context).onboardingTextStepBody,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Exemplu de citire',
+                AppLocalizations.of(context).onboardingReadingExampleLabel,
                 style: theme.labelLarge.override(
                   fontFamily: 'Inter',
                   letterSpacing: 0.0,
@@ -1123,7 +1123,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
               _buildTextPreview(context),
               const SizedBox(height: 20.0),
               Text(
-                'Stil font',
+                AppLocalizations.of(context).fontStyleTitle,
                 style: theme.bodyMedium.override(
                   fontFamily: 'Inter',
                   fontSize: 16.0,
@@ -1176,7 +1176,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
               ),
               const SizedBox(height: 20.0),
               Text(
-                'Mărime font',
+                AppLocalizations.of(context).fontSizeTitle,
                 style: theme.bodyMedium.override(
                   fontFamily: 'Inter',
                   fontSize: 16.0,
@@ -1222,7 +1222,8 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
           onPressed: _pickReminderTime,
           icon: const Icon(Icons.schedule_rounded),
           label: Text(
-            'Ora: ${_reminderTime.format(context)}',
+            AppLocalizations.of(context)
+                .onboardingReminderTime(_reminderTime.format(context)),
             style: theme.bodyMedium.override(
               fontFamily: 'Inter',
               letterSpacing: 0.0,
@@ -1231,7 +1232,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
         ),
         const SizedBox(height: 8.0),
         Text(
-          'Zile',
+          AppLocalizations.of(context).onboardingReminderDaysLabel,
           style: theme.bodyMedium.override(
             fontFamily: 'Inter',
             letterSpacing: 0.0,
@@ -1270,10 +1271,10 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
     return _buildStepShell(
       context: context,
       icon: Icons.notifications_outlined,
-      title: 'Programul meu de rugăciune',
+      title: AppLocalizations.of(context).onboardingReminderStepTitle,
       body: kIsWeb
-          ? 'Amintirile sunt disponibile doar din aplicație. Pe web puteți continua; le veți putea configura din Setări pe dispozitivul mobil.'
-          : 'Opțional: setați o amintire pentru o rugăciune de astăzi. Ora și zilele sunt completate automat, și le puteți modifica ulterior.',
+          ? AppLocalizations.of(context).onboardingReminderStepBodyWeb
+          : AppLocalizations.of(context).onboardingReminderStepBodyMobile,
       child: kIsWeb
           ? const SizedBox.shrink()
           : _loadingTodayPrayers
@@ -1285,7 +1286,8 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                 )
               : !_hasTodayPrayers
                   ? Text(
-                      'Nu am găsit rugăciuni pentru astăzi. Puteți adăuga o amintire mai târziu din aplicație.',
+                      AppLocalizations.of(context)
+                          .onboardingReminderNoPrayersToday,
                       style: theme.bodyMedium.override(
                         fontFamily: 'Inter',
                         color: theme.secondaryText,
@@ -1309,9 +1311,8 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
     return _buildStepShell(
       context: context,
       icon: Icons.favorite_outline_rounded,
-      title: 'Rugăciuni favorite',
-      body:
-          'Dacă doriți, alegeți o rugăciune favorită pentru început. Rugăciunile favorite sunt mai ușor de găsit și ascultat.',
+      title: AppLocalizations.of(context).onboardingFavoritesStepTitle,
+      body: AppLocalizations.of(context).onboardingFavoritesStepBody,
       child: _loadingFavorites
           ? const Center(
               child: Padding(
@@ -1321,7 +1322,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
             )
           : _favoriteOptions.isEmpty
               ? Text(
-                  'Nu am putut încărca lista acum. Puteți adăuga favorite mai târziu din aplicație.',
+                  AppLocalizations.of(context).onboardingFavoritesLoadError,
                   style: theme.bodyMedium.override(
                     fontFamily: 'Inter',
                     color: theme.secondaryText,
@@ -1484,9 +1485,8 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
     return _buildStepShell(
       context: context,
       icon: Icons.headphones_rounded,
-      title: 'Ascultați rugăciunile',
-      body:
-          'Majoritatea rugăciunilor pot fi ascultate în aplicație. Apăsați redare pentru un scurt exemplu — primul mister din Rozariul de durere.',
+      title: AppLocalizations.of(context).onboardingAudioStepTitle,
+      body: AppLocalizations.of(context).onboardingAudioStepBody,
       child: _loadingAudioPreview
           ? const Center(
               child: Padding(
@@ -1496,7 +1496,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
             )
           : preview == null || !preview.hasAudio
               ? Text(
-                  'Nu am putut încărca exemplul audio acum. Puteți asculta rugăciuni din aplicație.',
+                  AppLocalizations.of(context).onboardingAudioLoadError,
                   style: theme.bodyMedium.override(
                     fontFamily: 'Inter',
                     color: theme.secondaryText,
@@ -1603,7 +1603,11 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                                         : Icons.play_arrow_rounded,
                                   ),
                             label: Text(
-                              isPlaying ? 'Pauză' : 'Redare',
+                              isPlaying
+                                  ? AppLocalizations.of(context)
+                                      .onboardingAudioPause
+                                  : AppLocalizations.of(context)
+                                      .onboardingAudioPlay,
                               style: theme.titleSmall.override(
                                 fontFamily: 'Inter',
                                 color: theme.alternate,
@@ -1621,7 +1625,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
 
   Widget _buildClosingStep(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    const blessing = 'Vă dorim să aveți un timp binecuvântat de rugăciune!';
+    final blessing = AppLocalizations.of(context).onboardingClosingBlessing;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
@@ -1634,7 +1638,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
           ),
           const SizedBox(height: 24.0),
           Text(
-            'Multe de descoperit',
+            AppLocalizations.of(context).onboardingClosingTitle,
             textAlign: TextAlign.center,
             style: theme.headlineSmall.override(
               fontFamily: 'Merriweather',
@@ -1650,14 +1654,15 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                 context,
                 Icons.calendar_today_rounded,
               ),
-              title: 'Calendar',
-              subtitle: 'Rugăciunile din fiecare zi'),
+              title: AppLocalizations.of(context).onboardingClosingCalendarTitle,
+              subtitle:
+                  AppLocalizations.of(context).onboardingClosingCalendarSubtitle),
           _buildClosingDiscoverRow(
             context: context,
             leading: _buildClosingIconBadge(context, Icons.download_rounded),
-            title: 'Descărcări',
+            title: AppLocalizations.of(context).onboardingClosingDownloadsTitle,
             subtitle:
-                'Descarcă rugăciuni și cântări pentru a le asculta offline.',
+                AppLocalizations.of(context).onboardingClosingDownloadsSubtitle,
           ),
           _buildClosingDiscoverRow(
             context: context,
@@ -1665,7 +1670,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
               context,
               Icons.edit_note_rounded,
             ),
-            title: 'Jurnal de rugăciune',
+            title: AppLocalizations.of(context).onboardingClosingJournalTitle,
           ),
           _buildClosingDiscoverRow(
             context: context,
@@ -1673,13 +1678,14 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
               context,
               Icons.auto_stories_rounded,
             ),
-            title: 'Îndrumar',
-            subtitle: 'Află pe scurt sensul și folosul fiecărei rugăciuni.',
+            title: AppLocalizations.of(context).onboardingClosingGuideTitle,
+            subtitle:
+                AppLocalizations.of(context).onboardingClosingGuideSubtitle,
           ),
           _buildClosingDiscoverRow(
             context: context,
             leading: _buildClosingLogoBadge(context),
-            title: 'Și multe altele...',
+            title: AppLocalizations.of(context).onboardingClosingMoreTitle,
           ),
           const SizedBox(height: 12.0),
           Text(
@@ -1731,7 +1737,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                                 : theme.primary,
                           ),
                           label: Text(
-                            'Înapoi',
+                            AppLocalizations.of(context).onboardingBack,
                             style: theme.labelLarge.override(
                               fontFamily: 'Inter',
                               color: onGradientPage
@@ -1748,7 +1754,7 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                         TextButton(
                           onPressed: _finish,
                           child: Text(
-                            'Sari peste',
+                            AppLocalizations.of(context).onboardingSkip,
                             style: theme.labelLarge.override(
                               fontFamily: 'Inter',
                               color: onGradientPage
@@ -1821,7 +1827,9 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                       ),
                       child: Text(
-                        _page < _pageCount - 1 ? 'Continuă' : 'Începe',
+                        _page < _pageCount - 1
+                            ? AppLocalizations.of(context).onboardingContinue
+                            : AppLocalizations.of(context).onboardingStart,
                         style: theme.titleSmall.override(
                           fontFamily: 'Inter',
                           color: continueButtonFg,

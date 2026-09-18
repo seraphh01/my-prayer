@@ -27,6 +27,7 @@ import '/components/sections_view_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:aligned_tooltip/aligned_tooltip.dart';
@@ -1138,7 +1139,11 @@ class _RosaryPageWidgetState extends State<RosaryPageWidget> {
                                                           .showSnackBar(
                                                         SnackBar(
                                                           content: Text(
-                                                            'Semnul de carte către ${_model.currentPrayer!.title.isNotEmpty ? '„${_model.currentPrayer!.title}” - ' : ''}„${flattenedSections.elementAtOrNull(_pageManager.trackIndexNotifier.value)?.title}” a fost salvat!',
+                                                            AppLocalizations.of(
+                                                                    context)
+                                                                .bookmarkSaved(
+                                                              '${_model.currentPrayer!.title.isNotEmpty ? '„${_model.currentPrayer!.title}” - ' : ''}„${flattenedSections.elementAtOrNull(_pageManager.trackIndexNotifier.value)?.title}”',
+                                                            ),
                                                             style: PrayerTypography
                                                                     .of(context)
                                                                 .style(

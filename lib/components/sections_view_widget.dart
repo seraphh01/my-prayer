@@ -17,6 +17,7 @@ import '/components/section_text/section_header_widget.dart';
 import '/components/section_text/section_text_block_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import '/custom_code/widgets/index.dart' as custom_widgets;
 import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:flutter/material.dart';
@@ -825,8 +826,8 @@ class _SectionsViewWidgetState extends State<SectionsViewWidget> {
               width: double.infinity,
               height: 300.0,
               child: EmptyListComponentWidget(
-                title: 'Textul nu a putut fi încărcat!',
-                subtitle: 'Vă rugăm încercați mai târziu.',
+                title: AppLocalizations.of(context).textLoadFailedTitle,
+                subtitle: AppLocalizations.of(context).textLoadFailedSubtitle,
               ),
             ),
           ),

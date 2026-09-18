@@ -6,6 +6,7 @@ import '/components/reading_text_scroll_settings.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'prayer_options_model.dart';
 export 'prayer_options_model.dart';
@@ -345,7 +346,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                           children: [
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(AppThemeMode.light),
+                              label: themeModeToLabel(context, AppThemeMode.light),
                               icon: Icons.light_mode_outlined,
                               isSelected: _model.themeMode == AppThemeMode.light,
                               onSelected: () {               
@@ -356,7 +357,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                             ),
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(  AppThemeMode.sepia),
+                              label: themeModeToLabel(context, AppThemeMode.sepia),
                               icon: Icons.dark_mode_outlined,
                               isSelected: _model.themeMode == AppThemeMode.sepia,
                               onSelected: () {
@@ -367,7 +368,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                             ),
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(  AppThemeMode.dark),
+                              label: themeModeToLabel(context, AppThemeMode.dark),
                               icon: Icons.dark_mode_outlined,
                               isSelected: _model.themeMode == AppThemeMode.dark,
                               onSelected: () {
@@ -378,7 +379,7 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                             ),
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(AppThemeMode.system),
+                              label: themeModeToLabel(context, AppThemeMode.system),
                               icon: Icons.settings_suggest_outlined,
                               isSelected: _model.themeMode == AppThemeMode.system,
                               onSelected: () {
@@ -465,7 +466,11 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      '${widget.prayer?.title} - ${widget.prayer?.subtitle} nu mai este in lista de favorite!',
+                                      AppLocalizations.of(context)
+                                          .favoriteRemoved(
+                                        widget.prayer?.title ?? '',
+                                        widget.prayer?.subtitle ?? '',
+                                      ),
                                       style: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .override(
@@ -502,7 +507,11 @@ class _PrayerOptionsWidgetState extends State<PrayerOptionsWidget> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      '${widget.prayer?.title} - ${widget.prayer?.subtitle} a fost salvată în lista de favorite!',
+                                      AppLocalizations.of(context)
+                                          .favoriteAdded(
+                                        widget.prayer?.title ?? '',
+                                        widget.prayer?.subtitle ?? '',
+                                      ),
                                       style: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .override(

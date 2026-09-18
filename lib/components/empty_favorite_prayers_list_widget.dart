@@ -1,5 +1,6 @@
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'empty_favorite_prayers_list_model.dart';
 export 'empty_favorite_prayers_list_model.dart';
@@ -52,7 +53,7 @@ class _EmptyFavoritePrayersListWidgetState
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 0.0),
             child: Text(
-              'Încă nu ai nimic aici',
+              AppLocalizations.of(context).emptyStateTitle,
               style: FlutterFlowTheme.of(context).headlineMedium.override(
                     fontFamily: 'Merriweather',
                     letterSpacing: 0.0,
@@ -62,7 +63,7 @@ class _EmptyFavoritePrayersListWidgetState
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(0.0, 4.0, 0.0, 0.0),
             child: Text(
-              'Salvează rugăciunile preferate apâsând pe ♡ ',
+              AppLocalizations.of(context).emptyFavoriteHint,
               style: FlutterFlowTheme.of(context).labelMedium.override(
                     fontFamily: 'Inter',
                     letterSpacing: 0.0,

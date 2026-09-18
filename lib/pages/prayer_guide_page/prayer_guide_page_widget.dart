@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:my_prayer/custom_code/prayer/prayer_types_cache.dart';
@@ -7,6 +7,7 @@ import 'package:my_prayer/service_locator.dart';
 import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 
 class PrayerGuidePageWidget extends StatefulWidget {
   const PrayerGuidePageWidget({super.key});
@@ -60,14 +61,15 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
   }
 
   ({String meaning, String whenToPray, String howToPray}) _guideFor(
+    BuildContext context,
     _GuideTypeItem item,
   ) {
+    final l10n = AppLocalizations.of(context);
     final label = '${item.type.type} ${item.path}'.toLowerCase();
 
     if (label.contains('utren')) {
       return (
-        meaning:
-            'Utrenia este rugăciunea de dimineață a Bisericii. Prin psalmi, cântări și rugăciuni, Îi mulțumim lui Dumnezeu pentru lumina unei noi zile și Îi încredințăm gândurile, lucrările și toate acțiunile noastre. Este chemarea de a începe fiecare zi în lumina lui Cristos.',
+        meaning: l10n.guideMeaningUtrenia,
         whenToPray: '',
         howToPray: '',
       );
@@ -76,32 +78,28 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
         label.contains('ora ') ||
         label.contains('canonic')) {
       return (
-        meaning:
-            'Orele canonice (sau Ceasurile) așază rugăciunea în diferitele momente ale zilei și ne amintesc faptul că întreaga noastră viață Îi aparține lui Dumnezeu. Prin Ceasul întâi, al treilea, al șaselea și al nouălea, ne oprim din preocupările zilnice pentru a ne întoarce mintea și inima către El.',
+        meaning: l10n.guideMeaningCanonicalHours,
         whenToPray: '',
         howToPray: '',
       );
     }
     if (label.contains('vecern')) {
       return (
-        meaning:
-            'Vecernia este rugăciunea de seară a Bisericii. Îi mulțumim lui Dumnezeu pentru binele primit, Îi cerem iertare pentru greșelile săvârșite și așezăm în mâinile Sale ziua care se încheie. În lumina blândă a serii, Îi încredințăm Lui viața noastră întreagă și pe toți cei dragi.',
+        meaning: l10n.guideMeaningVespers,
         whenToPray: '',
         howToPray: '',
       );
     }
     if (label.contains('rozar')) {
       return (
-        meaning:
-            'Rozariul ne ajută să contemplăm tainele vieții lui Isus Cristos împreună cu Preasfânta Fecioară Maria. Repetarea rugăciunilor adună mintea și liniștește inima, pentru ca privirea noastră să rămână îndreptată spre Cristos și spre Evanghelia Sa.',
+        meaning: l10n.guideMeaningRosary,
         whenToPray: '',
         howToPray: '',
       );
     }
     if (label.contains('tatăl nostru')) {
       return (
-        meaning:
-            'Rugăciunea Domnească este rugăciunea pe care însuși Isus ne-a dăruit-o: ne învață să-L numim pe Dumnezeu Tată și să căutăm voia Lui.',
+        meaning: l10n.guideMeaningOurFather,
         whenToPray:
             'Se rostește în orice moment al zilei, în rugăciunea personală, familială și liturgică.',
         howToPray:
@@ -110,8 +108,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     }
     if (label.contains('crez')) {
       return (
-        meaning:
-            'Crezul este mărturisirea credinței Bisericii: rezumă lucrarea Tatălui, a Fiului și a Spiritului Sfânt.',
+        meaning: l10n.guideMeaningCreed,
         whenToPray:
             'Este potrivit dimineața, înaintea unei decizii importante și ori de câte ori dorești să-ți reînnoiești credința.',
         howToPray:
@@ -120,18 +117,16 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     }
     if (label.contains('înger') || label.contains('angel')) {
       return (
-        meaning:
-            'Rugăciunea Îngerului Domnului amintește Buna Vestire și întruparea Fiului lui Dumnezeu pentru mântuirea noastră.',
+        meaning: l10n.guideMeaningAngelus,
         whenToPray:
             'În tradiția creștină se rostește dimineața, la amiază și seara; este potrivită pentru a sfinți ritmul zilei.',
         howToPray:
-            'Oprește-te pentru câteva clipe din activitate și primește, asemenea Mariei, chemarea de a împlini voia lui Dumnezeu.',
+            'Opește-te pentru câteva clipe din activitate și primește, asemenea Mariei, chemarea de a împlini voia lui Dumnezeu.',
       );
     }
     if (label.contains('diminea')) {
       return (
-        meaning:
-            'Rugăciunea de dimineață încredințează lui Dumnezeu ziua care începe și cere lumină, pace și credincioșie.',
+        meaning: l10n.guideMeaningMorning,
         whenToPray:
             'Rostește-o la începutul zilei, înainte de a intra în griji și îndatoriri.',
         howToPray:
@@ -140,8 +135,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     }
     if (label.contains('seară') || label.contains('seara')) {
       return (
-        meaning:
-            'Rugăciunea de seară este un timp de mulțumire, cercetare a inimii și odihnire în grija lui Dumnezeu.',
+        meaning: l10n.guideMeaningEvening,
         whenToPray:
             'Rostește-o înainte de culcare, singur sau împreună cu familia.',
         howToPray:
@@ -150,24 +144,21 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     }
     if (label.contains('acatist')) {
       return (
-        meaning:
-            'Acatistul este o rugăciune de laudă și cinstire adusă Preasfintei Născătoare de Dumnezeu și Pururea Fecioarei Maria. Este un imn prin care îi aducem mulțumire Maicii Domnului pentru tot ceea ce I-a permis lui Dumnezeu să înfăptuiască, prin ea, în economia mântuirii și îi cerem să mijlocească pentru noi înaintea Fiului său, Isus Cristos, în bucurii, în încercări și în toate nevoile vieții.',
+        meaning: l10n.guideMeaningAcathist,
         whenToPray: '',
         howToPray: '',
       );
     }
     if (label.contains('paraclis')) {
       return (
-        meaning:
-            'Paraclisul este rugăciunea celui care caută ajutor și mângâiere. Prin cuvintele acestei rugăciuni, ne îndreptăm către Maica Domnului și îi încredințăm suferințele, neliniștile și speranțele noastre, cerându-i să ne ocrotească și să ne călăuzească spre Cristos.',
+        meaning: l10n.guideMeaningParaclis,
         whenToPray: '',
         howToPray: '',
       );
     }
     if (label.contains('psalm')) {
       return (
-        meaning:
-            'Psalmii sunt rugăciunea inspirată a poporului lui Dumnezeu: în ei se întâlnesc lauda, durerea, încrederea, pocăința și speranța.',
+        meaning: l10n.guideMeaningPsalms,
         whenToPray:
             'Sunt potriviți în orice timp, mai ales când îți este greu să găsești propriile cuvinte înaintea lui Dumnezeu.',
         howToPray:
@@ -176,24 +167,21 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     }
     if (label.contains('liturgh') || label.contains('cânt')) {
       return (
-        meaning:
-            'Cântarea este rugăciunea care se înalță din inimă. Cântările liturgice, pricesnele și colindele păstrează și transmit credința Bisericii, unind cuvântul rugăciunii cu frumusețea muzicii și a tradiției creștine.',
+        meaning: l10n.guideMeaningHymns,
         whenToPray: '',
         howToPray: '',
       );
     }
     if (label.contains('zilnic') || label.contains('rugăciuni zilnice')) {
       return (
-        meaning:
-            'Această secțiune reunește rugăciuni specifice pentru diferitele momente și împrejurări ale vieții: dimineața și seara, înainte și după masă, în clipe de mulțumire, de încercare sau de pocăință. Rostită cu statornicie, rugăciunea nu rămâne doar un moment al zilei, ci devine un mod de a trăi în prezența lui Dumnezeu.',
+        meaning: l10n.guideMeaningDaily,
         whenToPray: '',
         howToPray: '',
       );
     }
     if (label.contains('spoved') || label.contains('pocăin')) {
       return (
-        meaning:
-            'Rugăciunile de pocăință ne ajută să ne recunoaștem cu sinceritate păcatul și să primim milostivirea vindecătoare a lui Dumnezeu.',
+        meaning: l10n.guideMeaningRepentance,
         whenToPray:
             'Sunt potrivite înainte de Spovadă, în zilele de post și ori de câte ori simți nevoia de împăcare cu Dumnezeu și cu aproapele.',
         howToPray:
@@ -202,18 +190,16 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     }
     if (label.contains('famil') || label.contains('copil')) {
       return (
-        meaning:
-            'Rugăciunea pentru familie încredințează Domnului relațiile, bucuriile și greutățile celor dragi, cerând pace și unitate.',
+        meaning: l10n.guideMeaningFamily,
         whenToPray:
-            'Este potrivită dimineața sau seara, la aniversări, în perioade de încercare și înaintea hotărârilor importante ale familiei.',
+            'Este potrivită dimineața sau seara, la aniversari, în perioade de încercare și înaintea hotărârilor importante ale familiei.',
         howToPray:
             'Adu înaintea lui Dumnezeu fiecare persoană pe nume și cere harul de a o iubi cu răbdare, iertare și adevăr.',
       );
     }
     if (label.contains('maic') || label.contains('născătoare')) {
       return (
-        meaning:
-            'Această rugăciune ne îndreaptă către Maica Domnului, care mijlocește pentru noi și ne conduce întotdeauna la Fiul ei.',
+        meaning: l10n.guideMeaningMotherOfGod,
         whenToPray:
             'Poate fi rostită în orice nevoie, mai ales pentru familie, bolnavi, pace și statornicie în credință.',
         howToPray:
@@ -222,8 +208,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
     }
     if (label.contains('sfânt') || label.contains('sfant')) {
       return (
-        meaning:
-            'Rugăciunea cere mijlocirea unui sfânt, martor al lui Cristos și frate mai mare pe drumul credinței.',
+        meaning: l10n.guideMeaningSaint,
         whenToPray:
             'Este potrivită în ziua sărbătorii sfântului, înaintea unei încercări sau când dorești să-i urmezi o virtute.',
         howToPray:
@@ -233,8 +218,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
 
     final title = item.type.type;
     return (
-      meaning:
-          '„$title” este un drum de rugăciune din tradiția Bisericii Greco-Catolice. Prin aceste texte, credința Bisericii devine laudă, cerere și apropiere de Dumnezeu.',
+      meaning: l10n.guideMeaningDefault(title),
       whenToPray:
           'Poate fi rostită în liniște, în familie sau în comunitate, mai ales atunci când tema ei se potrivește cu nevoia și momentul tău de viață.',
       howToPray:
@@ -270,7 +254,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
         foregroundColor: theme.alternate,
         centerTitle: true,
         title: Text(
-          'Îndrumar',
+          AppLocalizations.of(context).guidePageTitle,
           style: theme.titleMedium.override(
             fontFamily: 'Merriweather',
             color: theme.alternate,
@@ -285,7 +269,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
           padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 24.0),
           children: [
             Text(
-              'Acest îndrumar li se adresează tuturor celor care doresc să se apropie mai mult de Dumnezeu și să descopere bogăția rugăciunii Bisericii Române Unite cu Roma, Greco-Catolică, în tradiția de rugăciune a Congregației Surorilor Maicii Domnului.\n\nAplicația cuprinde rugăciuni și cântări care ne ajută să-I încredințăm lui Dumnezeu începutul și sfârșitul fiecărei zile, bucuriile, încercările și oamenii pe care îi purtăm în inimă.',
+              AppLocalizations.of(context).guideIntro,
               style: theme.bodyMedium.override(
                 fontFamily: 'Inter',
                 color: theme.secondaryText,
@@ -304,7 +288,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
                 ),
               ),
               child: Text(
-                'Fie ca aceste rugăciuni să ne apropie de Cristos, să ne deschidă inima către aproapele și să ne ajute să trăim fiecare zi în comuniune cu Biserica, sub ocrotirea Preasfintei Fecioare Maria.',
+                AppLocalizations.of(context).guideQuote,
                 style: theme.titleSmall.override(
                   fontFamily: 'Merriweather',
                   color: theme.primary,
@@ -326,13 +310,13 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
                     _loadCatalog(forceRefresh: true),
                   ),
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Reîncearcă'),
+                  label: Text(AppLocalizations.of(context).retry),
                 ),
               )
             else if (items.isEmpty)
               Center(
                 child: Text(
-                  'Nu am găsit niciun tip de rugăciune.',
+                  AppLocalizations.of(context).guideEmptyTypes,
                   style: theme.bodyMedium.override(
                     fontFamily: 'Inter',
                     color: theme.secondaryText,
@@ -344,7 +328,7 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
               ...List.generate(items.length, (index) {
                 final item = items[index];
                 final type = item.type;
-                final guide = _guideFor(item);
+                final guide = _guideFor(context, item);
                 final expanded = _expandedTypeId == type.id;
 
                 return Padding(
@@ -406,8 +390,8 @@ class _PrayerGuidePageWidgetState extends State<PrayerGuidePageWidget> {
                                 backgroundColor:
                                     theme.primary.withValues(alpha: 0.1),
                               ),
-                              child: const Text(
-                                'Vezi rugăciunile',
+                              child: Text(
+                                AppLocalizations.of(context).guideOpenPrayers,
                               ),
                             ),
                           ),

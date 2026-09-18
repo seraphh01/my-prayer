@@ -2,6 +2,7 @@ import '/backend/schema/structs/index.dart';
 import '/components/empty_list_component_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'sub_types_view_model.dart';
 export 'sub_types_view_model.dart';
@@ -269,14 +270,13 @@ class _SubTypesViewWidgetState extends State<SubTypesViewWidget> {
         [];
 
     if (subTypes.isEmpty) {
-      return const Center(
+      return Center(
         child: SizedBox(
           width: double.infinity,
           height: 30.0,
           child: EmptyListComponentWidget(
-            title: 'Nu s-a putut încărca.',
-            subtitle:
-                'Verifică conexiunea la internet sau mergi la rugăciunile descărcate.',
+            title: AppLocalizations.of(context).subtypesLoadFailedTitle,
+            subtitle: AppLocalizations.of(context).subtypesLoadFailedSubtitle,
           ),
         ),
       );

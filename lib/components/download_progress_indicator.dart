@@ -6,6 +6,7 @@ import 'package:my_prayer/custom_code/download/notifiers/download_state_notifier
 import 'package:my_prayer/custom_code/widgets/custom_circular_progress_indicator.dart';
 import 'package:my_prayer/flutter_flow/flutter_flow_theme.dart';
 import 'package:my_prayer/flutter_flow/flutter_flow_util.dart';
+import 'package:my_prayer/l10n/generated/app_localizations.dart';
 import 'package:my_prayer/service_locator.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -47,11 +48,11 @@ class _DownloadProgressIndicatorState extends State<DownloadProgressIndicator> {
       context: context,
       builder: (alertDialogContext) {
         return AlertDialog(
-          title: const Text('Descărcarea a fost finalizată!'),
+          title: Text(AppLocalizations.of(context).downloadCompletedTitle),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(alertDialogContext),
-              child: const Text('Ok'),
+              child: Text(AppLocalizations.of(context).ok),
             ),
           ],
         );
@@ -65,13 +66,12 @@ class _DownloadProgressIndicatorState extends State<DownloadProgressIndicator> {
       context: context,
       builder: (alertDialogContext) {
         return AlertDialog(
-          title: const Text('Descărcarea nu a putut fi finalizată!'),
-          content: const Text(
-              'Ne pare rău, a intervenit o eroare. Încearcă mai târziu.'),
+          title: Text(AppLocalizations.of(context).downloadFailedTitle),
+          content: Text(AppLocalizations.of(context).downloadFailedBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(alertDialogContext),
-              child: const Text('Ok'),
+              child: Text(AppLocalizations.of(context).ok),
             ),
           ],
         );

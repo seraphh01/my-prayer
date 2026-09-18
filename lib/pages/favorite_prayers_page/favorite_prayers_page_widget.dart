@@ -6,6 +6,7 @@ import '/custom_code/prayer/prayer_card_lines.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -104,7 +105,7 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                 ),
                 automaticallyImplyLeading: true,
                 title: AutoSizeText(
-                  'Rugăciuni favorite',
+                  AppLocalizations.of(context).favoritesPageTitle,
                   maxLines: 1,
                   minFontSize: 18.0,
                   style: FlutterFlowTheme.of(context).titleLarge.override(
@@ -127,16 +128,18 @@ class _FavoritePrayersPageWidgetState extends State<FavoritePrayersPageWidget> {
                         context: context,
                         builder: (alertDialogContext) {
                           return AlertDialog(
-                            title: const Text('Rugăciuni favorite'),
-                            content: const Text(
-                              'Trage cu degetul pentru a reordona. Trage spre stânga pentru ștergere. Rugăciunile descărcate au pictograma offline.',
+                            title: Text(
+                                AppLocalizations.of(context).favoritesPageTitle),
+                            content: Text(
+                              AppLocalizations.of(context)
+                                  .favoritesInfoDialogBody,
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () =>
                                     Navigator.pop(alertDialogContext),
-                                child: const Text(
-                                    FFAppConstants.ConfirmButtonText),
+                                child: Text(
+                                    AppLocalizations.of(context).gotIt),
                               ),
                             ],
                           );

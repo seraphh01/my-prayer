@@ -1,0 +1,325 @@
+{
+  "@@locale": "ro",
+  "appTitle": "Rugăciuni și cântări",
+  "@appTitle": {
+    "description": "App name shown on the splash screen and browser/window title."
+  },
+  "congregationTitle": "Congregația Surorilor Maicii Domnului",
+  "@congregationTitle": {
+    "description": "Congregation name shown on the splash screen and about/settings pages."
+  },
+  "loading": "Se încarcă…",
+  "@loading": {
+    "description": "Generic loading placeholder."
+  },
+  "todayPrayersTileTitle": "Rugăciuni de azi",
+  "@todayPrayersTileTitle": {
+    "description": "Title of the home 'today's prayers' summary tile."
+  },
+  "retry": "Reîncearcă",
+  "@retry": {
+    "description": "Retry button label after a load failure."
+  },
+  "prayersLoadError": "Rugăciunile nu au putut fi încărcate. Vă rugăm să încercați din nou mai târziu sau verificați conexiunea la internet.",
+  "@prayersLoadError": {
+    "description": "Error shown when the prayer catalog fails to load."
+  },
+  "noSearchResults": "Nu există rugăciuni cu acest nume.",
+  "@noSearchResults": {
+    "description": "Shown when a catalog search returns no results."
+  },
+  "noTodayRecommendation": "Nicio recomandare pentru astăzi. Deschide calendarul pentru rugăciunile zilei.",
+  "@noTodayRecommendation": {
+    "description": "Shown on the home page when there are no prayers recommended for today."
+  },
+  "invalidSavedPrayer": "Rugăciunea salvată nu este validă. Vă rugăm să salvați o rugăciune din nou.",
+  "@invalidSavedPrayer": {
+    "description": "Snackbar shown when a saved/favorite prayer reference can no longer be resolved."
+  },
+  "homeCatalogSectionTitle": "Rugăciuni și cântări",
+  "@homeCatalogSectionTitle": {
+    "description": "Home page section header above the prayer type catalog."
+  },
+  "continueWhereYouLeftOff": "Continuă de unde ai rămas",
+  "@continueWhereYouLeftOff": {
+    "description": "Home page section header for the last opened prayer."
+  },
+  "favorites": "Favorite",
+  "@favorites": {
+    "description": "Home page section header / label for favorite prayers."
+  },
+  "searchHint": "Caută rugăciuni și cântări",
+  "@searchHint": {
+    "description": "Hint text of the home page search field."
+  },
+  "todaySectionLabel": "Pentru astăzi · {date}",
+  "@todaySectionLabel": {
+    "description": "Home page section header for today's prayers, with the formatted date.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutPageTitle": "Cine suntem",
+  "aboutParagraph1": "Această aplicație este un proiect al Congregației Surorilor Maicii Domnului, care își are sediul Casei Generale în Cluj-Napoca, România.",
+  "aboutParagraph2": "Congregația Surorilor Maicii Domnului (CMD) a fost întemeiată la Blaj, în 2 februarie 1921, de Mitropolitul Dr. Vasile Suciu, și așezată sub ocrotirea Preasfintei Fecioare Maria. De la începuturi, viața Surorilor s-a fundamentat pe rugăciune, muncă și slujirea aproapelui.",
+  "aboutParagraph3": "Spiritualitatea CMD își are izvorul în Cuvântul lui Dumnezeu, în viața liturgică a Bisericii și în exemplul Preasfintei Fecioare Maria.",
+  "aboutParagraph4": "Rugăciunea liturgică, celebrată în tradiția bizantină, se află în centrul vieții comunităților CMD și dă ritm fiecărei zile. Prin această aplicație, Surorile împărtășesc o parte din comoara spirituală moștenită în cei peste 100 de ani de existență celor care vor să descopere sau să aprofundeze rugăciunile și cântările greco-catolice.",
+  "aboutParagraph5": "Aplicația cuprinde rugăciuni pentru diferitele momente ale zilei, precum și cântări care însoțesc anul liturgic și însuflețesc evlavia credincioșilor. Ea poate să fie un ajutor pentru rugăciunea personală și familială și, totodată, o cale de apropiere de frumusețea și profunzimea spiritualității bizantine.",
+  "aboutParagraph6": "La Mănăstirea Maicii Domnului – Sanctuar Arhiepiscopal Major din Cluj-Napoca, Surorile se roagă pentru intențiile încredințate lor, primesc și însoțesc persoanele care caută un cuvânt de lumină și slujesc viața liturgică a Bisericii.",
+  "aboutPrayerTitle": "Rugăciune către Maica Domnului",
+  "aboutPrayerText": "Preasfântă Fecioară Maria, Maica lui Dumnezeu, păstrează-ne sub ocrotirea ta. Călăuzește-ne pașii către Fiul tău, Isus Cristos, și dobândește-ne o inimă curată, pace sufletească și statornicie în rugăciune. Amin.",
+  "privacyPolicyPageTitle": "Politica de confidențialitate",
+  "privacyPolicyBody": "Politica de confidențialitate a aplicației Rugăciuni și cântări – CMD\n\nUltima actualizare: 09.07.2026\n\nIntroducere\n\n  Aplicația Rugăciuni și cântări – CMD este pusă la dispoziția utilizatorilor de către Congregația Surorilor Maicii Domnului. Această politică explică modul în care aplicația utilizează datele necesare funcționării sale.\n\nDate stocate pe dispozitiv\n\n  Aplicația păstrează local, pe dispozitivul utilizatorului, preferințele de afișare și redare, rugăciunile favorite, descărcările pentru utilizare offline, jurnalul de rugăciune și program de rugăciune configurat de utilizator. Jurnalul de rugăciune este păstrat local timp de cel mult 31 de zile.\n\nNotificări și redare audio\n\n  Cu acordul utilizatorului, aplicația trimite notificări locale pentru program de rugăciune al utilizatorului. Informațiile necesare acestor notificări rămân pe dispozitiv. Aplicația poate reda audio în fundal și poate afișa controale de redare în sistemul de operare. Aplicația nu solicită acces la microfon.\n\nConținut și conexiune la internet\n\nPentru a încărca rugăciuni, texte, imagini și fișiere audio, aplicația se conectează la infrastructura Supabase. Furnizorul serviciului poate prelucra date tehnice de conexiune, precum adresa IP și jurnale de securitate, necesare furnizării și protejării serviciului. Conținutul descărcat pentru utilizare offline este stocat pe dispozitiv.\n\nDate personale și partajare\n\nAplicația nu solicită crearea unui cont și nu colectează în mod intenționat numele, adresa de e-mail, numărul de telefon, locația sau contacte ale utilizatorului. Nu folosim servicii de publicitate comportamentală și nu vindem date personale.\n\nSecuritate și control\n\nPuteți șterge datele stocate local prin eliminarea favoritelor, a jurnalului, a programului de rugăciune și a descărcărilor din aplicație sau prin ștergerea datelor aplicației din setările dispozitivului. Permisiunea pentru notificări poate fi retrasă oricând din setările sistemului.\n\nContact\n\nPentru întrebări legate de această politică, ne puteți contacta la:\n\nSeraphicApps\nCongregația Surorilor Maicii Domnului\nEmail: sserafim.socaciu@gmail.com\n\nAceastă politică poate fi actualizată periodic. Orice modificare survenită va fi publicată pe această pagină.",
+  "journalPageTitle": "Jurnal de rugăciune",
+  "journalToday": "Astăzi",
+  "journalYesterday": "Ieri",
+  "journalEmptyTitle": "Nicio rugăciune înregistrată",
+  "journalEmptySubtitle": "Rugăciunile deschise apar aici automat.",
+  "journalTodayCount": "Astăzi — {count} rugăciuni",
+  "@journalTodayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "journalHistoryTitle": "Istoric (ultima lună)",
+  "guidePageTitle": "Îndrumar",
+  "guideIntro": "Acest îndrumar li se adresează tuturor celor care doresc să se apropie mai mult de Dumnezeu și să descopere bogăția rugăciunii Bisericii Române Unite cu Roma, Greco-Catolică, în tradiția de rugăciune a Congregației Surorilor Maicii Domnului.\n\nAplicația cuprinde rugăciuni și cântări care ne ajută să-I încredințăm lui Dumnezeu începutul și sfârșitul fiecărei zile, bucuriile, încercările și oamenii pe care îi purtăm în inimă.",
+  "guideQuote": "Fie ca aceste rugăciuni să ne apropie de Cristos, să ne deschidă inima către aproapele și să ne ajute să trăim fiecare zi în comuniune cu Biserica, sub ocrotirea Preasfintei Fecioare Maria.",
+  "guideEmptyTypes": "Nu am găsit niciun tip de rugăciune.",
+  "guideOpenPrayers": "Vezi rugăciunile",
+  "guideMeaningUtrenia": "Utrenia este rugăciunea de dimineață a Bisericii. Prin psalmi, cântări și rugăciuni, Îi mulțumim lui Dumnezeu pentru lumina unei noi zile și Îi încredințăm gândurile, lucrările și toate acțiunile noastre. Este chemarea de a începe fiecare zi în lumina lui Cristos.",
+  "guideMeaningCanonicalHours": "Orele canonice (sau Ceasurile) așază rugăciunea în diferitele momente ale zilei și ne amintesc faptul că întreaga noastră viață Îi aparține lui Dumnezeu. Prin Ceasul întâi, al treilea, al șaselea și al nouălea, ne oprim din preocupările zilnice pentru a ne întoarce mintea și inima către El.",
+  "guideMeaningVespers": "Vecernia este rugăciunea de seară a Bisericii. Îi mulțumim lui Dumnezeu pentru binele primit, Îi cerem iertare pentru greșelile săvârșite și așezăm în mâinile Sale ziua care se încheie. În lumina blândă a serii, Îi încredințăm Lui viața noastră întreagă și pe toți cei dragi.",
+  "guideMeaningRosary": "Rozariul ne ajută să contemplăm tainele vieții lui Isus Cristos împreună cu Preasfânta Fecioară Maria. Repetarea rugăciunilor adună mintea și liniștește inima, pentru ca privirea noastră să rămână îndreptată spre Cristos și spre Evanghelia Sa.",
+  "guideMeaningOurFather": "Rugăciunea Domnească este rugăciunea pe care însuși Isus ne-a dăruit-o: ne învață să-L numim pe Dumnezeu Tată și să căutăm voia Lui.",
+  "guideMeaningCreed": "Crezul este mărturisirea credinței Bisericii: rezumă lucrarea Tatălui, a Fiului și a Spiritului Sfânt.",
+  "guideMeaningAngelus": "Rugăciunea Îngerului Domnului amintește Buna Vestire și întruparea Fiului lui Dumnezeu pentru mântuirea noastră.",
+  "guideMeaningMorning": "Rugăciunea de dimineață încredințează lui Dumnezeu ziua care începe și cere lumină, pace și credincioșie.",
+  "guideMeaningEvening": "Rugăciunea de seară este un timp de mulțumire, cercetare a inimii și odihnire în grija lui Dumnezeu.",
+  "guideMeaningAcathist": "Acatistul este o rugăciune de laudă și cinstire adusă Preasfintei Născătoare de Dumnezeu și Pururea Fecioarei Maria. Este un imn prin care îi aducem mulțumire Maicii Domnului pentru tot ceea ce I-a permis lui Dumnezeu să înfăptuiască, prin ea, în economia mântuirii și îi cerem să mijlocească pentru noi înaintea Fiului său, Isus Cristos, în bucurii, în încercări și în toate nevoile vieții.",
+  "guideMeaningParaclis": "Paraclisul este rugăciunea celui care caută ajutor și mângâiere. Prin cuvintele acestei rugăciuni, ne îndreptăm către Maica Domnului și îi încredințăm suferințele, neliniștile și speranțele noastre, cerându-i să ne ocrotească și să ne călăuzească spre Cristos.",
+  "guideMeaningPsalms": "Psalmii sunt rugăciunea inspirată a poporului lui Dumnezeu: în ei se întâlnesc lauda, durerea, încrederea, pocăința și speranța.",
+  "guideMeaningHymns": "Cântarea este rugăciunea care se înalță din inimă. Cântările liturgice, pricesnele și colindele păstrează și transmit credința Bisericii, unind cuvântul rugăciunii cu frumusețea muzicii și a tradiției creștine.",
+  "guideMeaningDaily": "Această secțiune reunește rugăciuni specifice pentru diferitele momente și împrejurări ale vieții: dimineața și seara, înainte și după masă, în clipe de mulțumire, de încercare sau de pocăință. Rostită cu statornicie, rugăciunea nu rămâne doar un moment al zilei, ci devine un mod de a trăi în prezența lui Dumnezeu.",
+  "guideMeaningRepentance": "Rugăciunile de pocăință ne ajută să ne recunoaștem cu sinceritate păcatul și să primim milostivirea vindecătoare a lui Dumnezeu.",
+  "guideMeaningFamily": "Rugăciunea pentru familie încredințează Domnului relațiile, bucuriile și greutățile celor dragi, cerând pace și unitate.",
+  "guideMeaningMotherOfGod": "Această rugăciune ne îndreaptă către Maica Domnului, care mijlocește pentru noi și ne conduce întotdeauna la Fiul ei.",
+  "guideMeaningSaint": "Rugăciunea cere mijlocirea unui sfânt, martor al lui Cristos și frate mai mare pe drumul credinței.",
+  "guideMeaningDefault": "„{title}” este un drum de rugăciune din tradiția Bisericii Greco-Catolice. Prin aceste texte, credința Bisericii devine laudă, cerere și apropiere de Dumnezeu.",
+  "@guideMeaningDefault": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Anulează",
+  "save": "Salvează",
+  "close": "Închide",
+  "delete": "Șterge",
+  "reminderChangePrayer": "Schimbă rugăciunea",
+  "reminderSelectPrayerError": "Selectează o rugăciune",
+  "reminderSelectDaysError": "Selectează cel puțin o zi",
+  "reminderEditTitle": "Editează înregistrarea",
+  "reminderNewTitle": "Înregistrare nouă",
+  "reminderPrefilledFromCalendar": "Ora și zilele au fost completate din calendarul liturgic.",
+  "reminderTimeLabel": "Ora",
+  "reminderDaysOfWeekLabel": "Zile din săptămână",
+  "remindersLoadError": "Nu s-a putut încărca lista de rugăciuni. Verifică conexiunea.",
+  "reminderDeleteConfirmTitle": "Șterge înregistrarea?",
+  "reminderDeleteConfirmBody": "Înregistrarea pentru „{title}” la {time} va fi ștearsă.",
+  "@reminderDeleteConfirmBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "remindersPageTitleWeb": "Program rugăciune",
+  "remindersUnavailableOnWeb": "Programul de rugăciune este disponibil doar pe telefon.",
+  "remindersPageTitle": "Programul meu de rugăciune",
+  "remindersDoneEditing": "Gata",
+  "remindersEdit": "Editează",
+  "remindersAdd": "Adaugă",
+  "remindersEnableNotificationsPrompt": "Activează notificările în setările telefonului.",
+  "remindersOpenSettings": "Setări",
+  "remindersEmptyState": "Nu ai un program stabilit. Apasă + pentru a începe.",
+  "settingsPageTitle": "Setări",
+  "playbackSpeedTitle": "Viteză de redare",
+  "playbackSpeedHint": "Repornește redarea audio pentru a aplica",
+  "fontStyleTitle": "Stil font",
+  "fontSizeTitle": "Mărime font",
+  "appThemeTitle": "Temă aplicație",
+  "themeAutoHint": "Auto - se sincronizează cu tema telefonului dumneavoastră (folosește Sepia pentru luminos și Întunecat pentru întunecat).",
+  "themeModeLight": "Luminos",
+  "themeModeSepia": "Sepia",
+  "themeModeDark": "Întunecat",
+  "themeModeSystem": "Auto",
+  "freeStorageTitle": "Eliberează spațiul de stocare",
+  "storageOccupied": "Descărcările ocupă {mb} MB în memorie.",
+  "@storageOccupied": {
+    "placeholders": {
+      "mb": {
+        "type": "String"
+      }
+    }
+  },
+  "freeStorageConfirmTitle": "Eliberare spațiu de stocare",
+  "freeStorageConfirmBody": "Această acțiune va șterge descărcările din memoria telefonului. Vei elibera {mb} MB, iar rugăciunile nu vor mai fi disponibile fără conexiune la internet.",
+  "@freeStorageConfirmBody": {
+    "placeholders": {
+      "mb": {
+        "type": "String"
+      }
+    }
+  },
+  "freeStorageAction": "Eliberează spațiul",
+  "genericErrorTitle": "A apărut o eroare!",
+  "freeStorageErrorBody": "Spațiul de stocare nu a putut fi eliberat. Încearcă să îl eliberezi din setările telefonului.",
+  "ok": "Ok",
+  "appUpToDate": "Aplicația este actualizată la ultima versiune.\nUltima actualizare: {date}",
+  "@appUpToDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "checkForUpdates": "Verifică actualizările aplicației",
+  "currentVersion": "Versiunea curentă: {version}",
+  "@currentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "lastContentUpdate": "Ultima actualizare: {date}",
+  "@lastContentUpdate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "congregationNameUpper": "CONGREGAȚIA SURORILOR MAICII DOMNULUI",
+  "congregationAddress": "Str. Romul Ladea, nr. 6, 400481, Cluj-Napoca",
+  "onboardingAppTitleLine1": "Rugăciuni și Cântări",
+  "onboardingAppTitleLine2": "Greco-Catolice",
+  "onboardingCongregationLine1": "Congregația Surorilor",
+  "onboardingCongregationLine2": "Maicii Domnului",
+  "onboardingMadeBy": "Realizată de",
+  "onboardingExpandGroup": "Restrânge",
+  "onboardingCollapseGroup": "Extinde",
+  "onboardingChangePrayer": "Alegeți altă rugăciune",
+  "onboardingDefaultPrayerTypeLabel": "Rugăciune",
+  "onboardingWelcomeHeading": "Cuvânt de bun-venit",
+  "onboardingWelcomeAddress": "Surorile Congregației Maicii Domnului vă întâmpină cu bucurie și vă invită să vă opriți, pentru câteva clipe, în liniștea rugăciunii.",
+  "onboardingWelcomeBody": "În această aplicație veți găsi rugăciuni și cântări interpretate și înregistrate de Surori, astfel încât, zi de zi, oriunde v-ați afla, să puteți fi însoțiți de rugăciunea lor.",
+  "onboardingWelcomeGuide": "În continuare, vă prezentăm câteva informații care vă vor ajuta să descoperiți conținutul aplicației și să îl folosiți potrivit nevoilor dumneavoastră sufletești.",
+  "onboardingWelcomeBlessing": "Fie ca Domnul să vă binecuvânteze, iar Preacurata Fecioară Maria să vă păstreze sub ocrotirea ei!",
+  "onboardingWelcomeSignOff": "Cu dragoste în Cristos,\nSurorile Congregației Maicii Domnului",
+  "onboardingTextStepTitle": "Personalizați textul",
+  "onboardingTextStepBody": "Adaptați fontul și mărimea textului acum sau oricând din Setări.",
+  "onboardingReadingExampleLabel": "Exemplu de citire",
+  "onboardingReadingPreviewQuote": "„Tatăl nostru, care ești în ceruri, sfințească-se numele Tău…”",
+  "onboardingReminderTime": "Ora: {time}",
+  "@onboardingReminderTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingReminderDaysLabel": "Zile",
+  "onboardingReminderStepTitle": "Programul meu de rugăciune",
+  "onboardingReminderStepBodyWeb": "Amintirile sunt disponibile doar din aplicație. Pe web puteți continua; le veți putea configura din Setări pe dispozitivul mobil.",
+  "onboardingReminderStepBodyMobile": "Opțional: setați o amintire pentru o rugăciune de astăzi. Ora și zilele sunt completate automat, și le puteți modifica ulterior.",
+  "onboardingReminderNoPrayersToday": "Nu am găsit rugăciuni pentru astăzi. Puteți adăuga o amintire mai târziu din aplicație.",
+  "onboardingFavoritesStepTitle": "Rugăciuni favorite",
+  "onboardingFavoritesStepBody": "Dacă doriți, alegeți o rugăciune favorită pentru început. Rugăciunile favorite sunt mai ușor de găsit și ascultat.",
+  "onboardingFavoritesLoadError": "Nu am putut încărca lista acum. Puteți adăuga favorite mai târziu din aplicație.",
+  "onboardingAudioStepTitle": "Ascultați rugăciunile",
+  "onboardingAudioStepBody": "Majoritatea rugăciunilor pot fi ascultate în aplicație. Apăsați redare pentru un scurt exemplu — primul mister din Rozariul de durere.",
+  "onboardingAudioLoadError": "Nu am putut încărca exemplul audio acum. Puteți asculta rugăciuni din aplicație.",
+  "onboardingAudioPause": "Pauză",
+  "onboardingAudioPlay": "Redare",
+  "onboardingClosingTitle": "Multe de descoperit",
+  "onboardingClosingCalendarTitle": "Calendar",
+  "onboardingClosingCalendarSubtitle": "Rugăciunile din fiecare zi",
+  "onboardingClosingDownloadsTitle": "Descărcări",
+  "onboardingClosingDownloadsSubtitle": "Descarcă rugăciuni și cântări pentru a le asculta offline.",
+  "onboardingClosingJournalTitle": "Jurnal de rugăciune",
+  "onboardingClosingGuideTitle": "Îndrumar",
+  "onboardingClosingGuideSubtitle": "Află pe scurt sensul și folosul fiecărei rugăciuni.",
+  "onboardingClosingMoreTitle": "Și multe altele...",
+  "onboardingClosingBlessing": "Vă dorim să aveți un timp binecuvântat de rugăciune!",
+  "onboardingBack": "Înapoi",
+  "onboardingSkip": "Sari peste",
+  "onboardingContinue": "Continuă",
+  "onboardingStart": "Începe",
+  "calendarPageTitle": "Calendar",
+  "allPrayersPageTitle": "Toate rugăciunile",
+  "gotIt": "Am înțeles",
+  "favoritesPageTitle": "Rugăciuni favorite",
+  "favoritesInfoDialogBody": "Trage cu degetul pentru a reordona. Trage spre stânga pentru ștergere. Rugăciunile descărcate au pictograma offline.",
+  "downloadedPageTitle": "Rugăciuni descărcate",
+  "downloadedInfoDialogBody": "Rugăciunile descărcate sunt disponibile in mod offline. Le puteți șterge prin acțiunea de slide către stânga. Atenție, ștergerea din această listă nu implică și ștergerea din memorie. Pentru a șterge din memorie, accesați pagina de setări.",
+  "bookmarkSaved": "Semnul de carte către {location} a fost salvat!",
+  "@bookmarkSaved": {
+    "placeholders": {
+      "location": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadCompletedTitle": "Descărcarea a fost finalizată!",
+  "downloadFailedTitle": "Descărcarea nu a putut fi finalizată!",
+  "downloadFailedBody": "Ne pare rău, a intervenit o eroare. Încearcă mai târziu.",
+  "emptyStateTitle": "Încă nu ai nimic aici",
+  "emptyDownloadedHint": "Descarcă rugăciunile dorite apâsând pe ",
+  "emptyFavoriteHint": "Salvează rugăciunile preferate apâsând pe ♡ ",
+  "emptyListDefaultTitle": "Textul va apărea curând",
+  "emptyListDefaultSubtitle": "Vă mulțumim pentru răbdare!",
+  "textLoadFailedTitle": "Textul nu a putut fi încărcat!",
+  "textLoadFailedSubtitle": "Vă rugăm încercați mai târziu.",
+  "subtypesLoadFailedTitle": "Nu s-a putut încărca.",
+  "subtypesLoadFailedSubtitle": "Verifică conexiunea la internet sau mergi la rugăciunile descărcate.",
+  "readingAnchorTitle": "Poziție derulare automată text",
+  "readingAnchorHint": "Unde se derulează automat textul când asculti o rugăciune",
+  "autoScrollTitle": "Derulare automată text",
+  "autoScrollSubtitle": "Textul urmărește automat redarea audio",
+  "chooseChapterDefaultTitle": "Mergi la secțiunea dorită",
+  "favoriteRemoved": "{title} - {subtitle} nu mai este in lista de favorite!",
+  "@favoriteRemoved": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "subtitle": {
+        "type": "String"
+      }
+    }
+  },
+  "favoriteAdded": "{title} - {subtitle} a fost salvată în lista de favorite!",
+  "@favoriteAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "subtitle": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadsMenuTitle": "Descărcări",
+  "expandHeader": "Extinde antetul",
+  "collapseHeader": "Restrânge antetul"
+}

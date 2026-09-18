@@ -5,6 +5,7 @@ import '/custom_code/prayer/prayer_card_lines.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +84,7 @@ class _DownloadedPrayersPageWidgetState
                 ),
                 automaticallyImplyLeading: true,
                 title: AutoSizeText(
-                  'Rugăciuni descărcate',
+                  AppLocalizations.of(context).downloadedPageTitle,
                   maxLines: 1,
                   minFontSize: 16.0,
                   style: FlutterFlowTheme.of(context).titleLarge.override(
@@ -107,16 +108,19 @@ class _DownloadedPrayersPageWidgetState
                         context: context,
                         builder: (alertDialogContext) {
                           return AlertDialog(
-                            title: const Text('Rugăciuni descărcate'),
-                            content: const Text(
-                              'Rugăciunile descărcate sunt disponibile in mod offline. Le puteți șterge prin acțiunea de slide către stânga. Atenție, ștergerea din această listă nu implică și ștergerea din memorie. Pentru a șterge din memorie, accesați pagina de setări.',
+                            title: Text(
+                                AppLocalizations.of(context)
+                                    .downloadedPageTitle),
+                            content: Text(
+                              AppLocalizations.of(context)
+                                  .downloadedInfoDialogBody,
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () =>
                                     Navigator.pop(alertDialogContext),
-                                child: const Text(
-                                    FFAppConstants.ConfirmButtonText),
+                                child: Text(
+                                    AppLocalizations.of(context).gotIt),
                               ),
                             ],
                           );

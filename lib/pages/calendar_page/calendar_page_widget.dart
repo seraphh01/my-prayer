@@ -4,6 +4,7 @@ import '/flutter_flow/flutter_flow_calendar.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/backend/schema/structs/index.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'calendar_page_model.dart';
@@ -128,7 +129,7 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                 IconThemeData(color: FlutterFlowTheme.of(context).alternate),
             automaticallyImplyLeading: true,
             title: Text(
-              'Calendar',
+              AppLocalizations.of(context).calendarPageTitle,
               style: FlutterFlowTheme.of(context).titleLarge.override(
                     fontFamily: 'Merriweather',
                     color: FlutterFlowTheme.of(context).alternate,

@@ -2,6 +2,7 @@ import '/app_state.dart';
 import '/custom_code/prayer/reading_anchor_presets.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ReadingAnchorPicker extends StatelessWidget {
@@ -41,7 +42,7 @@ class ReadingAnchorPicker extends StatelessWidget {
                   0.0,
                 ),
                 child: Text(
-                  'Poziție derulare automată text',
+                  AppLocalizations.of(context).readingAnchorTitle,
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                         fontFamily: 'Inter',
                         fontSize: 16.0,
@@ -58,7 +59,7 @@ class ReadingAnchorPicker extends StatelessWidget {
                   0.0,
                 ),
                 child: Text(
-                  'Unde se derulează automat textul când asculti o rugăciune',
+                  AppLocalizations.of(context).readingAnchorHint,
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                         fontFamily: 'Inter',
                         color: FlutterFlowTheme.of(context).secondaryText,

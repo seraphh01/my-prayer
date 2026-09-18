@@ -13,6 +13,7 @@ import 'package:my_prayer/flutter_flow/flutter_flow_theme.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../main.dart';
 
 export 'lat_lng.dart';
@@ -461,16 +462,17 @@ double computeGradientAlignmentY(double evaluatedAngle) {
   return double.parse(roundTo(y, 2));
 }
 
-String themeModeToLabel(AppThemeMode mode) {
+String themeModeToLabel(BuildContext context, AppThemeMode mode) {
+  final l10n = AppLocalizations.of(context);
   switch (mode) {
     case AppThemeMode.light:
-      return 'Luminos';
+      return l10n.themeModeLight;
     case AppThemeMode.sepia:
-      return 'Sepia';
+      return l10n.themeModeSepia;
     case AppThemeMode.dark:
-      return 'Întunecat';
+      return l10n.themeModeDark;
     case AppThemeMode.system:
-      return 'Auto';
+      return l10n.themeModeSystem;
   }
 }
 

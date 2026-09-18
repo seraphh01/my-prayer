@@ -9,6 +9,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/form_field_controller.dart';
 import '/components/reading_text_scroll_settings.dart';
 import '/custom_code/actions/index.dart' as actions;
+import '/l10n/generated/app_localizations.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -78,7 +79,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
           iconTheme:
               IconThemeData(color: FlutterFlowTheme.of(context).alternate),
           title: Text(
-            'Setări',
+            AppLocalizations.of(context).settingsPageTitle,
             style: FlutterFlowTheme.of(context).titleLarge.override(
                   fontFamily: 'Merriweather',
                   color: FlutterFlowTheme.of(context).alternate,
@@ -119,7 +120,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                           padding: const EdgeInsetsDirectional.fromSTEB(
                               24.0, 0.0, 0.0, 0.0),
                           child: Text(
-                            'Viteză de redare',
+                            AppLocalizations.of(context).playbackSpeedTitle,
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
@@ -133,7 +134,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                           padding: const EdgeInsetsDirectional.fromSTEB(
                               24.0, 0.0, 0.0, 0.0),
                           child: Text(
-                            'Repornește redarea audio pentru a aplica',
+                            AppLocalizations.of(context).playbackSpeedHint,
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
@@ -227,7 +228,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Stil font',
+                          AppLocalizations.of(context).fontStyleTitle,
                           style:
                               FlutterFlowTheme.of(context).bodyMedium.override(
                                     fontFamily: 'Inter',
@@ -325,7 +326,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                           padding: const EdgeInsetsDirectional.fromSTEB(
                               24.0, 0.0, 0.0, 0.0),
                           child: Text(
-                            'Mărime font',
+                            AppLocalizations.of(context).fontSizeTitle,
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
@@ -440,7 +441,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Temă aplicație',
+                          AppLocalizations.of(context).appThemeTitle,
                           style:
                               FlutterFlowTheme.of(context).bodyMedium.override(
                                     fontFamily: 'Inter',
@@ -454,7 +455,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                           children: [
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(AppThemeMode.light),
+                              label: themeModeToLabel(context, AppThemeMode.light),
                               icon: Icons.wb_sunny_outlined,
                               isSelected:
                                   _model.themeMode == AppThemeMode.light,
@@ -466,7 +467,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                             ),
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(AppThemeMode.sepia),
+                              label: themeModeToLabel(context, AppThemeMode.sepia),
                               icon: Icons.auto_stories_outlined,
                               isSelected:
                                   _model.themeMode == AppThemeMode.sepia,
@@ -478,7 +479,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                             ),
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(AppThemeMode.dark),
+                              label: themeModeToLabel(context, AppThemeMode.dark),
                               icon: Icons.dark_mode_outlined,
                               isSelected: _model.themeMode == AppThemeMode.dark,
                               onSelected: () {
@@ -489,7 +490,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                             ),
                             buildThemeChip(
                               context: context,
-                              label: themeModeToLabel(AppThemeMode.system),
+                              label: themeModeToLabel(context, AppThemeMode.system),
                               icon: Icons.settings_suggest_outlined,
                               isSelected:
                                   _model.themeMode == AppThemeMode.system,
@@ -504,7 +505,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                         ),
                         if (_model.themeMode == AppThemeMode.system)
                           Text(
-                            'Auto - se sincronizează cu tema telefonului dumneavoastră (folosește Sepia pentru luminos și Întunecat pentru întunecat).',
+                            AppLocalizations.of(context).themeAutoHint,
                             style:
                                 FlutterFlowTheme.of(context).bodySmall.override(
                                       fontFamily: 'Inter',
@@ -547,7 +548,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Eliberează spațiul de stocare',
+                                  AppLocalizations.of(context)
+                                      .freeStorageTitle,
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
@@ -557,7 +559,10 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                       ),
                                 ),
                                 Text(
-                                  'Descărcările ocupă ${((_model.occupiedStorage!) / (1024 * 1024)).toStringAsFixed(2)} MB în memorie.',
+                                  AppLocalizations.of(context).storageOccupied(
+                                    ((_model.occupiedStorage!) / (1024 * 1024))
+                                        .toStringAsFixed(2),
+                                  ),
                                   style: FlutterFlowTheme.of(context)
                                       .labelMedium
                                       .override(
@@ -586,26 +591,38 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                               context: context,
                                               builder: (alertDialogContext) {
                                                 return AlertDialog(
-                                                  title: const Text(
-                                                      'Eliberare spațiu de stocare'),
+                                                  title: Text(
+                                                      AppLocalizations.of(
+                                                              context)
+                                                          .freeStorageConfirmTitle),
                                                   content: Text(
-                                                      'Această acțiune va șterge descărcările din memoria telefonului. Vei elibera ${((_model.occupiedStorage!) / (1024 * 1024)).toStringAsFixed(2)} MB, iar rugăciunile nu vor mai fi disponibile fără conexiune la internet.'),
+                                                      AppLocalizations.of(
+                                                              context)
+                                                          .freeStorageConfirmBody(
+                                                    ((_model.occupiedStorage!) /
+                                                            (1024 * 1024))
+                                                        .toStringAsFixed(2),
+                                                  )),
                                                   actions: [
                                                     TextButton(
                                                       onPressed: () =>
                                                           Navigator.pop(
                                                               alertDialogContext,
                                                               false),
-                                                      child: const Text(
-                                                          'Anulează'),
+                                                      child: Text(
+                                                          AppLocalizations.of(
+                                                                  context)
+                                                              .cancel),
                                                     ),
                                                     TextButton(
                                                       onPressed: () =>
                                                           Navigator.pop(
                                                               alertDialogContext,
                                                               true),
-                                                      child: const Text(
-                                                          'Eliberează spațiul'),
+                                                      child: Text(
+                                                          AppLocalizations.of(
+                                                                  context)
+                                                              .freeStorageAction),
                                                     ),
                                                   ],
                                                 );
@@ -630,16 +647,21 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                           context: context,
                                           builder: (alertDialogContext) {
                                             return AlertDialog(
-                                              title: const Text(
-                                                  'A apărut o eroare!'),
-                                              content: const Text(
-                                                  'Spațiul de stocare nu a putut fi eliberat. Încearcă să îl eliberezi din setările telefonului.'),
+                                              title: Text(AppLocalizations.of(
+                                                      context)
+                                                  .genericErrorTitle),
+                                              content: Text(AppLocalizations.of(
+                                                      context)
+                                                  .freeStorageErrorBody),
                                               actions: [
                                                 TextButton(
                                                   onPressed: () =>
                                                       Navigator.pop(
                                                           alertDialogContext),
-                                                  child: const Text('Ok'),
+                                                  child: Text(
+                                                      AppLocalizations.of(
+                                                              context)
+                                                          .ok),
                                                 ),
                                               ],
                                             );
@@ -702,7 +724,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Politica de confidențialitate',
+                                  AppLocalizations.of(context)
+                                      .privacyPolicyPageTitle,
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
@@ -747,7 +770,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                             backgroundColor:
                                 FlutterFlowTheme.of(context).primary,
                             content: Text(
-                              'Aplicația este actualizată la ultima versiune.\nUltima actualizare: $_lastContentUpdate',
+                              AppLocalizations.of(context)
+                                  .appUpToDate(_lastContentUpdate),
                               style: TextStyle(
                                 color: FlutterFlowTheme.of(context).secondary,
                               ),
@@ -789,7 +813,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Verifică actualizările aplicației',
+                                  AppLocalizations.of(context)
+                                      .checkForUpdates,
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
@@ -799,7 +824,8 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                       ),
                                 ),
                                 Text(
-                                  'Versiunea curentă: 1.1.0',
+                                  AppLocalizations.of(context)
+                                      .currentVersion('1.1.0'),
                                   style: FlutterFlowTheme.of(context)
                                       .bodySmall
                                       .override(
@@ -809,7 +835,9 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                                       ),
                                 ),
                                     Text(
-                                      'Ultima actualizare: $_lastContentUpdate',
+                                      AppLocalizations.of(context)
+                                          .lastContentUpdate(
+                                              _lastContentUpdate),
                                       style: FlutterFlowTheme.of(context)
                                           .bodySmall
                                           .override(
@@ -865,7 +893,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                       padding: const EdgeInsetsDirectional.fromSTEB(
                           16.0, 0.0, 16.0, 0.0),
                       child: AutoSizeText(
-                        'CONGREGAȚIA SURORILOR MAICII DOMNULUI',
+                        AppLocalizations.of(context).congregationNameUpper,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         minFontSize: 12.0,
@@ -879,7 +907,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                       padding: const EdgeInsetsDirectional.fromSTEB(
                           16.0, 0.0, 16.0, 0.0),
                       child: AutoSizeText(
-                        'Str. Romul Ladea, nr. 6, 400481, Cluj-Napoca',
+                        AppLocalizations.of(context).congregationAddress,
                         maxLines: 1,
                         minFontSize: 10.0,
                         style: FlutterFlowTheme.of(context).bodyMedium.override(

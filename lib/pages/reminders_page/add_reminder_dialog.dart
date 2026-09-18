@@ -8,6 +8,7 @@ import '/custom_code/reminders/prayer_date_group_prefill.dart';
 import '/custom_code/reminders/prayer_reminder.dart';
 import '/custom_code/reminders/reminder_prayer_picker.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
+import '/l10n/generated/app_localizations.dart';
 
 ThemeData _reminderSheetTheme(BuildContext context) {
   final theme = FlutterFlowTheme.of(context);
@@ -255,7 +256,7 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
             IconButton(
               onPressed: onClear,
               icon: Icon(Icons.close, color: theme.primary),
-              tooltip: 'Schimbă rugăciunea',
+              tooltip: AppLocalizations.of(context).reminderChangePrayer,
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(
@@ -271,13 +272,13 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
   void _save() {
     var valid = true;
     if (!_hasPrayer) {
-      _prayerError = 'Selectează o rugăciune';
+      _prayerError = AppLocalizations.of(context).reminderSelectPrayerError;
       valid = false;
     } else {
       _prayerError = null;
     }
     if (_selectedDays.isEmpty) {
-      _daysError = 'Selectează cel puțin o zi';
+      _daysError = AppLocalizations.of(context).reminderSelectDaysError;
       valid = false;
     } else {
       _daysError = null;
@@ -324,7 +325,9 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    isEditing ? 'Editează înregistrarea' : 'Înregistrare nouă',
+                    isEditing
+                        ? AppLocalizations.of(context).reminderEditTitle
+                        : AppLocalizations.of(context).reminderNewTitle,
                     style: theme.titleLarge.override(
                       fontFamily: 'Merriweather',
                       letterSpacing: 0.0,
@@ -334,7 +337,7 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: Icon(Icons.close, color: theme.primary),
-                  tooltip: 'Închide',
+                  tooltip: AppLocalizations.of(context).close,
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
@@ -364,7 +367,8 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
                         Padding(
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Text(
-                            'Ora și zilele au fost completate din calendarul liturgic.',
+                            AppLocalizations.of(context)
+                                .reminderPrefilledFromCalendar,
                             style: theme.bodySmall.override(
                               fontFamily: 'Inter',
                               color: theme.secondaryText,
@@ -376,7 +380,7 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
                     ],
                     if (_showScheduleSections) ...[
                       Text(
-                        'Ora',
+                        AppLocalizations.of(context).reminderTimeLabel,
                         style: theme.labelLarge.override(
                           fontFamily: 'Inter',
                           letterSpacing: 0.0,
@@ -392,7 +396,7 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
                       ),
                       const SizedBox(height: 12.0),
                       Text(
-                        'Zile din săptămână',
+                        AppLocalizations.of(context).reminderDaysOfWeekLabel,
                         style: theme.labelLarge.override(
                           fontFamily: 'Inter',
                           letterSpacing: 0.0,
@@ -455,7 +459,7 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Anulează'),
+                    child: Text(AppLocalizations.of(context).cancel),
                   ),
                 ),
                 if (_showScheduleSections) ...[
@@ -467,7 +471,7 @@ class _AddEditReminderSheetState extends State<_AddEditReminderSheet> {
                         backgroundColor: theme.primary,
                         foregroundColor: theme.alternate,
                       ),
-                      child: const Text('Salvează'),
+                      child: Text(AppLocalizations.of(context).save),
                     ),
                   ),
                 ],

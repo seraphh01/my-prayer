@@ -6,6 +6,7 @@ import '/custom_code/audio/notifiers/play_button_notifier.dart';
 import '/custom_code/audio/page_manager.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
+import '/l10n/generated/app_localizations.dart';
 
 class HomeAudioMiniPlayer extends StatelessWidget {
   const HomeAudioMiniPlayer({
@@ -290,7 +291,7 @@ class HomeAudioMiniPlayer extends StatelessWidget {
                                   Icons.close_rounded,
                                   color: theme.primary,
                                 ),
-                                tooltip: 'Închide',
+                                tooltip: AppLocalizations.of(context).close,
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(
                                   minWidth: 44.0,

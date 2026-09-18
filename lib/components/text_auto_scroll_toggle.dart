@@ -1,6 +1,7 @@
 import '/app_state.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class TextAutoScrollToggle extends StatelessWidget {
@@ -37,14 +38,14 @@ class TextAutoScrollToggle extends StatelessWidget {
             inactiveThumbColor: theme.alternate,
             inactiveTrackColor: theme.secondaryText.withValues(alpha: 0.35),
             title: Text(
-              'Derulare automată text',
+              AppLocalizations.of(context).autoScrollTitle,
               style: theme.bodyMedium.override(
                 fontFamily: 'Inter',
                 letterSpacing: 0.0,
               ),
             ),
             subtitle: Text(
-              'Textul urmărește automat redarea audio',
+              AppLocalizations.of(context).autoScrollSubtitle,
               style: theme.bodySmall.override(
                 fontFamily: 'Inter',
                 color: theme.secondaryText,

@@ -4,6 +4,7 @@ import '/backend/schema/structs/index.dart';
 import '/components/chapter_options_view_widget.dart';
 import '/custom_code/prayer/prayer_typography.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ChooseChapterWidget extends StatefulWidget {
@@ -62,7 +63,9 @@ class _ChooseChapterWidgetState extends State<ChooseChapterWidget> {
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: AutoSizeText(
-                          widget.title ?? 'Mergi la secțiunea dorită',
+                          widget.title ??
+                              AppLocalizations.of(context)
+                                  .chooseChapterDefaultTitle,
                           style: typography.style(
                             FlutterFlowTheme.of(context).headlineSmall,
                             scaleFontSize: false,

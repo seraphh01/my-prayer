@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '/flutter_flow/flutter_flow_theme.dart';
+import '/l10n/generated/app_localizations.dart';
 
 class AboutPageWidget extends StatelessWidget {
   const AboutPageWidget({super.key});
@@ -8,6 +9,7 @@ class AboutPageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
+    final l10n = AppLocalizations.of(context);
     final bodyStyle = theme.bodyMedium.override(
       fontFamily: 'Inter',
       color: theme.primaryText,
@@ -21,7 +23,7 @@ class AboutPageWidget extends StatelessWidget {
         backgroundColor: theme.primary,
         iconTheme: IconThemeData(color: theme.alternate),
         title: Text(
-          'Cine suntem',
+          l10n.aboutPageTitle,
           style: theme.titleLarge.override(
             fontFamily: 'Merriweather',
             color: theme.alternate,
@@ -36,33 +38,27 @@ class AboutPageWidget extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 32.0),
           children: [
             _Paragraph(
-              text:
-                  'Această aplicație este un proiect al Congregației Surorilor Maicii Domnului, care își are sediul Casei Generale în Cluj-Napoca, România.',
+              text: l10n.aboutParagraph1,
               style: bodyStyle,
             ),
             _Paragraph(
-              text:
-                  'Congregația Surorilor Maicii Domnului (CMD) a fost întemeiată la Blaj, în 2 februarie 1921, de Mitropolitul Dr. Vasile Suciu, și așezată sub ocrotirea Preasfintei Fecioare Maria. De la începuturi, viața Surorilor s-a fundamentat pe rugăciune, muncă și slujirea aproapelui.',
+              text: l10n.aboutParagraph2,
               style: bodyStyle,
             ),
             _Paragraph(
-              text:
-                  'Spiritualitatea CMD își are izvorul în Cuvântul lui Dumnezeu, în viața liturgică a Bisericii și în exemplul Preasfintei Fecioare Maria.',
+              text: l10n.aboutParagraph3,
               style: bodyStyle,
             ),
             _Paragraph(
-              text:
-                  'Rugăciunea liturgică, celebrată în tradiția bizantină, se află în centrul vieții comunităților CMD și dă ritm fiecărei zile. Prin această aplicație, Surorile împărtășesc o parte din comoara spirituală moștenită în cei peste 100 de ani de existență celor care vor să descopere sau să aprofundeze rugăciunile și cântările greco-catolice.',
+              text: l10n.aboutParagraph4,
               style: bodyStyle,
             ),
             _Paragraph(
-              text:
-                  'Aplicația cuprinde rugăciuni pentru diferitele momente ale zilei, precum și cântări care însoțesc anul liturgic și însuflețesc evlavia credincioșilor. Ea poate să fie un ajutor pentru rugăciunea personală și familială și, totodată, o cale de apropiere de frumusețea și profunzimea spiritualității bizantine.',
+              text: l10n.aboutParagraph5,
               style: bodyStyle,
             ),
             _Paragraph(
-              text:
-                  'La Mănăstirea Maicii Domnului – Sanctuar Arhiepiscopal Major din Cluj-Napoca, Surorile se roagă pentru intențiile încredințate lor, primesc și însoțesc persoanele care caută un cuvânt de lumină și slujesc viața liturgică a Bisericii.',
+              text: l10n.aboutParagraph6,
               style: bodyStyle,
             ),
             Padding(
@@ -70,7 +66,7 @@ class AboutPageWidget extends StatelessWidget {
               child: Divider(color: theme.secondaryBackground),
             ),
             Text(
-              'Rugăciune către Maica Domnului',
+              l10n.aboutPrayerTitle,
               style: theme.titleMedium.override(
                 fontFamily: 'Merriweather',
                 color: theme.primary,
@@ -79,7 +75,7 @@ class AboutPageWidget extends StatelessWidget {
             ),
             const SizedBox(height: 12.0),
             Text(
-              'Preasfântă Fecioară Maria, Maica lui Dumnezeu, păstrează-ne sub ocrotirea ta. Călăuzește-ne pașii către Fiul tău, Isus Cristos, și dobândește-ne o inimă curată, pace sufletească și statornicie în rugăciune. Amin.',
+              l10n.aboutPrayerText,
               style: bodyStyle,
             ),
           ],

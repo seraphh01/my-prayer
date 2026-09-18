@@ -2,6 +2,7 @@ import '/backend/schema/structs/index.dart';
 import '/custom_code/journal/prayer_journal_storage.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -97,7 +98,7 @@ class _HomeTopFavoriteTileState extends State<HomeTopFavoriteTile> {
           ),
         ),
         subtitle: Text(
-          'Favorite',
+          AppLocalizations.of(context).favorites,
           style: theme.labelMedium.override(
             fontFamily: 'Inter',
             color: theme.secondaryText,

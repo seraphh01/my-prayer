@@ -1,5 +1,6 @@
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'empty_list_component_model.dart';
 export 'empty_list_component_model.dart';
@@ -7,13 +8,12 @@ export 'empty_list_component_model.dart';
 class EmptyListComponentWidget extends StatefulWidget {
   const EmptyListComponentWidget({
     super.key,
-    String? title,
-    String? subtitle,
-  })  : title = title ?? 'Textul va apărea curând',
-        subtitle = subtitle ?? 'Vă mulțumim pentru răbdare!';
+    this.title,
+    this.subtitle,
+  });
 
-  final String title;
-  final String subtitle;
+  final String? title;
+  final String? subtitle;
 
   @override
   State<EmptyListComponentWidget> createState() =>
@@ -59,7 +59,7 @@ class _EmptyListComponentWidgetState extends State<EmptyListComponentWidget> {
               Align(
                 alignment: const AlignmentDirectional(0.0, 0.0),
                 child: Text(
-                  widget.title,
+                  widget.title ?? AppLocalizations.of(context).emptyListDefaultTitle,
                   textAlign: TextAlign.center,
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                         fontFamily: 'Inter',
@@ -70,7 +70,8 @@ class _EmptyListComponentWidgetState extends State<EmptyListComponentWidget> {
               Align(
                 alignment: const AlignmentDirectional(0.0, 0.0),
                 child: Text(
-                  widget.subtitle,
+                  widget.subtitle ??
+                      AppLocalizations.of(context).emptyListDefaultSubtitle,
                   textAlign: TextAlign.center,
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                         fontFamily: 'Inter',

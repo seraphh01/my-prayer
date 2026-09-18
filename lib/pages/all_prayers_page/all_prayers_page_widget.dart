@@ -9,6 +9,7 @@ import '/backend/schema/structs/index.dart';
 import '/components/prayer_type_card_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/l10n/generated/app_localizations.dart';
 import 'all_prayers_page_model.dart';
 export 'all_prayers_page_model.dart';
 
@@ -146,8 +147,9 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
 
   Widget _buildPageHeader(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    final title =
-        _typeStack.isEmpty ? 'Toate rugăciunile' : _typeStack.last.type;
+    final title = _typeStack.isEmpty
+        ? AppLocalizations.of(context).allPrayersPageTitle
+        : _typeStack.last.type;
 
     return Container(
       width: double.infinity,
@@ -297,7 +299,7 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
           Padding(
             padding: const EdgeInsetsDirectional.only(top: 12.0),
             child: Text(
-              'Rugăciunile nu au putut fi încărcate. Vă rugăm să încercați din nou mai târziu sau verificați conexiunea la internet.',
+              AppLocalizations.of(context).prayersLoadError,
               textAlign: TextAlign.center,
               style: FlutterFlowTheme.of(context).labelMedium.override(
                     fontFamily: 'Inter',
@@ -313,7 +315,7 @@ class _AllPrayersPageWidgetState extends State<AllPrayersPageWidget> {
             ),
             onPressed: () => unawaited(_loadTypes(forceRefresh: true)),
             child: Text(
-              'Reîncearcă',
+              AppLocalizations.of(context).retry,
               style: FlutterFlowTheme.of(context).labelMedium.override(
                     fontFamily: 'Inter',
                     color: FlutterFlowTheme.of(context).primary,

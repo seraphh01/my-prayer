@@ -2,6 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 
 import '/flutter_flow/flutter_flow_theme.dart';
+import '/l10n/generated/app_localizations.dart';
 
 class AppSplashScreen extends StatelessWidget {
   const AppSplashScreen({super.key});
@@ -46,7 +47,7 @@ class AppSplashScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24.0),
                   AutoSizeText(
-                    'Rugăciuni și cântări',
+                    AppLocalizations.of(context).appTitle,
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     minFontSize: 16.0,
@@ -59,7 +60,7 @@ class AppSplashScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8.0),
                   AutoSizeText(
-                    'Congregația Surorilor Maicii Domnului',
+                    AppLocalizations.of(context).congregationTitle,
                     textAlign: TextAlign.center,
                     maxLines: 3,
                     minFontSize: 12.0,
