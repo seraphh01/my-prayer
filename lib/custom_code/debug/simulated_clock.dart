@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 /// Manual debug override. Set to `null` to use the real clock again.
-bool simulatedClockEnabled = true;
+bool simulatedClockEnabled = false;
 DateTime? debugSimulatedNow = new DateTime(2026, 9, 20, 12, 45);
 
 /// Optional run-time override: `flutter run --dart-define=SIMULATED_TIME=02:55`
@@ -9,15 +9,16 @@ const simulatedTimeFromEnvironment =
     String.fromEnvironment('SIMULATED_TIME', defaultValue: '');
 
 bool get isSimulatedClockActive {
-  if (!kDebugMode && simulatedClockEnabled) {
+  if (!kDebugMode) {
     return false;
   }
-  return debugSimulatedNow != null || simulatedTimeFromEnvironment.isNotEmpty;
+  return simulatedClockEnabled &&
+      (debugSimulatedNow != null || simulatedTimeFromEnvironment.isNotEmpty);
 }
 
 /// Clock used for “Pentru astăzi” hour windows and related dev testing.
 DateTime effectiveNow() {
-  if (!simulatedClockEnabled) {
+  if (!kDebugMode || !simulatedClockEnabled) {
     return DateTime.now();
   }
 
